@@ -14,8 +14,10 @@ import CourseManagement from "@/pages/course-management";
 import Trainers from "@/pages/trainers";
 import Schedule from "@/pages/schedule";
 import Certificates from "@/pages/certificates";
+import CertificateTemplates from "@/pages/certificate-templates";
 import Quotations from "@/pages/quotations";
 import Proposals from "@/pages/proposals";
+import ProposalTemplates from "@/pages/proposal-templates";
 
 function Router() {
   return (
@@ -29,8 +31,10 @@ function Router() {
       <ProtectedRoute path="/trainers" component={Trainers} />
       <ProtectedRoute path="/schedule" component={Schedule} />
       <ProtectedRoute path="/certificates" component={Certificates} />
+      <ProtectedRoute path="/certificate-templates" component={CertificateTemplates} />
       <ProtectedRoute path="/quotations" component={Quotations} />
       <ProtectedRoute path="/proposals" component={Proposals} />
+      <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
       <Route component={NotFound} />
     </Switch>
   );
