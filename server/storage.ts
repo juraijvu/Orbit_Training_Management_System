@@ -9,10 +9,15 @@ import {
   quotations, Quotation, InsertQuotation,
   proposals, Proposal, InsertProposal
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
 const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 // Storage interface
 export interface IStorage {
@@ -377,4 +382,259 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation
+export class DatabaseStorage implements IStorage {
+  sessionStore: any;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true
+    });
+  }
+
+  // Users methods
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(user).returning();
+    return result[0];
+  }
+
+  // Students methods
+  async getStudents(): Promise<Student[]> {
+    return await db.select().from(students);
+  }
+
+  async getStudent(id: number): Promise<Student | undefined> {
+    const result = await db.select().from(students).where(eq(students.id, id));
+    return result[0];
+  }
+
+  async getStudentByStudentId(studentId: string): Promise<Student | undefined> {
+    const result = await db.select().from(students).where(eq(students.studentId, studentId));
+    return result[0];
+  }
+
+  async createStudent(student: InsertStudent): Promise<Student> {
+    const studentWithDefaults = {
+      ...student,
+      createdAt: new Date(),
+      discount: student.discount || null,
+      registrationDate: student.registrationDate || new Date()
+    };
+    const result = await db.insert(students).values(studentWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateStudent(id: number, student: Partial<Student>): Promise<Student | undefined> {
+    const result = await db.update(students).set(student).where(eq(students.id, id)).returning();
+    return result[0];
+  }
+
+  // Courses methods
+  async getCourses(): Promise<Course[]> {
+    return await db.select().from(courses);
+  }
+
+  async getCourse(id: number): Promise<Course | undefined> {
+    const result = await db.select().from(courses).where(eq(courses.id, id));
+    return result[0];
+  }
+
+  async createCourse(course: InsertCourse): Promise<Course> {
+    const courseWithDefaults = {
+      ...course,
+      createdAt: new Date(),
+      content: course.content || null,
+      active: course.active || true
+    };
+    const result = await db.insert(courses).values(courseWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateCourse(id: number, course: Partial<Course>): Promise<Course | undefined> {
+    const result = await db.update(courses).set(course).where(eq(courses.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCourse(id: number): Promise<boolean> {
+    const result = await db.delete(courses).where(eq(courses.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Trainers methods
+  async getTrainers(): Promise<Trainer[]> {
+    return await db.select().from(trainers);
+  }
+
+  async getTrainer(id: number): Promise<Trainer | undefined> {
+    const result = await db.select().from(trainers).where(eq(trainers.id, id));
+    return result[0];
+  }
+
+  async createTrainer(trainer: InsertTrainer): Promise<Trainer> {
+    const trainerWithDefaults = {
+      ...trainer,
+      createdAt: new Date(),
+      profileImage: trainer.profileImage || null,
+      certifications: trainer.certifications || null
+    };
+    const result = await db.insert(trainers).values(trainerWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateTrainer(id: number, trainer: Partial<Trainer>): Promise<Trainer | undefined> {
+    const result = await db.update(trainers).set(trainer).where(eq(trainers.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTrainer(id: number): Promise<boolean> {
+    const result = await db.delete(trainers).where(eq(trainers.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Invoices methods
+  async getInvoices(): Promise<Invoice[]> {
+    return await db.select().from(invoices);
+  }
+
+  async getInvoicesByStudentId(studentId: number): Promise<Invoice[]> {
+    return await db.select().from(invoices).where(eq(invoices.studentId, studentId));
+  }
+
+  async getInvoice(id: number): Promise<Invoice | undefined> {
+    const result = await db.select().from(invoices).where(eq(invoices.id, id));
+    return result[0];
+  }
+
+  async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
+    const invoiceWithDefaults = {
+      ...invoice,
+      createdAt: new Date(),
+      transactionId: invoice.transactionId || null,
+      paymentDate: invoice.paymentDate || new Date()
+    };
+    const result = await db.insert(invoices).values(invoiceWithDefaults).returning();
+    return result[0];
+  }
+
+  // Schedules methods
+  async getSchedules(): Promise<Schedule[]> {
+    return await db.select().from(schedules);
+  }
+
+  async getSchedule(id: number): Promise<Schedule | undefined> {
+    const result = await db.select().from(schedules).where(eq(schedules.id, id));
+    return result[0];
+  }
+
+  async createSchedule(schedule: InsertSchedule): Promise<Schedule> {
+    const scheduleWithDefaults = {
+      ...schedule,
+      createdAt: new Date(),
+      status: schedule.status || 'pending'
+    };
+    const result = await db.insert(schedules).values(scheduleWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateSchedule(id: number, schedule: Partial<Schedule>): Promise<Schedule | undefined> {
+    const result = await db.update(schedules).set(schedule).where(eq(schedules.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSchedule(id: number): Promise<boolean> {
+    const result = await db.delete(schedules).where(eq(schedules.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Certificates methods
+  async getCertificates(): Promise<Certificate[]> {
+    return await db.select().from(certificates);
+  }
+
+  async getCertificatesByStudentId(studentId: number): Promise<Certificate[]> {
+    return await db.select().from(certificates).where(eq(certificates.studentId, studentId));
+  }
+
+  async getCertificate(id: number): Promise<Certificate | undefined> {
+    const result = await db.select().from(certificates).where(eq(certificates.id, id));
+    return result[0];
+  }
+
+  async createCertificate(certificate: InsertCertificate): Promise<Certificate> {
+    const certificateWithDefaults = {
+      ...certificate,
+      createdAt: new Date(),
+      issueDate: certificate.issueDate || new Date()
+    };
+    const result = await db.insert(certificates).values(certificateWithDefaults).returning();
+    return result[0];
+  }
+
+  // Quotations methods
+  async getQuotations(): Promise<Quotation[]> {
+    return await db.select().from(quotations);
+  }
+
+  async getQuotation(id: number): Promise<Quotation | undefined> {
+    const result = await db.select().from(quotations).where(eq(quotations.id, id));
+    return result[0];
+  }
+
+  async createQuotation(quotation: InsertQuotation): Promise<Quotation> {
+    const quotationWithDefaults = {
+      ...quotation,
+      createdAt: new Date(),
+      discount: quotation.discount || null,
+      status: quotation.status || 'pending'
+    };
+    const result = await db.insert(quotations).values(quotationWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateQuotation(id: number, quotation: Partial<Quotation>): Promise<Quotation | undefined> {
+    const result = await db.update(quotations).set(quotation).where(eq(quotations.id, id)).returning();
+    return result[0];
+  }
+
+  // Proposals methods
+  async getProposals(): Promise<Proposal[]> {
+    return await db.select().from(proposals);
+  }
+
+  async getProposal(id: number): Promise<Proposal | undefined> {
+    const result = await db.select().from(proposals).where(eq(proposals.id, id));
+    return result[0];
+  }
+
+  async createProposal(proposal: InsertProposal): Promise<Proposal> {
+    const proposalWithDefaults = {
+      ...proposal,
+      createdAt: new Date(),
+      discount: proposal.discount || null,
+      content: proposal.content || null,
+      coverPage: proposal.coverPage || null,
+      status: proposal.status || 'draft'
+    };
+    const result = await db.insert(proposals).values(proposalWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateProposal(id: number, proposal: Partial<Proposal>): Promise<Proposal | undefined> {
+    const result = await db.update(proposals).set(proposal).where(eq(proposals.id, id)).returning();
+    return result[0];
+  }
+}
+
+// Create a storage instance (database or memory)
+export const storage = new DatabaseStorage();
