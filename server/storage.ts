@@ -21,10 +21,20 @@ const PostgresSessionStore = connectPg(session);
 
 // Storage interface
 export interface IStorage {
+  // Session store
+  sessionStore: any;
+  
   // Users
+  getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
+  
+  // Institute settings
+  getInstitute(): Promise<any>;
+  updateInstitute(settings: any): Promise<any>;
   
   // Students
   getStudents(): Promise<Student[]>;
@@ -77,9 +87,6 @@ export interface IStorage {
   getProposal(id: number): Promise<Proposal | undefined>;
   createProposal(proposal: InsertProposal): Promise<Proposal>;
   updateProposal(id: number, proposal: Partial<Proposal>): Promise<Proposal | undefined>;
-  
-  // Session store
-  sessionStore: session.SessionStore;
 }
 
 // Memory Storage implementation
@@ -104,7 +111,7 @@ export class MemStorage implements IStorage {
   private quotationId: number = 1;
   private proposalId: number = 1;
   
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 
   constructor() {
     this.usersMap = new Map();
@@ -152,6 +159,10 @@ export class MemStorage implements IStorage {
   }
 
   // Users methods
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.usersMap.values());
+  }
+  
   async getUser(id: number): Promise<User | undefined> {
     return this.usersMap.get(id);
   }
@@ -164,9 +175,47 @@ export class MemStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userId++;
-    const newUser: User = { ...user, id };
+    const newUser: User = { 
+      ...user, 
+      id, 
+      role: user.role || "counselor",
+      email: user.email || null,
+      phone: user.phone || null 
+    };
     this.usersMap.set(id, newUser);
     return newUser;
+  }
+  
+  async updateUser(id: number, user: Partial<User>): Promise<User | undefined> {
+    const existingUser = this.usersMap.get(id);
+    if (!existingUser) return undefined;
+
+    const updatedUser = { ...existingUser, ...user };
+    this.usersMap.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    return this.usersMap.delete(id);
+  }
+  
+  // Institute settings methods
+  private institute = {
+    name: "Orbit Institute",
+    address: "Sheikh Zayed Road, Dubai, UAE",
+    phone: "+971 4 123 4567",
+    email: "info@orbitinstitute.com",
+    website: "www.orbitinstitute.com",
+    logo: "/logo.png"
+  };
+  
+  async getInstitute(): Promise<any> {
+    return this.institute;
+  }
+  
+  async updateInstitute(settings: any): Promise<any> {
+    this.institute = { ...this.institute, ...settings };
+    return this.institute;
   }
 
   // Students methods
@@ -394,6 +443,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Users methods
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+  
   async getUser(id: number): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id));
     return result[0];
@@ -405,8 +458,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(user).returning();
+    const userWithDefaults = {
+      ...user,
+      role: user.role || "counselor",
+      email: user.email || null,
+      phone: user.phone || null
+    };
+    const result = await db.insert(users).values(userWithDefaults).returning();
     return result[0];
+  }
+  
+  async updateUser(id: number, user: Partial<User>): Promise<User | undefined> {
+    const result = await db.update(users).set(user).where(eq(users.id, id)).returning();
+    return result[0];
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
+  }
+  
+  // Institute settings
+  // Using a private variable to simulate a database table for institute settings
+  private instituteSettings = {
+    name: "Orbit Institute",
+    address: "Sheikh Zayed Road, Dubai, UAE",
+    phone: "+971 4 123 4567",
+    email: "info@orbitinstitute.com",
+    website: "www.orbitinstitute.com",
+    logo: "/logo.png"
+  };
+  
+  async getInstitute(): Promise<any> {
+    return this.instituteSettings;
+  }
+  
+  async updateInstitute(settings: any): Promise<any> {
+    this.instituteSettings = { ...this.instituteSettings, ...settings };
+    return this.instituteSettings;
   }
 
   // Students methods

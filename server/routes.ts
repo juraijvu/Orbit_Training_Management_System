@@ -10,7 +10,8 @@ import {
   insertScheduleSchema,
   insertCertificateSchema,
   insertQuotationSchema,
-  insertProposalSchema
+  insertProposalSchema,
+  insertUserSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -765,6 +766,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching due payments:", error);
       res.status(500).json({ message: "Failed to fetch due payments" });
+    }
+  });
+
+  // ================== Users API ==================
+  // Get all users (admin only)
+  app.get('/api/users', isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Create user (admin only)
+  app.post('/api/users', isAdmin, async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      const newUser = await storage.createUser(userData);
+      res.status(201).json(newUser);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  // Update user (admin only)
+  app.patch('/api/users/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingUser = await storage.getUser(id);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Prevent role escalation - only superadmin can create superadmins
+      if (req.body.role === 'superadmin' && req.user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Only superadmins can create or modify superadmin accounts" });
+      }
+      
+      // Prevent updating your own role
+      if (id === req.user?.id && req.body.role) {
+        return res.status(403).json({ message: "You cannot modify your own role" });
+      }
+      
+      const updatedUser = await storage.updateUser(id, req.body);
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Delete user (superadmin only)
+  app.delete('/api/users/:id', isSuperAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Prevent deleting yourself
+      if (id === req.user?.id) {
+        return res.status(403).json({ message: "You cannot delete your own account" });
+      }
+      
+      const existingUser = await storage.getUser(id);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const result = await storage.deleteUser(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete user" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // ================== Institute Settings API ==================
+  // Get institute settings
+  app.get('/api/institute', isAuthenticated, async (req, res) => {
+    try {
+      const institute = await storage.getInstitute();
+      res.json(institute);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch institute settings" });
+    }
+  });
+
+  // Update institute settings (admin only)
+  app.patch('/api/institute', isAdmin, async (req, res) => {
+    try {
+      const updatedInstitute = await storage.updateInstitute(req.body);
+      res.json(updatedInstitute);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update institute settings" });
     }
   });
 

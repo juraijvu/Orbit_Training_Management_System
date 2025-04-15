@@ -18,25 +18,30 @@ import CertificateTemplates from "@/pages/certificate-templates";
 import Quotations from "@/pages/quotations";
 import Proposals from "@/pages/proposals";
 import ProposalTemplates from "@/pages/proposal-templates";
+import Settings from "@/pages/settings";
+import { MainLayout } from "@/components/layout/main-layout";
 
 function Router() {
   return (
-    <Switch>
-      <ProtectedRoute path="/" component={Dashboard} />
-      <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/student-registration" component={StudentRegistration} />
-      <ProtectedRoute path="/student-list" component={StudentList} />
-      <ProtectedRoute path="/invoices" component={Invoices} />
-      <ProtectedRoute path="/course-management" component={CourseManagement} />
-      <ProtectedRoute path="/trainers" component={Trainers} />
-      <ProtectedRoute path="/schedule" component={Schedule} />
-      <ProtectedRoute path="/certificates" component={Certificates} />
-      <ProtectedRoute path="/certificate-templates" component={CertificateTemplates} />
-      <ProtectedRoute path="/quotations" component={Quotations} />
-      <ProtectedRoute path="/proposals" component={Proposals} />
-      <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
-      <Route component={NotFound} />
-    </Switch>
+    <MainLayout>
+      <Switch>
+        <ProtectedRoute path="/" component={Dashboard} />
+        <Route path="/auth" component={AuthPage} />
+        <ProtectedRoute path="/student-registration" component={StudentRegistration} />
+        <ProtectedRoute path="/student-list" component={StudentList} />
+        <ProtectedRoute path="/invoices" component={Invoices} />
+        <ProtectedRoute path="/course-management" component={CourseManagement} />
+        <ProtectedRoute path="/trainers" component={Trainers} />
+        <ProtectedRoute path="/schedule" component={Schedule} />
+        <ProtectedRoute path="/certificates" component={Certificates} />
+        <ProtectedRoute path="/certificate-templates" component={CertificateTemplates} />
+        <ProtectedRoute path="/quotations" component={Quotations} />
+        <ProtectedRoute path="/proposals" component={Proposals} />
+        <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
+        <ProtectedRoute path="/settings" component={Settings} />
+        <Route component={NotFound} />
+      </Switch>
+    </MainLayout>
   );
 }
 

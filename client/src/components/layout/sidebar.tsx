@@ -1,155 +1,167 @@
-import { FC } from 'react';
-import { Link, useLocation } from 'wouter';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
+import React from "react";
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  BarChart2,
+  HomeIcon,
   UserPlus,
   Users,
-  File,
-  Book,
+  FileText,
   BookOpen,
+  UserCog,
   Calendar,
-  FilePen,
-  FileSignature,
   Award,
-  Settings
-} from 'lucide-react';
+  FileCheck,
+  FileSpreadsheet,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface SidebarProps {
+interface SidebarNavProps {
   className?: string;
 }
 
-const Sidebar: FC<SidebarProps> = ({ className }) => {
+function Sidebar({ className }: SidebarNavProps) {
   const [location] = useLocation();
-  const { user } = useAuth();
-  
-  const isSuperAdmin = user?.role === 'superadmin';
-  const isAdmin = user?.role === 'admin' || isSuperAdmin;
+  const { user, logoutMutation } = useAuth();
 
-  const menuItems = [
+  if (!user) return null;
+
+  const navItems = [
     {
-      title: 'ADMISSIONS',
-      items: [
-        {
-          name: 'Dashboard',
-          href: '/',
-          icon: <BarChart2 className="w-5 h-5" />,
-          access: true,
-        },
-        {
-          name: 'Student Registration',
-          href: '/student-registration',
-          icon: <UserPlus className="w-5 h-5" />,
-          access: true,
-        },
-        {
-          name: 'Student List',
-          href: '/student-list',
-          icon: <Users className="w-5 h-5" />,
-          access: true,
-        },
-        {
-          name: 'Invoices',
-          href: '/invoices',
-          icon: <File className="w-5 h-5" />,
-          access: true,
-        },
-      ],
+      title: "Dashboard",
+      href: "/",
+      icon: <HomeIcon className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
     },
     {
-      title: 'COURSES',
-      items: [
-        {
-          name: 'Course Management',
-          href: '/course-management',
-          icon: <Book className="w-5 h-5" />,
-          access: isAdmin,
-        },
-        {
-          name: 'Trainers',
-          href: '/trainers',
-          icon: <BookOpen className="w-5 h-5" />,
-          access: isAdmin,
-        },
-        {
-          name: 'Schedule',
-          href: '/schedule',
-          icon: <Calendar className="w-5 h-5" />,
-          access: true,
-        },
-      ],
+      title: "Student Registration",
+      href: "/student-registration",
+      icon: <UserPlus className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
     },
     {
-      title: 'CORPORATE',
-      items: [
-        {
-          name: 'Quotations',
-          href: '/quotations',
-          icon: <FilePen className="w-5 h-5" />,
-          access: true,
-        },
-        {
-          name: 'Proposals',
-          href: '/proposals',
-          icon: <FileSignature className="w-5 h-5" />,
-          access: true,
-        },
-      ],
+      title: "Student List",
+      href: "/student-list",
+      icon: <Users className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
     },
     {
-      title: 'ADMIN',
-      items: [
-        {
-          name: 'Certificates',
-          href: '/certificates',
-          icon: <Award className="w-5 h-5" />,
-          access: isSuperAdmin,
-        },
-        {
-          name: 'Settings',
-          href: '/settings',
-          icon: <Settings className="w-5 h-5" />,
-          access: isAdmin,
-        },
-      ],
+      title: "Invoices",
+      href: "/invoices",
+      icon: <FileText className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Course Management",
+      href: "/course-management",
+      icon: <BookOpen className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Trainers",
+      href: "/trainers",
+      icon: <UserCog className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Schedule",
+      href: "/schedule",
+      icon: <Calendar className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+    },
+    {
+      title: "Certificates",
+      href: "/certificates",
+      icon: <Award className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Certificate Templates",
+      href: "/certificate-templates",
+      icon: <Award className="h-5 w-5" />,
+      roles: ["superadmin"],
+    },
+    {
+      title: "Quotations",
+      href: "/quotations",
+      icon: <FileCheck className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Proposals",
+      href: "/proposals",
+      icon: <FileSpreadsheet className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Proposal Templates",
+      href: "/proposal-templates",
+      icon: <FileSpreadsheet className="h-5 w-5" />,
+      roles: ["superadmin"],
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: <Settings className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
     },
   ];
 
+  const filteredNavItems = navItems.filter((item) =>
+    item.roles.includes(user.role)
+  );
+
   return (
-    <aside className={cn("bg-gray-800 text-white w-64 min-h-screen hidden md:block overflow-y-auto", className)}>
-      <div className="p-4">
-        <h1 className="text-xl font-semibold">Orbit Institute</h1>
-      </div>
-      
-      <nav className="mt-4">
-        {menuItems.map((section, idx) => {
-          const visibleItems = section.items.filter(item => item.access);
-          if (visibleItems.length === 0) return null;
-          
-          return (
-            <div key={idx}>
-              <div className="px-4 py-2 text-gray-400 text-xs font-semibold">{section.title}</div>
-              
-              {visibleItems.map((item, itemIdx) => (
-                <Link
-                  key={itemIdx}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700",
-                    location === item.href && "text-white bg-primary-800"
-                  )}
-                >
-                  {item.icon}
-                  <span className="ml-2">{item.name}</span>
+    <div className={cn("pb-12 h-full flex flex-col", className)}>
+      <div className="space-y-4 py-4 flex-1">
+        <div className="px-3 py-2">
+          <div className="mb-8 px-4">
+            <Link href="/">
+              <h2 className="text-2xl font-bold tracking-tight">Orbit Institute</h2>
+            </Link>
+            <div className="text-sm text-gray-500 mt-1">UAE</div>
+          </div>
+          <div className="space-y-1">
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              {filteredNavItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant={location === item.href ? "secondary" : "ghost"}
+                    className={cn("w-full justify-start", {
+                      "bg-primary/10": location === item.href,
+                    })}
+                  >
+                    {item.icon}
+                    <span className="ml-2">{item.title}</span>
+                  </Button>
                 </Link>
               ))}
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
+            </ScrollArea>
+          </div>
+        </div>
+      </div>
+      <div className="px-3 py-2 border-t">
+        <div className="flex items-center mb-2 px-4">
+          <div className="ml-2">
+            <p className="text-sm font-medium">{user.fullName}</p>
+            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+          onClick={() => logoutMutation.mutate()}
+        >
+          <LogOut className="h-5 w-5 mr-2" />
+          Logout
+        </Button>
+      </div>
+    </div>
   );
-};
+}
 
+export { Sidebar };
 export default Sidebar;
