@@ -1,18 +1,21 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { 
   GraduationCap, 
   Presentation, 
-  IndianRupee, 
-  IdCard 
+  DollarSign, 
+  Award,
+  Users, 
+  BookOpen 
 } from 'lucide-react';
 
-interface StatCardProps {
+export interface StatCardProps {
   title: string;
   value: string | number;
   change?: string;
   type: 'students' | 'courses' | 'revenue' | 'certificates';
   className?: string;
+  icon?: ReactNode;
 }
 
 const StatCard: FC<StatCardProps> = ({ 
@@ -20,27 +23,30 @@ const StatCard: FC<StatCardProps> = ({
   value, 
   change, 
   type,
-  className 
+  className,
+  icon
 }) => {
   const getIcon = () => {
+    if (icon) return icon;
+    
     switch (type) {
       case 'students':
-        return <GraduationCap className="text-primary-700" />;
+        return <Users className="h-5 w-5 text-blue-600" />;
       case 'courses':
-        return <Presentation className="text-primary-700" />;
+        return <BookOpen className="h-5 w-5 text-yellow-600" />;
       case 'revenue':
-        return <IndianRupee className="text-primary-700" />;
+        return <DollarSign className="h-5 w-5 text-green-600" />;
       case 'certificates':
-        return <IdCard className="text-primary-700" />;
+        return <Award className="h-5 w-5 text-purple-600" />;
       default:
-        return <GraduationCap className="text-primary-700" />;
+        return <Users className="h-5 w-5 text-primary" />;
     }
   };
 
   return (
     <div className={cn("bg-white rounded-lg shadow-sm p-6", className)}>
       <div className="flex items-center">
-        <div className="bg-primary-100 p-3 rounded-full">
+        <div className="bg-primary-50 p-3 rounded-full">
           {getIcon()}
         </div>
         <div className="ml-4">
@@ -49,10 +55,10 @@ const StatCard: FC<StatCardProps> = ({
         </div>
       </div>
       {change && (
-        <div className="mt-4 text-sm text-success">
+        <div className="mt-4 text-xs text-gray-500">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
-            className="inline-block h-4 w-4 mr-1" 
+            className="inline-block h-3 w-3 mr-1 text-green-500" 
             fill="none" 
             viewBox="0 0 24 24" 
             stroke="currentColor"

@@ -616,7 +616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate pending fees (students with balance due and today as due date)
       const studentsWithDuePayments = students.filter(student => 
-        student.balanceDue > 0 && 
+        student.balanceDue && Number(student.balanceDue) > 0 && 
         student.registrationDate && 
         new Date(student.registrationDate).toDateString() === today.toDateString()
       );
@@ -664,7 +664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: `invoice-${invoice.id}`,
           type: 'invoice' as const,
           message: 'Invoice generated',
-          detail: `${invoice.invoiceNumber} - Amount: ₹${invoice.amount}`,
+          detail: `${invoice.invoiceNumber} - Amount: AED ${invoice.amount}`,
           timestamp: invoice.createdAt
         })),
         ...schedules.map(schedule => ({
