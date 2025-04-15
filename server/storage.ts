@@ -121,25 +121,29 @@ export class MemStorage implements IStorage {
   }
   
   private initializeData() {
-    // Add a default admin user
-    this.createUser({
+    // Add a default admin user with pre-hashed password
+    const adminUser: User = {
+      id: this.userId++,
       username: "admin",
-      password: "password", // This will be hashed in auth.ts
+      password: "48e1764216295a7dd6154b61ccd8e3260b2cc67bd14dc04bae3f583e63779c885d337094d9aa063ce399b2e76efe42891aa210f8fbe6fa702fc51125bf8d7267.e034e67f101c48dede83a2920fe39c76", // hashed 'password'
       role: "admin",
       fullName: "Admin User",
       email: "admin@orbitinstitute.com",
       phone: "+91 1234567890"
-    });
+    };
+    this.usersMap.set(adminUser.id, adminUser);
     
-    // Add a super admin user
-    this.createUser({
+    // Add a super admin user with pre-hashed password
+    const superAdminUser: User = {
+      id: this.userId++,
       username: "superadmin",
-      password: "password", // This will be hashed in auth.ts
+      password: "48e1764216295a7dd6154b61ccd8e3260b2cc67bd14dc04bae3f583e63779c885d337094d9aa063ce399b2e76efe42891aa210f8fbe6fa702fc51125bf8d7267.e034e67f101c48dede83a2920fe39c76", // hashed 'password'
       role: "superadmin",
       fullName: "Super Admin",
       email: "superadmin@orbitinstitute.com",
       phone: "+91 9876543210"
-    });
+    };
+    this.usersMap.set(superAdminUser.id, superAdminUser);
   }
 
   // Users methods
