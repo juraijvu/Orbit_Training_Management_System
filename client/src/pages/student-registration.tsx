@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -63,7 +63,7 @@ interface Course {
 }
 
 const StudentRegistration: FC = () => {
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -146,7 +146,7 @@ const StudentRegistration: FC = () => {
       });
       
       // Navigate to student list
-      navigate('/student-list');
+      setLocation('/student-list');
     },
     onError: (error) => {
       toast({
