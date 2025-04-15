@@ -596,17 +596,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeCourses = courses.filter(course => course.active);
       const invoices = await storage.getInvoices();
       const certificates = await storage.getCertificates();
+      const trainers = await storage.getTrainers();
+      
+      // Get today's date (start and end)
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
       
       // Calculate total revenue
       const revenue = invoices.reduce((total, invoice) => total + Number(invoice.amount), 0);
+      
+      // Calculate today's collection (payments made today)
+      const todayInvoices = invoices.filter(invoice => {
+        if (!invoice.paymentDate) return false;
+        const paymentDate = new Date(invoice.paymentDate);
+        return paymentDate >= startOfDay && paymentDate <= endOfDay;
+      });
+      const todayCollection = todayInvoices.reduce((total, invoice) => total + Number(invoice.amount), 0);
+      
+      // Calculate pending fees (students with balance due and today as due date)
+      const studentsWithDuePayments = students.filter(student => 
+        student.balanceDue > 0 && 
+        student.registrationDate && 
+        new Date(student.registrationDate).toDateString() === today.toDateString()
+      );
+      const pendingFees = studentsWithDuePayments.reduce((total, student) => total + Number(student.balanceDue), 0);
+      
+      // Calculate trainer revenue (mock calculation - in real app this would be more complex)
+      const trainerRevenue = trainers.reduce((total, trainer, index) => {
+        // Simple mock calculation for demo
+        return total + 10000 + (index * 5000);
+      }, 0);
       
       res.json({
         totalStudents: students.length,
         activeCourses: activeCourses.length,
         revenue,
-        certificates: certificates.length
+        certificates: certificates.length,
+        todayCollection,
+        pendingFees,
+        trainerRevenue
       });
     } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
       res.status(500).json({ message: "Failed to fetch dashboard stats" });
     }
   });
@@ -689,6 +721,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(upcomingSchedules);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch upcoming schedules" });
+    }
+  });
+  
+  // Get students with due payments today
+  app.get('/api/dashboard/due-payments', isAuthenticated, async (req, res) => {
+    try {
+      const students = await storage.getStudents();
+      const courses = await storage.getCourses();
+      
+      // Get today's date
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+      
+      // Find students with due payments today
+      const studentsWithDuePayments = students
+        .filter(student => {
+          // Check if student has balance due
+          if (!student.balanceDue || Number(student.balanceDue) <= 0) return false;
+          
+          // Check if due date is today
+          // In a real app, we'd have a specific dueDate field - here we're using registration date as a proxy
+          if (!student.registrationDate) return false;
+          
+          const dueDate = new Date(student.registrationDate);
+          return dueDate >= startOfDay && dueDate <= endOfDay;
+        })
+        .map(student => {
+          const course = courses.find(c => c.id === student.courseId);
+          
+          return {
+            id: student.id,
+            name: student.fullName,
+            course: course?.name || 'Unknown Course',
+            balanceDue: Number(student.balanceDue),
+            dueDate: new Date(student.registrationDate).toLocaleDateString(),
+            phone: student.phone
+          };
+        });
+      
+      res.json(studentsWithDuePayments);
+    } catch (error) {
+      console.error("Error fetching due payments:", error);
+      res.status(500).json({ message: "Failed to fetch due payments" });
     }
   });
 

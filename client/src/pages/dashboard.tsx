@@ -7,13 +7,31 @@ import StatCard from '@/components/dashboard/stats-card';
 import RecentActivities from '@/components/dashboard/recent-activities';
 import UpcomingSchedule from '@/components/dashboard/upcoming-schedule';
 import QuickActions from '@/components/dashboard/quick-actions';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { 
+  DollarSign, 
+  Users, 
+  BookOpen, 
+  Award, 
+  AlertCircle, 
+  TrendingUp, 
+  Calendar, 
+  Clock, 
+  ChevronRight
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 
 interface DashboardStats {
   totalStudents: number;
   activeCourses: number;
   revenue: number;
   certificates: number;
+  todayCollection: number;
+  pendingFees: number;
+  trainerRevenue: number;  // New field for trainer revenue stats
 }
 
 interface ScheduleItem {
@@ -24,6 +42,15 @@ interface ScheduleItem {
   startTime: string;
   endTime: string;
   status: string;
+}
+
+interface DuePaymentStudent {
+  id: number;
+  name: string;
+  course: string;
+  balanceDue: number;
+  dueDate: string;
+  phone: string;
 }
 
 const Dashboard: FC = () => {
@@ -47,16 +74,25 @@ const Dashboard: FC = () => {
     staleTime: 60 * 1000, // 1 minute
   });
 
-  // Format revenue for display
+  // Fetch students with due payments today
+  const { data: duePayments, isLoading: duePaymentsLoading } = useQuery<DuePaymentStudent[]>({
+    queryKey: ['/api/dashboard/due-payments'],
+    staleTime: 60 * 1000, // 1 minute
+  });
+
+  // Format revenue for display - changing to AED for UAE
   const formatRevenue = (amount: number) => {
     if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(1)}L`;
+      return `AED ${(amount / 1000).toFixed(1)}K`;
     } else if (amount >= 1000) {
-      return `₹${(amount / 1000).toFixed(1)}K`;
+      return `AED ${(amount / 1000).toFixed(1)}K`;
     } else {
-      return `₹${amount}`;
+      return `AED ${amount}`;
     }
   };
+  
+  // Get today's date for due payments section
+  const today = format(new Date(), 'MMMM d, yyyy');
   
   return (
     <AppLayout>
@@ -72,26 +108,124 @@ const Dashboard: FC = () => {
           value={statsLoading ? "—" : stats?.totalStudents.toString() || "0"}
           change="12% from last month"
           type="students"
+          icon={<Users className="h-5 w-5 text-blue-600" />}
         />
         <StatCard
           title="Active Courses"
           value={statsLoading ? "—" : stats?.activeCourses.toString() || "0"}
           change="3 new this month"
           type="courses"
+          icon={<BookOpen className="h-5 w-5 text-yellow-600" />}
         />
         <StatCard
-          title="Revenue"
+          title="Total Revenue"
           value={statsLoading ? "—" : formatRevenue(stats?.revenue || 0)}
           change="8% from last month"
           type="revenue"
+          icon={<DollarSign className="h-5 w-5 text-green-600" />}
         />
         <StatCard
           title="Certificates"
           value={statsLoading ? "—" : stats?.certificates.toString() || "0"}
           change="42 this month"
           type="certificates"
+          icon={<Award className="h-5 w-5 text-purple-600" />}
         />
       </div>
+
+      {/* Today's Collection and Due Payments */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center">
+              <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+              Today's Collection
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-3xl font-bold text-gray-900">
+                {statsLoading ? "—" : formatRevenue(stats?.todayCollection || 0)}
+              </p>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                Today
+              </Badge>
+            </div>
+            <p className="text-sm text-gray-500">
+              {today}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2 text-amber-600" />
+              Pending Fees
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-3xl font-bold text-gray-900">
+                {statsLoading ? "—" : formatRevenue(stats?.pendingFees || 0)}
+              </p>
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                <Calendar className="h-3 w-3 mr-1" />
+                Due Today
+              </Badge>
+            </div>
+            <p className="text-sm text-gray-500">
+              {duePaymentsLoading ? 'Loading payments due today...' : 
+                `${duePayments?.length || 0} students with payments due today`}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Students with Due Payments Today */}
+      {(duePayments && duePayments.length > 0) && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Students With Due Payments Today</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Balance Due</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {duePayments.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell className="font-medium">{student.name}</TableCell>
+                    <TableCell>{student.course}</TableCell>
+                    <TableCell className="text-red-600 font-medium">
+                      AED {student.balanceDue.toLocaleString()}
+                    </TableCell>
+                    <TableCell>{student.dueDate}</TableCell>
+                    <TableCell>{student.phone}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm">
+                        Collect <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button variant="outline">View All Due Payments</Button>
+          </CardFooter>
+        </Card>
+      )}
 
       {/* Recent Activities and Upcoming Schedule */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -108,7 +242,7 @@ const Dashboard: FC = () => {
       {/* Quick Actions */}
       <QuickActions />
       
-      {/* Role-specific sections */}
+      {/* Admin-specific sections */}
       {(user?.role === 'admin' || user?.role === 'superadmin') && (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-800 mb-6">Admin Tools</h2>
@@ -120,22 +254,95 @@ const Dashboard: FC = () => {
               <CardContent>
                 <p className="text-sm text-gray-500">Manage course content, pricing, and availability</p>
               </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="w-full">
+                  Manage Courses
+                </Button>
+              </CardFooter>
             </Card>
+            
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-md">Trainer Management</CardTitle>
+                <CardTitle className="text-md">Trainer Revenue</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-500">Add, update, and schedule trainers</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-500">
+                    Track trainer performance and revenue generated
+                  </p>
+                  <p className="text-lg font-semibold text-green-600">
+                    {formatRevenue(stats?.trainerRevenue || 0)}
+                  </p>
+                </div>
               </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="w-full">
+                  Trainer Reports
+                </Button>
+              </CardFooter>
             </Card>
+            
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-md">System Reports</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-500">View detailed system and financial reports</p>
+                <p className="text-sm text-gray-500">
+                  {user?.role === 'superadmin' ? 
+                    'Generate monthly, yearly, and date range reports' : 
+                    'View monthly reports and analytics'
+                  }
+                </p>
               </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="w-full">
+                  Generate Reports
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+      )}
+      
+      {/* Counselor-specific sections */}
+      {user?.role === 'counselor' && (
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-800 mb-6">Counselor Tools</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md">Student Dues</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500">View students with upcoming payment dues</p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="w-full">View Due List</Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md">Monthly Enrollments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500">View student enrollment counts by month</p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="w-full">View Enrollment Stats</Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md">New Registration</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500">Register a new student for courses</p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="w-full">New Registration</Button>
+              </CardFooter>
             </Card>
           </div>
         </div>
