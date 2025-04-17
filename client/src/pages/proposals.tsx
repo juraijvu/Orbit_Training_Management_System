@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useState, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -17,7 +17,9 @@ import {
   Users,
   DollarSign,
   Percent,
-  Calendar
+  Calendar,
+  Upload,
+  Image
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -48,9 +50,14 @@ const proposalFormSchema = insertProposalSchema.extend({
   }, {
     message: "Please enter a valid date",
   }),
+  logo: z.any().optional(), // To handle file upload
+  applyWhiteFilter: z.boolean().default(true), // Option to apply white filter to logo
 });
 
 type ProposalFormValues = z.infer<typeof proposalFormSchema>;
+
+// Define the white logo filter CSS
+const whiteLogoFilter = "brightness(0) invert(1)";
 
 // Proposal component
 const ProposalsPage: FC = () => {
@@ -58,6 +65,9 @@ const ProposalsPage: FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isNewProposalOpen, setIsNewProposalOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [showWhiteFilter, setShowWhiteFilter] = useState<boolean>(true);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   
   // Fetch proposals
   const { data: proposals, isLoading } = useQuery({
@@ -86,6 +96,7 @@ const ProposalsPage: FC = () => {
       ]),
       date: format(new Date(), 'yyyy-MM-dd'),
       status: 'draft',
+      applyWhiteFilter: true, // Default to applying white filter
     },
   });
   
@@ -99,6 +110,7 @@ const ProposalsPage: FC = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/proposals'] });
       setIsNewProposalOpen(false);
       form.reset();
+      setLogoUrl(""); // Clear logo preview
       
       toast({
         title: 'Success',
@@ -384,6 +396,93 @@ const ProposalsPage: FC = () => {
                     </FormItem>
                   )}
                 />
+                
+                {/* Company Logo Upload and Preview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="col-span-1 md:col-span-2">
+                    <div className="mb-2">
+                      <h4 className="text-sm font-medium text-gray-700">Company Logo</h4>
+                      <p className="text-xs text-gray-500">Upload the client's company logo</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={() => logoInputRef.current?.click()}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Logo
+                      </Button>
+                      
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={logoInputRef}
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (files && files.length > 0) {
+                            const file = files[0];
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              if (event.target && event.target.result) {
+                                setLogoUrl(event.target.result as string);
+                                form.setValue('logo', file);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="applyWhiteFilter"
+                        render={({ field }) => (
+                          <div className="flex items-center">
+                            <label className="text-sm font-medium mr-2">Apply White Filter</label>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={(e) => {
+                                field.onChange(e.target.checked);
+                                setShowWhiteFilter(e.target.checked);
+                              }}
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                          </div>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-1">
+                    {logoUrl ? (
+                      <div className="flex flex-col">
+                        <p className="text-sm font-medium mb-2">Logo Preview:</p>
+                        <div className="border rounded p-4 bg-black flex items-center justify-center">
+                          <img 
+                            src={logoUrl} 
+                            alt="Company Logo" 
+                            className="max-h-24 max-w-full object-contain"
+                            style={{ filter: showWhiteFilter ? whiteLogoFilter : 'none' }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Black background simulates how the logo will appear on the proposal cover
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="border rounded p-4 flex items-center justify-center h-32 bg-gray-100">
+                        <div className="text-center text-gray-500">
+                          <Image className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-xs">No logo uploaded</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               <DialogFooter>
