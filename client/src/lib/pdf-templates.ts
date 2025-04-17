@@ -321,61 +321,8 @@ export const generateQuotationPdf = (data: QuotationPdfData): string => {
 
 // Function to generate the proposal PDF content
 export const generateProposalPdf = (data: ProposalPdfData): string => {
-  // Parse content to display modules properly
-  // We need to process the content in a way that properly displays course modules
-  let modules = [];
-  try {
-    // Try to parse the content if it's JSON
-    if (typeof data.content === 'string') {
-      modules = JSON.parse(data.content);
-    } else if (typeof data.content === 'object') {
-      modules = data.content;
-    }
-  } catch (e) {
-    console.error('Error parsing modules:', e);
-    modules = [];
-  }
-
-  // Generate course list HTML
-  const courseList = data.courses.map((course, index) => {
-    // Try to extract course details if available
-    let courseModules = '';
-    try {
-      if (modules && modules.length > 0) {
-        courseModules = `
-          <div class="mt-4">
-            <h4 class="font-medium mb-2">Module Outline:</h4>
-            <ul class="list-disc pl-5">
-              ${modules.map(m => `
-                <li class="mb-2">
-                  <span class="font-medium">${m.name || m.title}</span>
-                  ${m.subItems ? `
-                    <ul class="list-circle pl-5 mt-1">
-                      ${m.subItems.map(sub => `<li class="text-sm">${sub}</li>`).join('')}
-                    </ul>
-                  ` : ''}
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-        `;
-      }
-    } catch (e) {
-      console.error('Error rendering course modules:', e);
-    }
-
-    return `
-    <div class="mb-8">
-      <h3 class="text-lg font-semibold">${index + 1}. ${course}</h3>
-      <div class="mt-2">
-        <p class="mb-2">Format: ${data.courseFormat || 'In-Person'}</p>
-        <p class="mb-2">Duration: ${data.trainingDuration || '5 Days'}</p>
-        <p class="mb-2">Location: ${data.trainingLocation || 'Dubai, UAE'}</p>
-      </div>
-      ${courseModules}
-    </div>
-  `;
-  }).join('');
+  // We don't need to process the course content as it's handled in the proposal form
+  // and the template is only for the cover page, introduction, and about us sections
 
   // Company logo handling
   const logoHtml = data.logo ? `
@@ -432,57 +379,8 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
       
       <!-- Page Break -->
       <div style="page-break-after: always;"></div>
-      
-      <!-- Proposed Training Programs -->
-      <div class="mb-10">
-        <h2 class="text-2xl font-bold mb-6">Proposed Training Programs</h2>
-        ${courseList}
-      </div>
-      
-      <!-- Page Break -->
-      <div style="page-break-after: always;"></div>
-      
-      <!-- Commercial Terms -->
-      <div class="mb-10">
-        <h2 class="text-2xl font-bold mb-6">Commercial Terms</h2>
-        <table class="w-full border-collapse mb-6">
-          <thead>
-            <tr class="bg-gray-100">
-              <th class="border border-gray-300 px-4 py-2 text-left">Description</th>
-              <th class="border border-gray-300 px-4 py-2 text-right">Amount (AED)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="border border-gray-300 px-4 py-2">Total Training Cost</td>
-              <td class="border border-gray-300 px-4 py-2 text-right">${data.totalAmount.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td class="border border-gray-300 px-4 py-2">Discount</td>
-              <td class="border border-gray-300 px-4 py-2 text-right">${data.discount.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td class="border border-gray-300 px-4 py-2 font-semibold">Final Amount</td>
-              <td class="border border-gray-300 px-4 py-2 text-right font-semibold">${data.finalAmount.toLocaleString()}</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <h3 class="text-lg font-semibold mb-2">Payment Terms:</h3>
-        <ul class="list-disc pl-5 mb-6">
-          <li>50% advance payment to confirm the training</li>
-          <li>Balance 50% payment to be made before the completion of the training</li>
-          <li>All payments to be made in favor of "Orbit Institute"</li>
-        </ul>
-        
-        <h3 class="text-lg font-semibold mb-2">Other Terms:</h3>
-        <ul class="list-disc pl-5">
-          <li>This proposal is valid for 30 days from the date of submission</li>
-          <li>GST will be charged extra as applicable</li>
-          <li>Training materials will be provided to all participants</li>
-          <li>Certificates will be provided to all participants upon successful completion</li>
-        </ul>
-      </div>
+      <!-- The rest of the proposal content will be dynamically generated from proposal entries -->
+      <!-- This template only provides the company introduction and about us section -->
       
       <!-- Page Break -->
       <div style="page-break-after: always;"></div>
