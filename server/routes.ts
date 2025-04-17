@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import * as chatbot from "./chatbot";
 import {
   insertStudentSchema,
   insertCourseSchema,
@@ -1366,6 +1367,497 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ================== End of WhatsApp API ==================
+
+  // ================== WhatsApp Chatbot API ==================
+  // Get all chatbot flows
+  app.get('/api/whatsapp/chatbot/flows', isAuthenticated, async (req, res) => {
+    try {
+      const flows = await chatbot.getChatbotFlows();
+      res.json(flows);
+    } catch (error) {
+      console.error("Error fetching chatbot flows:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot flows" });
+    }
+  });
+
+  // Get chatbot flows by consultant
+  app.get('/api/whatsapp/chatbot/flows/consultant/:consultantId', isAuthenticated, async (req, res) => {
+    try {
+      const consultantId = parseInt(req.params.consultantId);
+      const flows = await chatbot.getChatbotFlowsByConsultant(consultantId);
+      res.json(flows);
+    } catch (error) {
+      console.error("Error fetching chatbot flows for consultant:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot flows" });
+    }
+  });
+
+  // Get chatbot flow by ID
+  app.get('/api/whatsapp/chatbot/flows/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const flow = await chatbot.getChatbotFlow(id);
+      if (!flow) {
+        return res.status(404).json({ message: "Chatbot flow not found" });
+      }
+      res.json(flow);
+    } catch (error) {
+      console.error("Error fetching chatbot flow:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot flow" });
+    }
+  });
+
+  // Create chatbot flow
+  app.post('/api/whatsapp/chatbot/flows', isAuthenticated, async (req, res) => {
+    try {
+      const flowData = {
+        ...req.body,
+        createdBy: req.user!.id
+      };
+      const newFlow = await chatbot.createChatbotFlow(flowData);
+      res.status(201).json(newFlow);
+    } catch (error) {
+      console.error("Error creating chatbot flow:", error);
+      res.status(500).json({ message: "Failed to create chatbot flow" });
+    }
+  });
+
+  // Update chatbot flow
+  app.put('/api/whatsapp/chatbot/flows/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const flow = await chatbot.getChatbotFlow(id);
+      if (!flow) {
+        return res.status(404).json({ message: "Chatbot flow not found" });
+      }
+      
+      // Check if user is either the creator or an admin
+      if (flow.createdBy !== req.user!.id && req.user!.role !== 'admin' && req.user!.role !== 'superadmin') {
+        return res.status(403).json({ message: "You don't have permission to edit this flow" });
+      }
+      
+      const updatedFlow = await chatbot.updateChatbotFlow(id, req.body);
+      res.json(updatedFlow);
+    } catch (error) {
+      console.error("Error updating chatbot flow:", error);
+      res.status(500).json({ message: "Failed to update chatbot flow" });
+    }
+  });
+
+  // Delete chatbot flow
+  app.delete('/api/whatsapp/chatbot/flows/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const flow = await chatbot.getChatbotFlow(id);
+      if (!flow) {
+        return res.status(404).json({ message: "Chatbot flow not found" });
+      }
+      
+      // Check if user is either the creator or an admin
+      if (flow.createdBy !== req.user!.id && req.user!.role !== 'admin' && req.user!.role !== 'superadmin') {
+        return res.status(403).json({ message: "You don't have permission to delete this flow" });
+      }
+      
+      const result = await chatbot.deleteChatbotFlow(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete chatbot flow" });
+      }
+    } catch (error) {
+      console.error("Error deleting chatbot flow:", error);
+      res.status(500).json({ message: "Failed to delete chatbot flow" });
+    }
+  });
+
+  // Get all chatbot nodes for a flow
+  app.get('/api/whatsapp/chatbot/flows/:flowId/nodes', isAuthenticated, async (req, res) => {
+    try {
+      const flowId = parseInt(req.params.flowId);
+      const nodes = await chatbot.getChatbotNodes(flowId);
+      res.json(nodes);
+    } catch (error) {
+      console.error("Error fetching chatbot nodes:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot nodes" });
+    }
+  });
+
+  // Get chatbot node by ID
+  app.get('/api/whatsapp/chatbot/nodes/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const node = await chatbot.getChatbotNode(id);
+      if (!node) {
+        return res.status(404).json({ message: "Chatbot node not found" });
+      }
+      res.json(node);
+    } catch (error) {
+      console.error("Error fetching chatbot node:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot node" });
+    }
+  });
+
+  // Create chatbot node
+  app.post('/api/whatsapp/chatbot/nodes', isAuthenticated, async (req, res) => {
+    try {
+      const nodeData = req.body;
+      
+      // Check if user has permission to modify this flow
+      const flow = await chatbot.getChatbotFlow(nodeData.flowId);
+      if (!flow) {
+        return res.status(404).json({ message: "Chatbot flow not found" });
+      }
+      
+      if (flow.createdBy !== req.user!.id && req.user!.role !== 'admin' && req.user!.role !== 'superadmin') {
+        return res.status(403).json({ message: "You don't have permission to modify this flow" });
+      }
+      
+      const newNode = await chatbot.createChatbotNode(nodeData);
+      res.status(201).json(newNode);
+    } catch (error) {
+      console.error("Error creating chatbot node:", error);
+      res.status(500).json({ message: "Failed to create chatbot node" });
+    }
+  });
+
+  // Update chatbot node
+  app.put('/api/whatsapp/chatbot/nodes/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const node = await chatbot.getChatbotNode(id);
+      if (!node) {
+        return res.status(404).json({ message: "Chatbot node not found" });
+      }
+      
+      // Check if user has permission to modify this node's flow
+      const flow = await chatbot.getChatbotFlow(node.flowId);
+      if (!flow) {
+        return res.status(404).json({ message: "Chatbot flow not found" });
+      }
+      
+      if (flow.createdBy !== req.user!.id && req.user!.role !== 'admin' && req.user!.role !== 'superadmin') {
+        return res.status(403).json({ message: "You don't have permission to modify this node" });
+      }
+      
+      const updatedNode = await chatbot.updateChatbotNode(id, req.body);
+      res.json(updatedNode);
+    } catch (error) {
+      console.error("Error updating chatbot node:", error);
+      res.status(500).json({ message: "Failed to update chatbot node" });
+    }
+  });
+
+  // Delete chatbot node
+  app.delete('/api/whatsapp/chatbot/nodes/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const node = await chatbot.getChatbotNode(id);
+      if (!node) {
+        return res.status(404).json({ message: "Chatbot node not found" });
+      }
+      
+      // Check if user has permission to modify this node's flow
+      const flow = await chatbot.getChatbotFlow(node.flowId);
+      if (!flow) {
+        return res.status(404).json({ message: "Chatbot flow not found" });
+      }
+      
+      if (flow.createdBy !== req.user!.id && req.user!.role !== 'admin' && req.user!.role !== 'superadmin') {
+        return res.status(403).json({ message: "You don't have permission to delete this node" });
+      }
+      
+      const result = await chatbot.deleteChatbotNode(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete chatbot node" });
+      }
+    } catch (error) {
+      console.error("Error deleting chatbot node:", error);
+      res.status(500).json({ message: "Failed to delete chatbot node" });
+    }
+  });
+  
+  // Get conditions for a node
+  app.get('/api/whatsapp/chatbot/nodes/:nodeId/conditions', isAuthenticated, async (req, res) => {
+    try {
+      const nodeId = parseInt(req.params.nodeId);
+      const conditions = await chatbot.getChatbotConditionsByNode(nodeId);
+      res.json(conditions);
+    } catch (error) {
+      console.error("Error fetching chatbot conditions:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot conditions" });
+    }
+  });
+
+  // Create condition for a node
+  app.post('/api/whatsapp/chatbot/conditions', isAuthenticated, async (req, res) => {
+    try {
+      const conditionData = req.body;
+      
+      // Check if user has permission to modify this node's flow
+      const node = await chatbot.getChatbotNode(conditionData.nodeId);
+      if (!node) {
+        return res.status(404).json({ message: "Chatbot node not found" });
+      }
+      
+      const flow = await chatbot.getChatbotFlow(node.flowId);
+      if (!flow) {
+        return res.status(404).json({ message: "Chatbot flow not found" });
+      }
+      
+      if (flow.createdBy !== req.user!.id && req.user!.role !== 'admin' && req.user!.role !== 'superadmin') {
+        return res.status(403).json({ message: "You don't have permission to modify this flow" });
+      }
+      
+      const newCondition = await chatbot.createChatbotCondition(conditionData);
+      res.status(201).json(newCondition);
+    } catch (error) {
+      console.error("Error creating chatbot condition:", error);
+      res.status(500).json({ message: "Failed to create chatbot condition" });
+    }
+  });
+
+  // Update condition
+  app.put('/api/whatsapp/chatbot/conditions/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedCondition = await chatbot.updateChatbotCondition(id, req.body);
+      if (!updatedCondition) {
+        return res.status(404).json({ message: "Chatbot condition not found" });
+      }
+      res.json(updatedCondition);
+    } catch (error) {
+      console.error("Error updating chatbot condition:", error);
+      res.status(500).json({ message: "Failed to update chatbot condition" });
+    }
+  });
+
+  // Delete condition
+  app.delete('/api/whatsapp/chatbot/conditions/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await chatbot.deleteChatbotCondition(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete chatbot condition" });
+      }
+    } catch (error) {
+      console.error("Error deleting chatbot condition:", error);
+      res.status(500).json({ message: "Failed to delete chatbot condition" });
+    }
+  });
+
+  // Get actions for a node
+  app.get('/api/whatsapp/chatbot/nodes/:nodeId/actions', isAuthenticated, async (req, res) => {
+    try {
+      const nodeId = parseInt(req.params.nodeId);
+      const actions = await chatbot.getChatbotActionsByNode(nodeId);
+      res.json(actions);
+    } catch (error) {
+      console.error("Error fetching chatbot actions:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot actions" });
+    }
+  });
+
+  // Create action for a node
+  app.post('/api/whatsapp/chatbot/actions', isAuthenticated, async (req, res) => {
+    try {
+      const actionData = req.body;
+      
+      // Check if user has permission to modify this node's flow
+      const node = await chatbot.getChatbotNode(actionData.nodeId);
+      if (!node) {
+        return res.status(404).json({ message: "Chatbot node not found" });
+      }
+      
+      const flow = await chatbot.getChatbotFlow(node.flowId);
+      if (!flow) {
+        return res.status(404).json({ message: "Chatbot flow not found" });
+      }
+      
+      if (flow.createdBy !== req.user!.id && req.user!.role !== 'admin' && req.user!.role !== 'superadmin') {
+        return res.status(403).json({ message: "You don't have permission to modify this flow" });
+      }
+      
+      const newAction = await chatbot.createChatbotAction(actionData);
+      res.status(201).json(newAction);
+    } catch (error) {
+      console.error("Error creating chatbot action:", error);
+      res.status(500).json({ message: "Failed to create chatbot action" });
+    }
+  });
+
+  // Update action
+  app.put('/api/whatsapp/chatbot/actions/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedAction = await chatbot.updateChatbotAction(id, req.body);
+      if (!updatedAction) {
+        return res.status(404).json({ message: "Chatbot action not found" });
+      }
+      res.json(updatedAction);
+    } catch (error) {
+      console.error("Error updating chatbot action:", error);
+      res.status(500).json({ message: "Failed to update chatbot action" });
+    }
+  });
+
+  // Delete action
+  app.delete('/api/whatsapp/chatbot/actions/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await chatbot.deleteChatbotAction(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete chatbot action" });
+      }
+    } catch (error) {
+      console.error("Error deleting chatbot action:", error);
+      res.status(500).json({ message: "Failed to delete chatbot action" });
+    }
+  });
+
+  // Get canned responses
+  app.get('/api/whatsapp/canned-responses', isAuthenticated, async (req, res) => {
+    try {
+      const responses = await chatbot.getCannedResponses();
+      res.json(responses);
+    } catch (error) {
+      console.error("Error fetching canned responses:", error);
+      res.status(500).json({ message: "Failed to fetch canned responses" });
+    }
+  });
+
+  // Get canned responses for a consultant
+  app.get('/api/whatsapp/canned-responses/consultant/:consultantId', isAuthenticated, async (req, res) => {
+    try {
+      const consultantId = parseInt(req.params.consultantId);
+      const responses = await chatbot.getCannedResponsesByConsultant(consultantId);
+      res.json(responses);
+    } catch (error) {
+      console.error("Error fetching canned responses for consultant:", error);
+      res.status(500).json({ message: "Failed to fetch canned responses" });
+    }
+  });
+
+  // Create canned response
+  app.post('/api/whatsapp/canned-responses', isAuthenticated, async (req, res) => {
+    try {
+      const responseData = {
+        ...req.body,
+        createdBy: req.user!.id
+      };
+      
+      const newResponse = await chatbot.createCannedResponse(responseData);
+      res.status(201).json(newResponse);
+    } catch (error) {
+      console.error("Error creating canned response:", error);
+      res.status(500).json({ message: "Failed to create canned response" });
+    }
+  });
+
+  // Update canned response
+  app.put('/api/whatsapp/canned-responses/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedResponse = await chatbot.updateCannedResponse(id, req.body);
+      if (!updatedResponse) {
+        return res.status(404).json({ message: "Canned response not found" });
+      }
+      res.json(updatedResponse);
+    } catch (error) {
+      console.error("Error updating canned response:", error);
+      res.status(500).json({ message: "Failed to update canned response" });
+    }
+  });
+
+  // Delete canned response
+  app.delete('/api/whatsapp/canned-responses/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await chatbot.deleteCannedResponse(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete canned response" });
+      }
+    } catch (error) {
+      console.error("Error deleting canned response:", error);
+      res.status(500).json({ message: "Failed to delete canned response" });
+    }
+  });
+
+  // Process incoming webhook from WhatsApp
+  app.post('/api/whatsapp/webhook', async (req, res) => {
+    try {
+      const { entry } = req.body;
+      
+      if (!entry || !Array.isArray(entry) || entry.length === 0) {
+        return res.status(400).json({ message: "Invalid webhook payload" });
+      }
+      
+      // Process each entry in the webhook
+      for (const e of entry) {
+        if (e.changes && Array.isArray(e.changes)) {
+          for (const change of e.changes) {
+            if (change.value && change.value.messages && Array.isArray(change.value.messages)) {
+              for (const message of change.value.messages) {
+                // Extract phone number and message text
+                const phoneNumber = message.from;
+                const messageText = message.text ? message.text.body : "(Media or non-text message)";
+                
+                // Process the message with the chatbot
+                const response = await chatbot.processIncomingMessage(phoneNumber, messageText);
+                
+                // If we have a response, we'd send it back to the user via the WhatsApp API
+                if (response) {
+                  console.log(`[WhatsApp Bot] Response to ${phoneNumber}: ${response}`);
+                  // In a real implementation, send the message via WhatsApp API
+                  // For now, just acknowledge receipt
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      res.status(200).send("OK");
+    } catch (error) {
+      console.error("Error processing webhook:", error);
+      res.status(500).json({ message: "Error processing webhook" });
+    }
+  });
+
+  // WhatsApp webhook verification
+  app.get('/api/whatsapp/webhook', async (req, res) => {
+    try {
+      const settings = await storage.getWhatsappSettings();
+      
+      if (!settings || !settings.webhookVerifyToken) {
+        return res.status(400).json({ message: "WhatsApp settings not configured" });
+      }
+      
+      const mode = req.query['hub.mode'];
+      const token = req.query['hub.verify_token'];
+      const challenge = req.query['hub.challenge'];
+      
+      if (mode === 'subscribe' && token === settings.webhookVerifyToken) {
+        console.log('WhatsApp webhook verified');
+        res.status(200).send(challenge);
+      } else {
+        console.log('WhatsApp webhook verification failed');
+        res.status(403).send('Verification failed');
+      }
+    } catch (error) {
+      console.error("Error verifying webhook:", error);
+      res.status(500).json({ message: "Error verifying webhook" });
+    }
+  });
+  
+  // ================== End of WhatsApp Chatbot API ==================
 
   // ================== Titan Email API ==================
   
