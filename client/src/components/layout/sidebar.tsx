@@ -145,6 +145,13 @@ function Sidebar({ className }: SidebarNavProps) {
     
     // CRM Section
     {
+      title: "CRM Dashboard",
+      href: "/crm/dashboard",
+      icon: <BarChart className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
       title: "Leads Management",
       href: "/crm/leads",
       icon: <Users className="h-5 w-5" />,

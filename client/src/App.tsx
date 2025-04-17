@@ -52,6 +52,14 @@ function Router() {
         <ProtectedRoute path="/canned-responses" component={CannedResponses} />
         <ProtectedRoute path="/email-settings" component={EmailSettings} />
         {/* CRM Routes */}
+        <ProtectedRoute path="/crm/dashboard" component={() => {
+          const CrmDashboardPage = React.lazy(() => import("@/pages/crm/dashboard"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <CrmDashboardPage />
+            </React.Suspense>
+          );
+        }} />
         <ProtectedRoute path="/crm/leads" component={() => {
           const LeadsPage = React.lazy(() => import("@/pages/crm/leads"));
           return (
