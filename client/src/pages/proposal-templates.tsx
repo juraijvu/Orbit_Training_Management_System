@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +19,9 @@ import {
   Trash,
   MoveHorizontal,
   MoveVertical,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 
 interface CoverPageField {
@@ -168,6 +172,23 @@ const fontFamilies = [
   "Verdana, sans-serif",
 ];
 
+interface Course {
+  id: number;
+  name: string;
+  description: string;
+  duration: string;
+  fee: number;
+  content?: string;
+  active: boolean;
+  createdAt: string;
+}
+
+interface CourseModule {
+  id: string;
+  name: string;
+  subItems: string[];
+}
+
 export default function ProposalTemplates() {
   const { toast } = useToast();
   const [coverFields, setCoverFields] = useState<CoverPageField[]>(defaultCoverFields);
@@ -182,6 +203,15 @@ export default function ProposalTemplates() {
   });
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("cover");
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+  const [moduleDisplayFormat, setModuleDisplayFormat] = useState<string>("list");
+  const [includeDuration, setIncludeDuration] = useState<boolean>(true);
+  const [includeFees, setIncludeFees] = useState<boolean>(true);
+  
+  // Fetch courses
+  const { data: courses, isLoading: isCoursesLoading } = useQuery<Course[]>({
+    queryKey: ['/api/courses'],
+  });
 
   // Find the selected field in our list
   const getSelectedField = (): CoverPageField | undefined => {
@@ -317,6 +347,106 @@ export default function ProposalTemplates() {
       }
     };
     reader.readAsText(file);
+  };
+  
+  // Parse course content JSON to extract modules
+  const parseModules = (content: string | undefined): CourseModule[] => {
+    if (!content) return [];
+    
+    try {
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error parsing course modules:", error);
+      return [];
+    }
+  };
+  
+  // Get selected course
+  const getSelectedCourse = (): Course | undefined => {
+    if (!selectedCourseId || !courses) return undefined;
+    return courses.find(course => course.id.toString() === selectedCourseId);
+  };
+  
+  // Render modules based on selected format
+  const renderModules = (): React.ReactNode => {
+    const course = getSelectedCourse();
+    if (!course) return "(Select a course to preview modules)";
+    
+    const modules = parseModules(course.content);
+    if (!modules.length) return "No modules found for this course";
+    
+    switch (moduleDisplayFormat) {
+      case 'list':
+        return (
+          <ul className="list-disc pl-5 space-y-2">
+            {modules.map((module, idx) => (
+              <li key={idx} className="text-sm">
+                <strong>{module.name}</strong>
+                {module.subItems && module.subItems.length > 0 && (
+                  <ul className="list-circle pl-5 mt-1 space-y-1">
+                    {module.subItems.map((item, i) => (
+                      <li key={i} className="text-xs">{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        );
+      
+      case 'table':
+        return (
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr>
+                <th className="border border-gray-300 bg-gray-100 p-1">Module</th>
+                <th className="border border-gray-300 bg-gray-100 p-1">Sub-Topics</th>
+              </tr>
+            </thead>
+            <tbody>
+              {modules.map((module, idx) => (
+                <tr key={idx}>
+                  <td className="border border-gray-300 p-1 font-medium">{module.name}</td>
+                  <td className="border border-gray-300 p-1">
+                    {module.subItems && module.subItems.length > 0 ? (
+                      <ul className="list-disc pl-4 space-y-1">
+                        {module.subItems.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : "None"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      
+      case 'cards':
+        return (
+          <div className="grid grid-cols-1 gap-2">
+            {modules.map((module, idx) => (
+              <div key={idx} className="border rounded p-2 bg-white">
+                <div className="font-medium text-sm border-b pb-1 mb-1">{module.name}</div>
+                {module.subItems && module.subItems.length > 0 ? (
+                  <ul className="list-disc pl-4 space-y-1 text-xs">
+                    {module.subItems.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                ) : <div className="text-xs text-gray-500">No sub-topics</div>}
+              </div>
+            ))}
+          </div>
+        );
+      
+      default:
+        return "(Select a display format)";
+    }
   };
 
   return (
