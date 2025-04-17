@@ -1208,13 +1208,16 @@ export default function ProposalTemplates() {
               <CardTitle>Content Pages Configuration</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                 <Card className="p-4 h-full">
                   <div className="flex flex-col h-full">
                     <div>
                       <h4 className="font-medium text-lg mb-2">Company Introduction</h4>
                       <p className="text-sm text-gray-500 mb-4">
                         Upload company profile PDF or create content
+                      </p>
+                      <p className="text-xs text-blue-600 mb-4">
+                        Note: Course modules, pricing, and timeline will be handled dynamically by the proposal entries
                       </p>
                     </div>
                     
@@ -1265,160 +1268,6 @@ export default function ProposalTemplates() {
                     </Tabs>
                   </div>
                 </Card>
-                
-                <Card className="p-4 h-full">
-                  <div className="flex flex-col h-full">
-                    <div>
-                      <h4 className="font-medium text-lg mb-2">Course Modules</h4>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Select course to display its modules
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="course-select">Select Course</Label>
-                        {isCoursesLoading ? (
-                          <div className="flex items-center space-x-2 h-10 p-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="text-sm">Loading courses...</span>
-                          </div>
-                        ) : (
-                          <select
-                            id="course-select"
-                            className="w-full border border-gray-300 rounded p-2"
-                            value={selectedCourseId}
-                            onChange={(e) => {
-                              setSelectedCourseId(e.target.value);
-                              const course = courses?.find(c => c.id.toString() === e.target.value);
-                              if (course) {
-                                updatePreviewData("courseName", course.name);
-                              }
-                            }}
-                          >
-                            <option value="">Select a course...</option>
-                            {courses?.map((course) => (
-                              <option key={course.id} value={course.id.toString()}>
-                                {course.name}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="modules-display">Module Display Format</Label>
-                        <select
-                          id="modules-display"
-                          className="w-full border border-gray-300 rounded p-2"
-                          value={moduleDisplayFormat}
-                          onChange={(e) => setModuleDisplayFormat(e.target.value)}
-                        >
-                          <option value="list">Bulleted List</option>
-                          <option value="table">Table Format</option>
-                          <option value="cards">Cards</option>
-                        </select>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="checkbox" 
-                          id="include-duration" 
-                          checked={includeDuration}
-                          onChange={(e) => setIncludeDuration(e.target.checked)}
-                        />
-                        <Label htmlFor="include-duration" className="text-sm">Include Duration</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="checkbox" 
-                          id="include-fees" 
-                          checked={includeFees}
-                          onChange={(e) => setIncludeFees(e.target.checked)}
-                        />
-                        <Label htmlFor="include-fees" className="text-sm">Include Fees</Label>
-                      </div>
-                      
-                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                        <div className="text-sm font-medium">Preview:</div>
-                        <div className="text-xs mt-1">
-                          {getSelectedCourse() && (
-                            <>
-                              {includeDuration && (
-                                <div className="mb-1 font-medium">
-                                  Duration: {getSelectedCourse()?.duration}
-                                </div>
-                              )}
-                              {includeFees && (
-                                <div className="mb-2 font-medium">
-                                  Fee: AED {getSelectedCourse()?.fee}
-                                </div>
-                              )}
-                            </>
-                          )}
-                          <div className={getSelectedCourse() ? "" : "text-gray-500"}>
-                            {renderModules()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-                
-                <Card className="p-4 h-full">
-                  <div className="flex flex-col h-full">
-                    <div>
-                      <h4 className="font-medium text-lg mb-2">Pricing & Timeline</h4>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Set pricing and delivery timeline
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="pricing-type">Pricing Type</Label>
-                        <select
-                          id="pricing-type"
-                          className="w-full border border-gray-300 rounded p-2"
-                        >
-                          <option value="fixed">Fixed Price</option>
-                          <option value="participant">Per Participant</option>
-                          <option value="tiered">Tiered Pricing</option>
-                        </select>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="base-price">Base Price (AED)</Label>
-                          <Input id="base-price" type="number" placeholder="0.00" />
-                        </div>
-                        <div>
-                          <Label htmlFor="discount">Discount (%)</Label>
-                          <Input id="discount" type="number" max="20" placeholder="0" />
-                          <p className="text-xs text-gray-500 mt-1">Maximum 20% discount</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="timeline-weeks">Course Duration (Weeks)</Label>
-                        <Input id="timeline-weeks" type="number" placeholder="4" />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="timeline-hours">Hours Per Week</Label>
-                        <Input id="timeline-hours" type="number" placeholder="10" />
-                      </div>
-                      
-                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                        <div className="text-sm font-medium">Total:</div>
-                        <div className="text-md mt-1">
-                          AED 0.00
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
               </div>
               
               <div className="flex flex-col items-center justify-center pt-4">
@@ -1436,12 +1285,12 @@ export default function ProposalTemplates() {
                       <span className="flex-1">2. Company Introduction</span>
                     </div>
                     <div className="flex items-center p-2 bg-gray-50 rounded border cursor-move">
-                      <span className="flex-1">3. Course Modules</span>
-                    </div>
-                    <div className="flex items-center p-2 bg-gray-50 rounded border cursor-move">
-                      <span className="flex-1">4. Pricing & Timeline</span>
+                      <span className="flex-1">3. Conclusion</span>
                     </div>
                   </div>
+                  <p className="text-xs text-blue-600 mt-3">
+                    Note: Course modules, pricing, and timeline sections will be handled by the proposal entries
+                  </p>
                 </div>
               </div>
               
