@@ -7,6 +7,7 @@ import StatCard from '@/components/dashboard/stats-card';
 import RecentActivities from '@/components/dashboard/recent-activities';
 import UpcomingSchedule from '@/components/dashboard/upcoming-schedule';
 import QuickActions from '@/components/dashboard/quick-actions';
+import { DashboardReportSection } from '@/components/dashboard/report-section';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,8 @@ import {
   TrendingUp, 
   Calendar, 
   Clock, 
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -241,6 +243,13 @@ const Dashboard: FC = () => {
 
       {/* Quick Actions */}
       <QuickActions />
+      
+      {/* Reports Section - only shown to admin and superadmin */}
+      {(user?.role === 'admin' || user?.role === 'superadmin') && (
+        <div className="mb-8">
+          <DashboardReportSection />
+        </div>
+      )}
       
       {/* Admin-specific sections */}
       {(user?.role === 'admin' || user?.role === 'superadmin') && (

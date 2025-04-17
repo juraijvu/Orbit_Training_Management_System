@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CrmReportSection } from "@/components/dashboard/report-section";
 import {
   Table,
   TableBody,
@@ -101,6 +102,7 @@ export default function CrmDashboardPage() {
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="follow-ups">Follow-ups</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -630,6 +632,35 @@ export default function CrmDashboardPage() {
                 </Button>
               </CardFooter>
             )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Reports</CardTitle>
+              <CardDescription>Generate detailed reports on CRM performance metrics</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6">
+                <CrmReportSection />
+              </div>
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">Report Information</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  You can generate various types of CRM performance reports to track key metrics related to:
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground mb-4">
+                  <li>Lead conversion rates and sales funnel performance</li>
+                  <li>Campaign effectiveness and ROI tracking</li>
+                  <li>Follow-up efficiency and response times</li>
+                  <li>Consultant performance and lead assignment metrics</li>
+                </ul>
+                <p className="text-sm text-muted-foreground">
+                  Reports can be downloaded as PDF or exported as Excel/CSV files for further analysis.
+                </p>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
