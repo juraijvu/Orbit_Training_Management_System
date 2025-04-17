@@ -875,6 +875,250 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================== CRM - Leads API ==================
+  // Get all leads
+  app.get('/api/crm/leads', isAuthenticated, async (req, res) => {
+    try {
+      const leads = await storage.getLeads();
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch leads" });
+    }
+  });
+
+  // Get lead by ID
+  app.get('/api/crm/leads/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const lead = await storage.getLead(id);
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      res.json(lead);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch lead" });
+    }
+  });
+
+  // Create lead
+  app.post('/api/crm/leads', isAuthenticated, async (req, res) => {
+    try {
+      const newLead = await storage.createLead({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      res.status(201).json(newLead);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create lead" });
+    }
+  });
+
+  // Update lead
+  app.patch('/api/crm/leads/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingLead = await storage.getLead(id);
+      if (!existingLead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      const updatedLead = await storage.updateLead(id, req.body);
+      res.json(updatedLead);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update lead" });
+    }
+  });
+
+  // Delete lead
+  app.delete('/api/crm/leads/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingLead = await storage.getLead(id);
+      if (!existingLead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      const result = await storage.deleteLead(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete lead" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete lead" });
+    }
+  });
+
+  // ================== CRM - Campaigns API ==================
+  // Get all campaigns
+  app.get('/api/crm/campaigns', isAuthenticated, async (req, res) => {
+    try {
+      const campaigns = await storage.getCampaigns();
+      res.json(campaigns);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch campaigns" });
+    }
+  });
+
+  // Get campaign by ID
+  app.get('/api/crm/campaigns/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const campaign = await storage.getCampaign(id);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      res.json(campaign);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch campaign" });
+    }
+  });
+
+  // Create campaign
+  app.post('/api/crm/campaigns', isAdmin, async (req, res) => {
+    try {
+      const newCampaign = await storage.createCampaign({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      res.status(201).json(newCampaign);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create campaign" });
+    }
+  });
+
+  // Update campaign
+  app.patch('/api/crm/campaigns/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingCampaign = await storage.getCampaign(id);
+      if (!existingCampaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      const updatedCampaign = await storage.updateCampaign(id, req.body);
+      res.json(updatedCampaign);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update campaign" });
+    }
+  });
+
+  // Delete campaign
+  app.delete('/api/crm/campaigns/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingCampaign = await storage.getCampaign(id);
+      if (!existingCampaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      const result = await storage.deleteCampaign(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete campaign" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete campaign" });
+    }
+  });
+
+  // ================== CRM - Follow-ups API ==================
+  // Get all follow-ups
+  app.get('/api/crm/follow-ups', isAuthenticated, async (req, res) => {
+    try {
+      const followUps = await storage.getFollowUps();
+      
+      // Enrich follow-ups with lead information
+      const enrichedFollowUps = await Promise.all(followUps.map(async (followUp) => {
+        const lead = await storage.getLead(followUp.leadId);
+        return {
+          ...followUp,
+          leadName: lead ? lead.fullName : 'Unknown',
+          leadPhone: lead ? lead.phone : 'Unknown'
+        };
+      }));
+      
+      res.json(enrichedFollowUps);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch follow-ups" });
+    }
+  });
+
+  // Get follow-ups by lead ID
+  app.get('/api/crm/follow-ups/lead/:leadId', isAuthenticated, async (req, res) => {
+    try {
+      const leadId = parseInt(req.params.leadId);
+      const followUps = await storage.getFollowUpsByLeadId(leadId);
+      res.json(followUps);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch follow-ups" });
+    }
+  });
+
+  // Get follow-up by ID
+  app.get('/api/crm/follow-ups/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const followUp = await storage.getFollowUp(id);
+      if (!followUp) {
+        return res.status(404).json({ message: "Follow-up not found" });
+      }
+      res.json(followUp);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch follow-up" });
+    }
+  });
+
+  // Create follow-up
+  app.post('/api/crm/follow-ups', isAuthenticated, async (req, res) => {
+    try {
+      const newFollowUp = await storage.createFollowUp({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      res.status(201).json(newFollowUp);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create follow-up" });
+    }
+  });
+
+  // Update follow-up
+  app.patch('/api/crm/follow-ups/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingFollowUp = await storage.getFollowUp(id);
+      if (!existingFollowUp) {
+        return res.status(404).json({ message: "Follow-up not found" });
+      }
+      
+      const updatedFollowUp = await storage.updateFollowUp(id, req.body);
+      res.json(updatedFollowUp);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update follow-up" });
+    }
+  });
+
+  // Delete follow-up
+  app.delete('/api/crm/follow-ups/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingFollowUp = await storage.getFollowUp(id);
+      if (!existingFollowUp) {
+        return res.status(404).json({ message: "Follow-up not found" });
+      }
+      
+      const result = await storage.deleteFollowUp(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete follow-up" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete follow-up" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
