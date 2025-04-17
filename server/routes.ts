@@ -15,7 +15,10 @@ import {
   insertWhatsappSettingsSchema,
   insertWhatsappTemplateSchema,
   insertWhatsappChatSchema,
-  insertWhatsappMessageSchema
+  insertWhatsappMessageSchema,
+  insertTitanEmailSettingsSchema,
+  insertEmailTemplateSchema,
+  insertEmailHistorySchema
 } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
