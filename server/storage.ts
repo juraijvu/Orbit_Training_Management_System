@@ -7,7 +7,10 @@ import {
   schedules, Schedule, InsertSchedule,
   certificates, Certificate, InsertCertificate,
   quotations, Quotation, InsertQuotation,
-  proposals, Proposal, InsertProposal
+  proposals, Proposal, InsertProposal,
+  leads, Lead, InsertLead,
+  campaigns, Campaign, InsertCampaign,
+  followUps, FollowUp, InsertFollowUp
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -87,6 +90,28 @@ export interface IStorage {
   getProposal(id: number): Promise<Proposal | undefined>;
   createProposal(proposal: InsertProposal): Promise<Proposal>;
   updateProposal(id: number, proposal: Partial<Proposal>): Promise<Proposal | undefined>;
+  
+  // CRM - Leads
+  getLeads(): Promise<Lead[]>;
+  getLead(id: number): Promise<Lead | undefined>;
+  createLead(lead: InsertLead): Promise<Lead>;
+  updateLead(id: number, lead: Partial<Lead>): Promise<Lead | undefined>;
+  deleteLead(id: number): Promise<boolean>;
+  
+  // CRM - Campaigns
+  getCampaigns(): Promise<Campaign[]>;
+  getCampaign(id: number): Promise<Campaign | undefined>;
+  createCampaign(campaign: InsertCampaign): Promise<Campaign>;
+  updateCampaign(id: number, campaign: Partial<Campaign>): Promise<Campaign | undefined>;
+  deleteCampaign(id: number): Promise<boolean>;
+  
+  // CRM - Follow Ups
+  getFollowUps(): Promise<FollowUp[]>;
+  getFollowUpsByLeadId(leadId: number): Promise<FollowUp[]>;
+  getFollowUp(id: number): Promise<FollowUp | undefined>;
+  createFollowUp(followUp: InsertFollowUp): Promise<FollowUp>;
+  updateFollowUp(id: number, followUp: Partial<FollowUp>): Promise<FollowUp | undefined>;
+  deleteFollowUp(id: number): Promise<boolean>;
 }
 
 // Memory Storage implementation
@@ -100,6 +125,9 @@ export class MemStorage implements IStorage {
   private certificatesMap: Map<number, Certificate>;
   private quotationsMap: Map<number, Quotation>;
   private proposalsMap: Map<number, Proposal>;
+  private leadsMap: Map<number, Lead>;
+  private campaignsMap: Map<number, Campaign>;
+  private followUpsMap: Map<number, FollowUp>;
   
   private userId: number = 1;
   private studentId: number = 1;
@@ -110,6 +138,9 @@ export class MemStorage implements IStorage {
   private certificateId: number = 1;
   private quotationId: number = 1;
   private proposalId: number = 1;
+  private leadId: number = 1;
+  private campaignId: number = 1;
+  private followUpId: number = 1;
   
   sessionStore: any;
 
@@ -123,6 +154,9 @@ export class MemStorage implements IStorage {
     this.certificatesMap = new Map();
     this.quotationsMap = new Map();
     this.proposalsMap = new Map();
+    this.leadsMap = new Map();
+    this.campaignsMap = new Map();
+    this.followUpsMap = new Map();
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
@@ -429,6 +463,112 @@ export class MemStorage implements IStorage {
     this.proposalsMap.set(id, updatedProposal);
     return updatedProposal;
   }
+  
+  // CRM - Leads methods
+  async getLeads(): Promise<Lead[]> {
+    return Array.from(this.leadsMap.values());
+  }
+
+  async getLead(id: number): Promise<Lead | undefined> {
+    return this.leadsMap.get(id);
+  }
+
+  async createLead(lead: InsertLead): Promise<Lead> {
+    const id = this.leadId++;
+    const newLead: Lead = { 
+      ...lead, 
+      id, 
+      createdAt: new Date(),
+      status: lead.status || "New"
+    };
+    this.leadsMap.set(id, newLead);
+    return newLead;
+  }
+
+  async updateLead(id: number, lead: Partial<Lead>): Promise<Lead | undefined> {
+    const existingLead = this.leadsMap.get(id);
+    if (!existingLead) return undefined;
+
+    const updatedLead = { ...existingLead, ...lead };
+    this.leadsMap.set(id, updatedLead);
+    return updatedLead;
+  }
+
+  async deleteLead(id: number): Promise<boolean> {
+    return this.leadsMap.delete(id);
+  }
+  
+  // CRM - Campaigns methods
+  async getCampaigns(): Promise<Campaign[]> {
+    return Array.from(this.campaignsMap.values());
+  }
+
+  async getCampaign(id: number): Promise<Campaign | undefined> {
+    return this.campaignsMap.get(id);
+  }
+
+  async createCampaign(campaign: InsertCampaign): Promise<Campaign> {
+    const id = this.campaignId++;
+    const newCampaign: Campaign = { 
+      ...campaign, 
+      id, 
+      createdAt: new Date()
+    };
+    this.campaignsMap.set(id, newCampaign);
+    return newCampaign;
+  }
+
+  async updateCampaign(id: number, campaign: Partial<Campaign>): Promise<Campaign | undefined> {
+    const existingCampaign = this.campaignsMap.get(id);
+    if (!existingCampaign) return undefined;
+
+    const updatedCampaign = { ...existingCampaign, ...campaign };
+    this.campaignsMap.set(id, updatedCampaign);
+    return updatedCampaign;
+  }
+
+  async deleteCampaign(id: number): Promise<boolean> {
+    return this.campaignsMap.delete(id);
+  }
+  
+  // CRM - Follow Ups methods
+  async getFollowUps(): Promise<FollowUp[]> {
+    return Array.from(this.followUpsMap.values());
+  }
+
+  async getFollowUpsByLeadId(leadId: number): Promise<FollowUp[]> {
+    return Array.from(this.followUpsMap.values()).filter(
+      (followUp) => followUp.leadId === leadId
+    );
+  }
+
+  async getFollowUp(id: number): Promise<FollowUp | undefined> {
+    return this.followUpsMap.get(id);
+  }
+
+  async createFollowUp(followUp: InsertFollowUp): Promise<FollowUp> {
+    const id = this.followUpId++;
+    const newFollowUp: FollowUp = { 
+      ...followUp, 
+      id, 
+      createdAt: new Date()
+    };
+    this.followUpsMap.set(id, newFollowUp);
+    return newFollowUp;
+  }
+
+  async updateFollowUp(id: number, followUp: Partial<FollowUp>): Promise<FollowUp | undefined> {
+    const existingFollowUp = this.followUpsMap.get(id);
+    if (!existingFollowUp) return undefined;
+
+    const updatedFollowUp = { ...existingFollowUp, ...followUp };
+    this.followUpsMap.set(id, updatedFollowUp);
+    return updatedFollowUp;
+  }
+
+  async deleteFollowUp(id: number): Promise<boolean> {
+    return this.followUpsMap.delete(id);
+  }
 }
 
 // Database storage implementation
@@ -722,6 +862,104 @@ export class DatabaseStorage implements IStorage {
   async updateProposal(id: number, proposal: Partial<Proposal>): Promise<Proposal | undefined> {
     const result = await db.update(proposals).set(proposal).where(eq(proposals.id, id)).returning();
     return result[0];
+  }
+  
+  // CRM - Leads methods
+  async getLeads(): Promise<Lead[]> {
+    return await db.select().from(leads);
+  }
+
+  async getLead(id: number): Promise<Lead | undefined> {
+    const result = await db.select().from(leads).where(eq(leads.id, id));
+    return result[0];
+  }
+
+  async createLead(lead: InsertLead): Promise<Lead> {
+    const leadWithDefaults = {
+      ...lead,
+      createdAt: new Date(),
+      status: lead.status || "New",
+      source: lead.source || null,
+      notes: lead.notes || null
+    };
+    const result = await db.insert(leads).values(leadWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateLead(id: number, lead: Partial<Lead>): Promise<Lead | undefined> {
+    const result = await db.update(leads).set(lead).where(eq(leads.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteLead(id: number): Promise<boolean> {
+    const result = await db.delete(leads).where(eq(leads.id, id)).returning();
+    return result.length > 0;
+  }
+  
+  // CRM - Campaigns methods
+  async getCampaigns(): Promise<Campaign[]> {
+    return await db.select().from(campaigns);
+  }
+
+  async getCampaign(id: number): Promise<Campaign | undefined> {
+    const result = await db.select().from(campaigns).where(eq(campaigns.id, id));
+    return result[0];
+  }
+
+  async createCampaign(campaign: InsertCampaign): Promise<Campaign> {
+    const campaignWithDefaults = {
+      ...campaign,
+      createdAt: new Date(),
+      budget: campaign.budget || null,
+      platform: campaign.platform || null,
+      status: campaign.status || "Draft"
+    };
+    const result = await db.insert(campaigns).values(campaignWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateCampaign(id: number, campaign: Partial<Campaign>): Promise<Campaign | undefined> {
+    const result = await db.update(campaigns).set(campaign).where(eq(campaigns.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCampaign(id: number): Promise<boolean> {
+    const result = await db.delete(campaigns).where(eq(campaigns.id, id)).returning();
+    return result.length > 0;
+  }
+  
+  // CRM - Follow Ups methods
+  async getFollowUps(): Promise<FollowUp[]> {
+    return await db.select().from(followUps);
+  }
+
+  async getFollowUpsByLeadId(leadId: number): Promise<FollowUp[]> {
+    return await db.select().from(followUps).where(eq(followUps.leadId, leadId));
+  }
+
+  async getFollowUp(id: number): Promise<FollowUp | undefined> {
+    const result = await db.select().from(followUps).where(eq(followUps.id, id));
+    return result[0];
+  }
+
+  async createFollowUp(followUp: InsertFollowUp): Promise<FollowUp> {
+    const followUpWithDefaults = {
+      ...followUp,
+      createdAt: new Date(),
+      notes: followUp.notes || null
+    };
+    const result = await db.insert(followUps).values(followUpWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateFollowUp(id: number, followUp: Partial<FollowUp>): Promise<FollowUp | undefined> {
+    const result = await db.update(followUps).set(followUp).where(eq(followUps.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteFollowUp(id: number): Promise<boolean> {
+    const result = await db.delete(followUps).where(eq(followUps.id, id)).returning();
+    return result.length > 0;
   }
 }
 
