@@ -1370,7 +1370,12 @@ export class DatabaseStorage implements IStorage {
   
   // CRM - Leads methods
   async getLeads(): Promise<Lead[]> {
-    return await db.select().from(leads).orderBy(desc(leads.createdAt));
+    try {
+      return await db.select().from(leads).orderBy(desc(leads.createdAt));
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+      return [];
+    }
   }
 
   async getLead(id: number): Promise<Lead | undefined> {
@@ -1510,10 +1515,15 @@ export class DatabaseStorage implements IStorage {
   
   // CRM - Follow Ups methods
   async getFollowUps(): Promise<FollowUp[]> {
-    return await db
-      .select()
-      .from(followUps)
-      .orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
+    try {
+      return await db
+        .select()
+        .from(followUps)
+        .orderBy(desc(followUps.createdAt));
+    } catch (error) {
+      console.error("Error fetching follow-ups:", error);
+      return [];
+    }
   }
 
   async getFollowUpsByLeadId(leadId: number): Promise<FollowUp[]> {
@@ -1525,11 +1535,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFollowUpsByConsultant(consultantId: number): Promise<FollowUp[]> {
-    return await db
-      .select()
-      .from(followUps)
-      .where(eq(followUps.consultantId, consultantId))
-      .orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
+    try {
+      return await db
+        .select()
+        .from(followUps)
+        .where(eq(followUps.consultantId, consultantId))
+        .orderBy(asc(followUps.nextFollowUp));
+    } catch (error) {
+      console.error("Error fetching follow-ups by consultant:", error);
+      return [];
+    }
   }
 
   async getPendingFollowUps(): Promise<FollowUp[]> {
