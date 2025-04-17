@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
@@ -423,18 +424,190 @@ const CourseManagement: FC = () => {
               <FormField
                 control={form.control}
                 name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Course Content</FormLabel>
-                    <FormControl>
-                      <Textarea rows={5} {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Enter course modules and details here. Use new lines to separate modules.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const [modules, setModules] = useState<{id: string; name: string; subItems: string[]}[]>(() => {
+                    try {
+                      return field.value ? JSON.parse(field.value) : [];
+                    } catch (e) {
+                      return [];
+                    }
+                  });
+                  const [newModuleName, setNewModuleName] = useState("");
+                  const [newSubItem, setNewSubItem] = useState("");
+                  const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
+                  
+                  const addModule = () => {
+                    if (newModuleName.trim()) {
+                      const newModule = {
+                        id: Date.now().toString(),
+                        name: newModuleName,
+                        subItems: []
+                      };
+                      const updatedModules = [...modules, newModule];
+                      setModules(updatedModules);
+                      field.onChange(JSON.stringify(updatedModules));
+                      setNewModuleName("");
+                      setEditingModuleId(newModule.id);
+                    }
+                  };
+                  
+                  const addSubItem = (moduleId: string) => {
+                    if (newSubItem.trim()) {
+                      const updatedModules = modules.map(module => {
+                        if (module.id === moduleId) {
+                          return {
+                            ...module,
+                            subItems: [...module.subItems, newSubItem]
+                          };
+                        }
+                        return module;
+                      });
+                      setModules(updatedModules);
+                      field.onChange(JSON.stringify(updatedModules));
+                      setNewSubItem("");
+                    }
+                  };
+                  
+                  const removeModule = (moduleId: string) => {
+                    const updatedModules = modules.filter(module => module.id !== moduleId);
+                    setModules(updatedModules);
+                    field.onChange(JSON.stringify(updatedModules));
+                    if (editingModuleId === moduleId) {
+                      setEditingModuleId(null);
+                    }
+                  };
+                  
+                  const removeSubItem = (moduleId: string, index: number) => {
+                    const updatedModules = modules.map(module => {
+                      if (module.id === moduleId) {
+                        const updatedSubItems = [...module.subItems];
+                        updatedSubItems.splice(index, 1);
+                        return {
+                          ...module,
+                          subItems: updatedSubItems
+                        };
+                      }
+                      return module;
+                    });
+                    setModules(updatedModules);
+                    field.onChange(JSON.stringify(updatedModules));
+                  };
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel>Course Modules</FormLabel>
+                      <FormControl>
+                        <div className="space-y-4 border rounded-md p-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="module-name">Add New Module</Label>
+                            <div className="flex space-x-2">
+                              <Input
+                                id="module-name"
+                                placeholder="Enter module name"
+                                value={newModuleName}
+                                onChange={(e) => setNewModuleName(e.target.value)}
+                              />
+                              <Button 
+                                type="button" 
+                                onClick={addModule}
+                                className="shrink-0"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-4 mt-4">
+                            {modules.length === 0 ? (
+                              <div className="text-center p-4 border border-dashed rounded-md text-gray-500">
+                                No modules added yet. Add your first module above.
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                {modules.map((module) => (
+                                  <div key={module.id} className="border rounded-md p-3">
+                                    <div className="flex justify-between items-center mb-2">
+                                      <h4 className="font-medium">{module.name}</h4>
+                                      <div className="flex space-x-1">
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => setEditingModuleId(editingModuleId === module.id ? null : module.id)}
+                                        >
+                                          {editingModuleId === module.id ? (
+                                            <X className="h-4 w-4" />
+                                          ) : (
+                                            <Pencil className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                          onClick={() => removeModule(module.id)}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    
+                                    {editingModuleId === module.id && (
+                                      <div className="space-y-2 mt-2 mb-3">
+                                        <div className="flex space-x-2">
+                                          <Input
+                                            placeholder="Add sub-item"
+                                            value={newSubItem}
+                                            onChange={(e) => setNewSubItem(e.target.value)}
+                                            className="flex-1"
+                                          />
+                                          <Button 
+                                            type="button" 
+                                            onClick={() => addSubItem(module.id)}
+                                            size="sm"
+                                          >
+                                            Add
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {module.subItems.length > 0 && (
+                                      <div className="pl-4 border-l space-y-1 mt-2">
+                                        {module.subItems.map((item, index) => (
+                                          <div key={index} className="flex justify-between text-sm py-1">
+                                            <span>• {item}</span>
+                                            {editingModuleId === module.id && (
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-5 w-5 text-red-500"
+                                                onClick={() => removeSubItem(module.id, index)}
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </Button>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Create modules and sub-items for your course. These will be used in proposals.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               
               <FormField
@@ -504,12 +677,39 @@ const CourseManagement: FC = () => {
           
           <div className="mt-4 max-h-96 overflow-y-auto">
             {viewingCourse?.content ? (
-              <div className="space-y-4">
-                {viewingCourse.content.split('\n').map((line, i) => (
-                  <div key={i} className="border-b pb-2">
-                    <p className="text-gray-800 whitespace-pre-wrap">{line}</p>
-                  </div>
-                ))}
+              <div className="space-y-6">
+                {(() => {
+                  try {
+                    const modules = JSON.parse(viewingCourse.content);
+                    return modules.length > 0 ? (
+                      modules.map((module: any, i: number) => (
+                        <div key={i} className="border rounded-lg p-4">
+                          <h3 className="text-lg font-medium mb-2">{module.name}</h3>
+                          {module.subItems && module.subItems.length > 0 ? (
+                            <ul className="pl-5 space-y-1">
+                              {module.subItems.map((item: string, j: number) => (
+                                <li key={j} className="text-gray-700 list-disc">
+                                  {item}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-500 italic">No sub-items</p>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-5">No modules defined</p>
+                    );
+                  } catch (e) {
+                    // Fallback for courses with old content format
+                    return viewingCourse.content.split('\n').map((line, i) => (
+                      <div key={i} className="border-b pb-2">
+                        <p className="text-gray-800 whitespace-pre-wrap">{line}</p>
+                      </div>
+                    ));
+                  }
+                })()}
               </div>
             ) : (
               <p className="text-gray-500 text-center py-10">No course content available</p>
