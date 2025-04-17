@@ -24,6 +24,9 @@ import {
   Loader2
 } from "lucide-react";
 
+// Define the filter for making logos appear white on dark backgrounds
+const whiteLogoFilter = "brightness(0) invert(1)";
+
 interface CoverPageField {
   id: string;
   type: 'text' | 'image' | 'rectangle';
@@ -54,9 +57,6 @@ interface PreviewData {
   logoUrl: string;
   trainerName: string;
 }
-
-// CSS filter to make logo white
-const whiteLogoFilter = "invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(103%) contrast(103%)";
 
 const defaultCoverFields: CoverPageField[] = [
   {
@@ -1100,6 +1100,15 @@ export default function ProposalTemplates() {
                           if (textValue.includes("{{companyName}}")) {
                             textValue = textValue.replace("{{companyName}}", previewData.companyName);
                           }
+                          if (textValue.includes("{{contactPerson}}")) {
+                            textValue = textValue.replace("{{contactPerson}}", previewData.contactPerson);
+                          }
+                          if (textValue.includes("{{email}}")) {
+                            textValue = textValue.replace("{{email}}", previewData.email);
+                          }
+                          if (textValue.includes("{{phone}}")) {
+                            textValue = textValue.replace("{{phone}}", previewData.phone);
+                          }
                           if (textValue.includes("{{courseName}}")) {
                             textValue = textValue.replace("{{courseName}}", previewData.courseName);
                           }
@@ -1111,6 +1120,9 @@ export default function ProposalTemplates() {
                           }
                           if (textValue.includes("{{proposalDate}}")) {
                             textValue = textValue.replace("{{proposalDate}}", previewData.proposalDate);
+                          }
+                          if (textValue.includes("{{trainerName}}")) {
+                            textValue = textValue.replace("{{trainerName}}", previewData.trainerName);
                           }
 
                           return (
@@ -1141,6 +1153,9 @@ export default function ProposalTemplates() {
                           // Replace image placeholder with preview data
                           let imageUrl = previewData.logoUrl;
                           
+                          // Check if logo is on the black background and needs to be white
+                          const isOnBlackBackground = field.x < 250; // Assuming left side has the black background
+                          
                           return (
                             <div
                               key={field.id}
@@ -1162,6 +1177,7 @@ export default function ProposalTemplates() {
                                   maxWidth: "100%",
                                   maxHeight: "100%",
                                   objectFit: "contain",
+                                  filter: isOnBlackBackground ? whiteLogoFilter : "none" // Apply white filter when on black
                                 }}
                               />
                             </div>
