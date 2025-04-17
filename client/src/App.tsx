@@ -23,6 +23,8 @@ import Settings from "@/pages/settings";
 import WhatsappSettings from "@/pages/whatsapp-settings";
 import WhatsappChats from "@/pages/whatsapp-chats";
 import EmailSettings from "@/pages/email-settings";
+import ChatbotFlows from "@/pages/chatbot-flows";
+import CannedResponses from "@/pages/canned-responses";
 import { MainLayout } from "@/components/layout/main-layout";
 
 function Router() {
@@ -46,6 +48,8 @@ function Router() {
         {/* External Integrations */}
         <ProtectedRoute path="/whatsapp-settings" component={WhatsappSettings} />
         <ProtectedRoute path="/whatsapp-chats" component={WhatsappChats} />
+        <ProtectedRoute path="/chatbot-flows" component={ChatbotFlows} />
+        <ProtectedRoute path="/canned-responses" component={CannedResponses} />
         <ProtectedRoute path="/email-settings" component={EmailSettings} />
         {/* CRM Routes */}
         <ProtectedRoute path="/crm/leads" component={() => {
