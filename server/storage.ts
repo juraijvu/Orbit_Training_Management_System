@@ -10,7 +10,11 @@ import {
   proposals, Proposal, InsertProposal,
   leads, Lead, InsertLead,
   campaigns, Campaign, InsertCampaign,
-  followUps, FollowUp, InsertFollowUp
+  followUps, FollowUp, InsertFollowUp,
+  whatsappSettings, WhatsappSettings, InsertWhatsappSettings,
+  whatsappTemplates, WhatsappTemplate, InsertWhatsappTemplate,
+  whatsappChats, WhatsappChat, InsertWhatsappChat,
+  whatsappMessages, WhatsappMessage, InsertWhatsappMessage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, asc, desc, gte, lte, lt } from "drizzle-orm";
@@ -124,6 +128,29 @@ export interface IStorage {
   updateFollowUp(id: number, followUp: Partial<FollowUp>): Promise<FollowUp | undefined>;
   markFollowUpAsNotified(id: number): Promise<FollowUp | undefined>;
   deleteFollowUp(id: number): Promise<boolean>;
+  
+  // WhatsApp API Settings
+  getWhatsappSettings(): Promise<WhatsappSettings | undefined>;
+  createWhatsappSettings(settings: InsertWhatsappSettings): Promise<WhatsappSettings>;
+  updateWhatsappSettings(id: number, settings: Partial<WhatsappSettings>): Promise<WhatsappSettings | undefined>;
+  
+  // WhatsApp Templates
+  getWhatsappTemplates(): Promise<WhatsappTemplate[]>;
+  getWhatsappTemplate(id: number): Promise<WhatsappTemplate | undefined>;
+  createWhatsappTemplate(template: InsertWhatsappTemplate): Promise<WhatsappTemplate>;
+  updateWhatsappTemplate(id: number, template: Partial<WhatsappTemplate>): Promise<WhatsappTemplate | undefined>;
+  deleteWhatsappTemplate(id: number): Promise<boolean>;
+  
+  // WhatsApp Chats
+  getWhatsappChats(): Promise<WhatsappChat[]>;
+  getWhatsappChat(id: number): Promise<WhatsappChat | undefined>;
+  getWhatsappChatsByConsultantId(consultantId: number): Promise<WhatsappChat[]>;
+  createWhatsappChat(chat: InsertWhatsappChat): Promise<WhatsappChat>;
+  updateWhatsappChat(id: number, chat: Partial<WhatsappChat>): Promise<WhatsappChat | undefined>;
+  
+  // WhatsApp Messages
+  getWhatsappMessagesByChatId(chatId: number): Promise<WhatsappMessage[]>;
+  createWhatsappMessage(message: InsertWhatsappMessage): Promise<WhatsappMessage>;
 }
 
 // Memory Storage implementation

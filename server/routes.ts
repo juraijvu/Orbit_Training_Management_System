@@ -1123,6 +1123,247 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================== WhatsApp API ==================
+  // Get WhatsApp API settings
+  app.get('/api/whatsapp/settings', isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getWhatsappSettings();
+      res.json(settings || {});
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch WhatsApp settings" });
+    }
+  });
+
+  // Save WhatsApp API settings
+  app.post('/api/whatsapp/settings', isAdmin, async (req, res) => {
+    try {
+      const settingsData = insertWhatsappSettingsSchema.parse(req.body);
+      const settings = await storage.getWhatsappSettings();
+      
+      if (settings) {
+        // Update existing settings
+        const updatedSettings = await storage.updateWhatsappSettings(settings.id, settingsData);
+        res.json(updatedSettings);
+      } else {
+        // Create new settings
+        const newSettings = await storage.createWhatsappSettings(settingsData);
+        res.status(201).json(newSettings);
+      }
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to save WhatsApp settings" });
+    }
+  });
+
+  // Get WhatsApp templates
+  app.get('/api/whatsapp/templates', isAuthenticated, async (req, res) => {
+    try {
+      const templates = await storage.getWhatsappTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch WhatsApp templates" });
+    }
+  });
+
+  // Get WhatsApp template by ID
+  app.get('/api/whatsapp/templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getWhatsappTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch template" });
+    }
+  });
+
+  // Create WhatsApp template
+  app.post('/api/whatsapp/templates', isAuthenticated, async (req, res) => {
+    try {
+      const templateData = insertWhatsappTemplateSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      
+      const newTemplate = await storage.createWhatsappTemplate(templateData);
+      res.status(201).json(newTemplate);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create template" });
+    }
+  });
+
+  // Update WhatsApp template
+  app.patch('/api/whatsapp/templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingTemplate = await storage.getWhatsappTemplate(id);
+      if (!existingTemplate) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      const updatedTemplate = await storage.updateWhatsappTemplate(id, req.body);
+      res.json(updatedTemplate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update template" });
+    }
+  });
+
+  // Delete WhatsApp template
+  app.delete('/api/whatsapp/templates/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingTemplate = await storage.getWhatsappTemplate(id);
+      if (!existingTemplate) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      const result = await storage.deleteWhatsappTemplate(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete template" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete template" });
+    }
+  });
+
+  // Get WhatsApp chats
+  app.get('/api/whatsapp/chats', isAuthenticated, async (req, res) => {
+    try {
+      const chats = await storage.getWhatsappChats();
+      res.json(chats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch WhatsApp chats" });
+    }
+  });
+
+  // Get WhatsApp chats by consultant ID
+  app.get('/api/whatsapp/chats/consultant/:consultantId', isAuthenticated, async (req, res) => {
+    try {
+      const consultantId = parseInt(req.params.consultantId);
+      const chats = await storage.getWhatsappChatsByConsultantId(consultantId);
+      res.json(chats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch WhatsApp chats" });
+    }
+  });
+
+  // Get WhatsApp chat by ID
+  app.get('/api/whatsapp/chats/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const chat = await storage.getWhatsappChat(id);
+      if (!chat) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+      res.json(chat);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch chat" });
+    }
+  });
+
+  // Create WhatsApp chat
+  app.post('/api/whatsapp/chats', isAuthenticated, async (req, res) => {
+    try {
+      const chatData = insertWhatsappChatSchema.parse(req.body);
+      const newChat = await storage.createWhatsappChat(chatData);
+      res.status(201).json(newChat);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create chat" });
+    }
+  });
+
+  // Assign WhatsApp chat to consultant
+  app.put('/api/whatsapp/chats/:id/assign', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { consultantId } = req.body;
+      
+      const existingChat = await storage.getWhatsappChat(id);
+      if (!existingChat) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+      
+      const updatedChat = await storage.updateWhatsappChat(id, { 
+        consultantId: parseInt(consultantId),
+        unreadCount: 0
+      });
+      
+      res.json(updatedChat);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to assign chat" });
+    }
+  });
+
+  // Get WhatsApp messages for a chat
+  app.get('/api/whatsapp/messages/:chatId', isAuthenticated, async (req, res) => {
+    try {
+      const chatId = parseInt(req.params.chatId);
+      const messages = await storage.getWhatsappMessagesByChatId(chatId);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Send WhatsApp message
+  app.post('/api/whatsapp/messages/send', isAuthenticated, async (req, res) => {
+    try {
+      const { chatId, content, sentBy } = req.body;
+      
+      // Get WhatsApp settings to check if API is active
+      const settings = await storage.getWhatsappSettings();
+      if (!settings || !settings.isActive) {
+        return res.status(400).json({ message: "WhatsApp API is not configured or inactive" });
+      }
+      
+      // Create message record
+      const messageData = insertWhatsappMessageSchema.parse({
+        chatId,
+        content,
+        sentBy,
+        messageId: `local-${Date.now()}`, // This would be replaced by actual WhatsApp message ID in real integration
+        direction: "outbound",
+        status: "sent",
+        timestamp: new Date()
+      });
+      
+      const newMessage = await storage.createWhatsappMessage(messageData);
+      
+      // Update chat's last message time
+      await storage.updateWhatsappChat(chatId, {
+        lastMessageTime: new Date()
+      });
+      
+      // In a real implementation, we would call the WhatsApp API here to send the message
+      // For now, we'll simulate a successful sending
+      
+      res.status(201).json(newMessage);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // ================== End of WhatsApp API ==================
+
   const httpServer = createServer(app);
   return httpServer;
 }
