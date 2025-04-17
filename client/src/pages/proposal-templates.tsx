@@ -211,7 +211,7 @@ export default function ProposalTemplates() {
   // Fetch courses from API
   const { data: courses, isLoading: isCoursesLoading } = useQuery<Course[]>({
     queryKey: ['/api/courses'],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   // Find the selected field in our list
