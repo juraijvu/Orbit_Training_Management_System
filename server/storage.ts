@@ -959,6 +959,115 @@ export class MemStorage implements IStorage {
     
     return newMessage;
   }
+  
+  // Titan Email Settings
+  async getTitanEmailSettings(): Promise<TitanEmailSettings | undefined> {
+    const settings = Array.from(this.titanEmailSettingsMap.values());
+    return settings.length > 0 ? settings[0] : undefined;
+  }
+
+  async createTitanEmailSettings(settings: InsertTitanEmailSettings): Promise<TitanEmailSettings> {
+    const id = this.titanEmailSettingsId++;
+    const newSettings: TitanEmailSettings = { 
+      ...settings, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.titanEmailSettingsMap.set(id, newSettings);
+    return newSettings;
+  }
+
+  async updateTitanEmailSettings(id: number, settings: Partial<TitanEmailSettings>): Promise<TitanEmailSettings | undefined> {
+    const existingSettings = this.titanEmailSettingsMap.get(id);
+    if (!existingSettings) return undefined;
+
+    const updatedSettings = { 
+      ...existingSettings, 
+      ...settings,
+      updatedAt: new Date()
+    };
+    this.titanEmailSettingsMap.set(id, updatedSettings);
+    return updatedSettings;
+  }
+  
+  // Email Templates
+  async getEmailTemplates(): Promise<EmailTemplate[]> {
+    return Array.from(this.emailTemplatesMap.values());
+  }
+
+  async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
+    return this.emailTemplatesMap.get(id);
+  }
+  
+  async getEmailTemplatesByCategory(category: string): Promise<EmailTemplate[]> {
+    return Array.from(this.emailTemplatesMap.values())
+      .filter(template => template.category === category);
+  }
+
+  async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    const id = this.emailTemplateId++;
+    const newTemplate: EmailTemplate = { 
+      ...template, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isActive: template.isActive !== undefined ? template.isActive : true,
+      variables: template.variables || null
+    };
+    this.emailTemplatesMap.set(id, newTemplate);
+    return newTemplate;
+  }
+
+  async updateEmailTemplate(id: number, template: Partial<EmailTemplate>): Promise<EmailTemplate | undefined> {
+    const existingTemplate = this.emailTemplatesMap.get(id);
+    if (!existingTemplate) return undefined;
+
+    const updatedTemplate = { 
+      ...existingTemplate, 
+      ...template,
+      updatedAt: new Date()
+    };
+    this.emailTemplatesMap.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+  
+  async deleteEmailTemplate(id: number): Promise<boolean> {
+    return this.emailTemplatesMap.delete(id);
+  }
+  
+  // Email History
+  async getEmailHistory(): Promise<EmailHistory[]> {
+    return Array.from(this.emailHistoryMap.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getEmailHistoryByLeadId(leadId: number): Promise<EmailHistory[]> {
+    return Array.from(this.emailHistoryMap.values())
+      .filter(email => email.leadId === leadId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getEmailHistoryByStudentId(studentId: number): Promise<EmailHistory[]> {
+    return Array.from(this.emailHistoryMap.values())
+      .filter(email => email.studentId === studentId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async createEmailHistory(email: InsertEmailHistory): Promise<EmailHistory> {
+    const id = this.emailHistoryId++;
+    const newEmail: EmailHistory = { 
+      ...email, 
+      id, 
+      createdAt: new Date(),
+      status: email.status || "sent",
+      attachments: email.attachments || null,
+      cc: email.cc || null,
+      bcc: email.bcc || null
+    };
+    this.emailHistoryMap.set(id, newEmail);
+    return newEmail;
+  }
 }
 
 // Database storage implementation
