@@ -16,8 +16,13 @@ import {
   FileSpreadsheet,
   Settings,
   LogOut,
+  Phone,
+  Target,
+  Activity,
+  UserRound
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SidebarNavProps {
   className?: string;
@@ -26,6 +31,7 @@ interface SidebarNavProps {
 function Sidebar({ className }: SidebarNavProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
+  const [crmOpen, setCrmOpen] = React.useState(false);
 
   if (!user) return null;
 
@@ -110,7 +116,38 @@ function Sidebar({ className }: SidebarNavProps) {
     },
   ];
 
+  const crmItems = [
+    {
+      title: "Leads Management",
+      href: "/crm/leads",
+      icon: <UserRound className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+    },
+    {
+      title: "Follow Ups",
+      href: "/crm/follow-ups",
+      icon: <Phone className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+    },
+    {
+      title: "Marketing Campaigns",
+      href: "/crm/campaigns",
+      icon: <Target className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+    },
+    {
+      title: "Analytics",
+      href: "/crm/analytics",
+      icon: <Activity className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+    },
+  ];
+
   const filteredNavItems = navItems.filter((item) =>
+    item.roles.includes(user.role)
+  );
+
+  const filteredCrmItems = crmItems.filter((item) =>
     item.roles.includes(user.role)
   );
 
@@ -139,13 +176,64 @@ function Sidebar({ className }: SidebarNavProps) {
                   </Button>
                 </Link>
               ))}
+              
+              {/* CRM Section */}
+              <Collapsible
+                open={crmOpen}
+                onOpenChange={setCrmOpen}
+                className="mt-4"
+              >
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className={cn("w-full justify-between group", {
+                      "bg-primary/5": crmOpen || location.startsWith("/crm"),
+                    })}
+                  >
+                    <div className="flex items-center">
+                      <Target className="h-5 w-5 mr-2" />
+                      <span>CRM</span>
+                    </div>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={cn("transform transition-transform duration-200", {
+                        "rotate-180": crmOpen,
+                      })}
+                    >
+                      <path
+                        d="M8 12L2 6L3.4 4.6L8 9.2L12.6 4.6L14 6L8 12Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-4">
+                  {filteredCrmItems.map((item) => (
+                    <Link key={item.href} href={item.href}>
+                      <Button
+                        variant={location === item.href ? "secondary" : "ghost"}
+                        className={cn("w-full justify-start mt-1", {
+                          "bg-primary/10": location === item.href,
+                        })}
+                      >
+                        {item.icon}
+                        <span className="ml-2">{item.title}</span>
+                      </Button>
+                    </Link>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
             </ScrollArea>
           </div>
         </div>
       </div>
       <div className="px-3 py-2 border-t">
         <div className="flex items-center mb-2 px-4">
-          <div className="ml-2">
+          <div>
             <p className="text-sm font-medium">{user.fullName}</p>
             <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
           </div>
@@ -164,4 +252,3 @@ function Sidebar({ className }: SidebarNavProps) {
 }
 
 export { Sidebar };
-export default Sidebar;
