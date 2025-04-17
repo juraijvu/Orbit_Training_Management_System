@@ -26,8 +26,8 @@ function Router() {
   return (
     <MainLayout>
       <Switch>
-        <ProtectedRoute path="/" component={Dashboard} />
         <Route path="/auth" component={AuthPage} />
+        <ProtectedRoute path="/" component={Dashboard} />
         <ProtectedRoute path="/student-registration" component={StudentRegistration} />
         <ProtectedRoute path="/student-list" component={StudentList} />
         <ProtectedRoute path="/invoices" component={Invoices} />
