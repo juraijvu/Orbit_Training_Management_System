@@ -14,7 +14,10 @@ import {
   whatsappSettings, WhatsappSettings, InsertWhatsappSettings,
   whatsappTemplates, WhatsappTemplate, InsertWhatsappTemplate,
   whatsappChats, WhatsappChat, InsertWhatsappChat,
-  whatsappMessages, WhatsappMessage, InsertWhatsappMessage
+  whatsappMessages, WhatsappMessage, InsertWhatsappMessage,
+  titanEmailSettings, TitanEmailSettings, InsertTitanEmailSettings,
+  emailTemplates, EmailTemplate, InsertEmailTemplate,
+  emailHistory, EmailHistory, InsertEmailHistory
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, asc, desc, gte, lte, lt } from "drizzle-orm";
@@ -151,6 +154,25 @@ export interface IStorage {
   // WhatsApp Messages
   getWhatsappMessagesByChatId(chatId: number): Promise<WhatsappMessage[]>;
   createWhatsappMessage(message: InsertWhatsappMessage): Promise<WhatsappMessage>;
+  
+  // Titan Email Settings
+  getTitanEmailSettings(): Promise<TitanEmailSettings | undefined>;
+  createTitanEmailSettings(settings: InsertTitanEmailSettings): Promise<TitanEmailSettings>;
+  updateTitanEmailSettings(id: number, settings: Partial<TitanEmailSettings>): Promise<TitanEmailSettings | undefined>;
+  
+  // Email Templates
+  getEmailTemplates(): Promise<EmailTemplate[]>;
+  getEmailTemplate(id: number): Promise<EmailTemplate | undefined>;
+  getEmailTemplatesByCategory(category: string): Promise<EmailTemplate[]>;
+  createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
+  updateEmailTemplate(id: number, template: Partial<EmailTemplate>): Promise<EmailTemplate | undefined>;
+  deleteEmailTemplate(id: number): Promise<boolean>;
+  
+  // Email History
+  getEmailHistory(): Promise<EmailHistory[]>;
+  getEmailHistoryByLeadId(leadId: number): Promise<EmailHistory[]>;
+  getEmailHistoryByStudentId(studentId: number): Promise<EmailHistory[]>;
+  createEmailHistory(email: InsertEmailHistory): Promise<EmailHistory>;
 }
 
 // Memory Storage implementation
@@ -171,6 +193,9 @@ export class MemStorage implements IStorage {
   private whatsappTemplatesMap: Map<number, WhatsappTemplate>;
   private whatsappChatsMap: Map<number, WhatsappChat>;
   private whatsappMessagesMap: Map<number, WhatsappMessage>;
+  private titanEmailSettingsMap: Map<number, TitanEmailSettings>;
+  private emailTemplatesMap: Map<number, EmailTemplate>;
+  private emailHistoryMap: Map<number, EmailHistory>;
   
   private userId: number = 1;
   private studentId: number = 1;
@@ -188,6 +213,9 @@ export class MemStorage implements IStorage {
   private whatsappTemplateId: number = 1;
   private whatsappChatId: number = 1;
   private whatsappMessageId: number = 1;
+  private titanEmailSettingsId: number = 1;
+  private emailTemplateId: number = 1;
+  private emailHistoryId: number = 1;
   
   sessionStore: any;
 
@@ -208,6 +236,9 @@ export class MemStorage implements IStorage {
     this.whatsappTemplatesMap = new Map();
     this.whatsappChatsMap = new Map();
     this.whatsappMessagesMap = new Map();
+    this.titanEmailSettingsMap = new Map();
+    this.emailTemplatesMap = new Map();
+    this.emailHistoryMap = new Map();
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
