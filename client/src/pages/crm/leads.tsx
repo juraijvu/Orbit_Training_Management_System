@@ -48,6 +48,8 @@ import {
   FileText,
   Trash,
   Edit,
+  Eye,
+  Trash2,
   MoreHorizontal
 } from "lucide-react";
 import {
