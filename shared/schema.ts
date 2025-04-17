@@ -77,6 +77,7 @@ export const trainers = pgTable("trainers", {
   specialization: text("specialization").notNull(),
   courses: text("courses").notNull(), // Stored as comma-separated course IDs
   availability: text("availability").notNull(), // Stored as JSON
+  profilePdf: text("profile_pdf"), // URL to the uploaded profile PDF
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
