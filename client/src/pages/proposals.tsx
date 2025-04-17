@@ -149,7 +149,7 @@ const ProposalsPage: FC = () => {
       trainingDuration: '5 Days',
       trainingLocation: 'Dubai, UAE',
       
-      // Cover page appearance
+      // Used for logo background and text color in preview
       coverBackgroundColor: '#000000',
       coverTextColor: '#ffffff',
     },
@@ -703,62 +703,6 @@ const ProposalsPage: FC = () => {
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                
-                {/* Cover Page Design */}
-                <div>
-                  <h3 className="text-md font-medium text-gray-700 mb-4">Cover Page Design</h3>
-                  <p className="text-sm text-gray-500 mb-4">Customize the appearance of the proposal cover page</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <FormField
-                      control={form.control}
-                      name="coverBackgroundColor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Background Color</FormLabel>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-8 h-8 rounded border"
-                              style={{ backgroundColor: field.value }}
-                            />
-                            <FormControl>
-                              <Input 
-                                type="color" 
-                                {...field} 
-                                className="w-full h-10"
-                              />
-                            </FormControl>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="coverTextColor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Text Color</FormLabel>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-8 h-8 rounded border"
-                              style={{ backgroundColor: field.value }}
-                            />
-                            <FormControl>
-                              <Input 
-                                type="color" 
-                                {...field}
-                                className="w-full h-10" 
-                              />
-                            </FormControl>
-                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
