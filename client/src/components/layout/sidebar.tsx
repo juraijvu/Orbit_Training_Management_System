@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,15 @@ function Sidebar({ className }: SidebarNavProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
   const [activeSection, setActiveSection] = useState("main");
+  
+  // Set section based on the current location
+  useEffect(() => {
+    if (location?.startsWith("/crm")) {
+      setActiveSection("crm");
+    } else {
+      setActiveSection("main");
+    }
+  }, [location]);
 
   if (!user) return null;
 

@@ -1,3 +1,4 @@
+import React from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -40,9 +41,30 @@ function Router() {
         <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
         <ProtectedRoute path="/settings" component={Settings} />
         {/* CRM Routes */}
-        <ProtectedRoute path="/crm/leads" component={() => <div>Leads Management</div>} />
-        <ProtectedRoute path="/crm/campaigns" component={() => <div>Marketing Campaigns</div>} />
-        <ProtectedRoute path="/crm/follow-ups" component={() => <div>Follow-ups</div>} />
+        <ProtectedRoute path="/crm/leads" component={() => {
+          const LeadsPage = React.lazy(() => import("@/pages/crm/leads"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <LeadsPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/crm/campaigns" component={() => {
+          const CampaignsPage = React.lazy(() => import("@/pages/crm/campaigns"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <CampaignsPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/crm/follow-ups" component={() => {
+          const FollowUpsPage = React.lazy(() => import("@/pages/crm/follow-ups"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <FollowUpsPage />
+            </React.Suspense>
+          );
+        }} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

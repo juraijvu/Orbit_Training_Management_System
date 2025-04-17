@@ -2,6 +2,7 @@ import { FC, useState } from 'react';
 import { Bell, User, ChevronDown, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ interface HeaderProps {
 const Header: FC<HeaderProps> = ({ onMobileMenuToggle }) => {
   const { user, logoutMutation } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [location] = useLocation();
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -77,6 +79,31 @@ const Header: FC<HeaderProps> = ({ onMobileMenuToggle }) => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
+      
+      {/* Mobile breadcrumb with background */}
+      <div className="md:hidden bg-white border-t border-gray-200 p-2 px-4 text-sm text-gray-600 flex items-center">
+        <a href="/" className="hover:text-primary">Home</a>
+        {location && location.startsWith("/crm") && (
+          <>
+            <span className="mx-2">/</span>
+            <a href="/crm/leads" className={location === "/crm/leads" ? "text-primary font-medium" : "hover:text-primary"}>
+              Leads
+            </a>
+            {location === "/crm/campaigns" && (
+              <>
+                <span className="mx-2">/</span>
+                <a href="/crm/campaigns" className="text-primary font-medium">Campaigns</a>
+              </>
+            )}
+            {location === "/crm/follow-ups" && (
+              <>
+                <span className="mx-2">/</span>
+                <a href="/crm/follow-ups" className="text-primary font-medium">Follow-ups</a>
+              </>
+            )}
+          </>
+        )}
       </div>
     </header>
   );
