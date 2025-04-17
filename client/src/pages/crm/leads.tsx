@@ -401,12 +401,24 @@ export default function LeadsPage() {
                     <TableHead>Status</TableHead>
                     <TableHead>Interested In</TableHead>
                     <TableHead>Last Contact</TableHead>
+                    <TableHead>Next Follow-up</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredLeads.map((lead) => (
-                    <TableRow key={lead.id}>
+                    <TableRow 
+                      key={lead.id}
+                      className={`
+                        ${lead.status === 'Interested Highly' ? 'bg-green-50' : ''}
+                        ${lead.status === 'Register Soon' ? 'bg-purple-50' : ''}
+                        ${lead.status === 'New' ? 'bg-blue-50' : ''}
+                        ${lead.status === 'Called Back' ? 'bg-yellow-50' : ''}
+                        ${lead.status === 'Not Interested' ? 'bg-red-50' : ''}
+                        ${lead.status === 'Wrong Enquiry' ? 'bg-orange-50' : ''}
+                        ${lead.status === 'Converted' ? 'bg-emerald-50' : ''}
+                      `}
+                    >
                       <TableCell className="font-medium">
                         <div className="flex items-center">
                           <User className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -457,6 +469,48 @@ export default function LeadsPage() {
                           </div>
                         ) : (
                           <span className="text-sm text-muted-foreground">Not contacted</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {lead.nextFollowUpDate ? (
+                          <div className="flex flex-col">
+                            <div className="flex items-center">
+                              <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
+                              <span className="text-sm">
+                                {format(new Date(lead.nextFollowUpDate), 'MMM d, yyyy')}
+                              </span>
+                            </div>
+                            {lead.nextFollowUpTime && (
+                              <div className="flex items-center mt-1">
+                                <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">{lead.nextFollowUpTime}</span>
+                              </div>
+                            )}
+                            {lead.followupStatus && (
+                              <div className={`
+                                mt-1 px-2 py-0.5 rounded-full text-xs inline-flex items-center w-fit
+                                ${lead.followupStatus === 'Pending' ? 'bg-yellow-100 text-yellow-800' : ''}
+                                ${lead.followupStatus === 'Completed' ? 'bg-green-100 text-green-800' : ''}
+                                ${lead.followupStatus === 'No Response' ? 'bg-red-100 text-red-800' : ''}
+                                ${lead.followupStatus === 'Missed' ? 'bg-orange-100 text-orange-800' : ''}
+                                ${lead.followupStatus === 'Rescheduled' ? 'bg-blue-100 text-blue-800' : ''}
+                              `}>
+                                {lead.followupStatus}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-2 text-xs"
+                              onClick={() => handleOpenFollowUpForm(lead)}
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Schedule
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell>
@@ -645,6 +699,61 @@ export default function LeadsPage() {
                   rows={3}
                 />
               </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="followUpDate" className="text-right">
+                  Next Follow-up
+                </Label>
+                <div className="col-span-3">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        {formData.followUpDate ? (
+                          format(formData.followUpDate, "PPP")
+                        ) : (
+                          <span className="text-muted-foreground">Select a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <CalendarComponent
+                        mode="single"
+                        selected={formData.followUpDate}
+                        onSelect={(date) => 
+                          setFormData((prev) => ({ ...prev, followUpDate: date }))
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              
+              {formData.followUpDate && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="followUpStatus" className="text-right">
+                    Follow-up Status
+                  </Label>
+                  <Select
+                    value={formData.followUpStatus}
+                    onValueChange={(value) => handleSelectChange("followUpStatus", value)}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="None">None</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Completed">Completed</SelectItem>
+                      <SelectItem value="Missed">Missed</SelectItem>
+                      <SelectItem value="Rescheduled">Rescheduled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <DialogFooter>
               {editMode && (
