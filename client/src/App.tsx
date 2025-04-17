@@ -39,6 +39,10 @@ function Router() {
         <ProtectedRoute path="/proposals" component={Proposals} />
         <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
         <ProtectedRoute path="/settings" component={Settings} />
+        {/* CRM Routes */}
+        <ProtectedRoute path="/crm/leads" component={() => <div>Leads Management</div>} />
+        <ProtectedRoute path="/crm/campaigns" component={() => <div>Marketing Campaigns</div>} />
+        <ProtectedRoute path="/crm/follow-ups" component={() => <div>Follow-ups</div>} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
