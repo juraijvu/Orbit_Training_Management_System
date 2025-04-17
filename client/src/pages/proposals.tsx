@@ -50,8 +50,25 @@ const proposalFormSchema = insertProposalSchema.extend({
   }, {
     message: "Please enter a valid date",
   }),
+  // Logo handling
   logo: z.any().optional(), // To handle file upload
   applyWhiteFilter: z.boolean().default(true), // Option to apply white filter to logo
+  
+  // Additional fields for the cover page
+  presenterName: z.string().min(1, "Presenter name is required"),
+  presenterTitle: z.string().optional(),
+  presenterEmail: z.string().email("Invalid email format").optional(),
+  presenterPhone: z.string().optional(),
+  
+  // Course details
+  courseName: z.string().min(1, "Course name is required"),
+  courseFormat: z.string().optional(),
+  trainingDuration: z.string().optional(),
+  trainingLocation: z.string().optional(),
+  
+  // Cover page customization
+  coverBackgroundColor: z.string().default("#000000"),
+  coverTextColor: z.string().default("#ffffff"),
 });
 
 type ProposalFormValues = z.infer<typeof proposalFormSchema>;
@@ -97,6 +114,22 @@ const ProposalsPage: FC = () => {
       date: format(new Date(), 'yyyy-MM-dd'),
       status: 'draft',
       applyWhiteFilter: true, // Default to applying white filter
+      
+      // New fields for presenter information
+      presenterName: user?.username || '',
+      presenterTitle: 'Training Consultant',
+      presenterEmail: '',
+      presenterPhone: '',
+      
+      // Course details
+      courseName: '',
+      courseFormat: 'In-Person',
+      trainingDuration: '5 Days',
+      trainingLocation: 'Dubai, UAE',
+      
+      // Cover page appearance
+      coverBackgroundColor: '#000000',
+      coverTextColor: '#ffffff',
     },
   });
   
@@ -397,6 +430,190 @@ const ProposalsPage: FC = () => {
                   )}
                 />
                 
+                {/* Presenter Information */}
+                <div>
+                  <h3 className="text-md font-medium text-gray-700 mb-4">Presenter Information</h3>
+                  <p className="text-sm text-gray-500 mb-4">Enter details of the person presenting this proposal</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="presenterName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Presenter Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="presenterTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title / Position</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="presenterEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="presenterPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                {/* Course Details */}
+                <div>
+                  <h3 className="text-md font-medium text-gray-700 mb-4">Course Details</h3>
+                  <p className="text-sm text-gray-500 mb-4">Enter information about the training course</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="courseName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Course Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="courseFormat"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Format</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="In-Person, Online, Hybrid" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="trainingDuration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duration</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="e.g. 5 Days" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="trainingLocation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                {/* Cover Page Design */}
+                <div>
+                  <h3 className="text-md font-medium text-gray-700 mb-4">Cover Page Design</h3>
+                  <p className="text-sm text-gray-500 mb-4">Customize the appearance of the proposal cover page</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <FormField
+                      control={form.control}
+                      name="coverBackgroundColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Background Color</FormLabel>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-8 h-8 rounded border"
+                              style={{ backgroundColor: field.value }}
+                            />
+                            <FormControl>
+                              <Input 
+                                type="color" 
+                                {...field} 
+                                className="w-full h-10"
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="coverTextColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Text Color</FormLabel>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-8 h-8 rounded border"
+                              style={{ backgroundColor: field.value }}
+                            />
+                            <FormControl>
+                              <Input 
+                                type="color" 
+                                {...field}
+                                className="w-full h-10" 
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                
                 {/* Company Logo Upload and Preview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="col-span-1 md:col-span-2">
@@ -461,7 +678,10 @@ const ProposalsPage: FC = () => {
                     {logoUrl ? (
                       <div className="flex flex-col">
                         <p className="text-sm font-medium mb-2">Logo Preview:</p>
-                        <div className="border rounded p-4 bg-black flex items-center justify-center">
+                        <div 
+                          className="border rounded p-4 flex items-center justify-center"
+                          style={{ backgroundColor: form.getValues('coverBackgroundColor') || '#000000' }}
+                        >
                           <img 
                             src={logoUrl} 
                             alt="Company Logo" 
@@ -470,12 +690,15 @@ const ProposalsPage: FC = () => {
                           />
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
-                          Black background simulates how the logo will appear on the proposal cover
+                          Background color matches your cover page design
                         </p>
                       </div>
                     ) : (
-                      <div className="border rounded p-4 flex items-center justify-center h-32 bg-gray-100">
-                        <div className="text-center text-gray-500">
+                      <div 
+                        className="border rounded p-4 flex items-center justify-center h-32"
+                        style={{ backgroundColor: form.getValues('coverBackgroundColor') || '#000000' }}
+                      >
+                        <div className="text-center" style={{ color: form.getValues('coverTextColor') || '#ffffff' }}>
                           <Image className="h-8 w-8 mx-auto mb-2" />
                           <p className="text-xs">No logo uploaded</p>
                         </div>
