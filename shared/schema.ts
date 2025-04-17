@@ -220,12 +220,19 @@ export const leads = pgTable("leads", {
   fullName: text("full_name").notNull(),
   email: text("email"),
   phone: text("phone").notNull(),
+  whatsappNumber: text("whatsapp_number"),
+  consultantId: integer("consultant_id").notNull(), // User ID of consultant
   source: text("source").notNull(), // website, social media, referral, etc.
-  interestedCourse: integer("interested_course"),
-  status: text("status").notNull().default("new"), // new, contacted, qualified, converted, closed
+  interestedCourses: text("interested_courses").notNull(), // Store as JSON array of course IDs
+  status: text("status").notNull().default("New"), // New, Interested Highly, Wrong Enquiry, Not Interested
+  priority: text("priority").notNull().default("Medium"), // High, Medium, Low
   notes: text("notes"),
+  meetingDate: timestamp("meeting_date"),
   assignedTo: integer("assigned_to"), // User ID
   lastContactDate: timestamp("last_contact_date"),
+  nextFollowUpDate: timestamp("next_follow_up_date"),
+  nextFollowUpTime: text("next_follow_up_time"),
+  createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -241,12 +248,19 @@ export const campaigns = pgTable("campaigns", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  platform: text("platform").notNull(), // facebook, instagram, email, etc.
+  platform: text("platform").notNull(), // Meta Ads, Google Ads, LinkedIn Ads, TikTok Ads, etc.
+  adAccount: text("ad_account"),
+  adCampaignId: text("ad_campaign_id"),
+  targetAudience: text("target_audience"),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date"),
   budget: numeric("budget"),
   status: text("status").notNull(), // planned, active, completed
   results: text("results"), // Stored as JSON
+  conversions: integer("conversions").default(0),
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  costPerLead: numeric("cost_per_lead"),
   createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -263,11 +277,17 @@ export const followUps = pgTable("follow_ups", {
   id: serial("id").primaryKey(),
   leadId: integer("lead_id").notNull(),
   contactDate: timestamp("contact_date").notNull(),
-  contactType: text("contact_type").notNull(), // call, email, meeting, etc.
+  contactTime: text("contact_time"),
+  contactType: text("contact_type").notNull(), // call, email, meeting, whatsapp, etc.
   notes: text("notes"),
-  outcome: text("outcome"), // interested, not interested, call back, etc.
+  outcome: text("outcome"), // Interested Highly, Called Back, No Response, Wrong Enquiry, Not Interested
   nextFollowUp: timestamp("next_follow_up"),
+  nextFollowUpTime: text("next_follow_up_time"),
+  priority: text("priority").notNull().default("Medium"), // High, Medium, Low
+  status: text("status").notNull().default("Pending"), // Pending, Completed, Missed
+  isNotified: boolean("is_notified").default(false),
   createdBy: integer("created_by").notNull(),
+  consultantId: integer("consultant_id").notNull(), // to track which consultant created the follow-up
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

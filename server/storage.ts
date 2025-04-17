@@ -866,7 +866,7 @@ export class DatabaseStorage implements IStorage {
   
   // CRM - Leads methods
   async getLeads(): Promise<Lead[]> {
-    return await db.select().from(leads);
+    return await db.select().from(leads).orderBy(desc(leads.createdAt));
   }
 
   async getLead(id: number): Promise<Lead | undefined> {
@@ -874,20 +874,73 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getLeadsByConsultant(consultantId: number): Promise<Lead[]> {
+    return await db
+      .select()
+      .from(leads)
+      .where(eq(leads.consultantId, consultantId))
+      .orderBy(desc(leads.createdAt));
+  }
+
+  async getLeadsByStatus(status: string): Promise<Lead[]> {
+    return await db
+      .select()
+      .from(leads)
+      .where(eq(leads.status, status))
+      .orderBy(desc(leads.createdAt));
+  }
+
+  async getLeadsByPriority(priority: string): Promise<Lead[]> {
+    return await db
+      .select()
+      .from(leads)
+      .where(eq(leads.priority, priority))
+      .orderBy(desc(leads.createdAt));
+  }
+
+  async getLeadsDueForFollowUp(date?: Date): Promise<Lead[]> {
+    const targetDate = date || new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    
+    return await db
+      .select()
+      .from(leads)
+      .where(
+        and(
+          gte(leads.nextFollowUpDate, targetDate),
+          lt(leads.nextFollowUpDate, nextDay)
+        )
+      )
+      .orderBy(leads.nextFollowUpTime);
+  }
+
   async createLead(lead: InsertLead): Promise<Lead> {
     const leadWithDefaults = {
       ...lead,
       createdAt: new Date(),
       status: lead.status || "New",
+      priority: lead.priority || "Medium",
       source: lead.source || null,
-      notes: lead.notes || null
+      notes: lead.notes || null,
+      email: lead.email || null,
+      whatsappNumber: lead.whatsappNumber || null,
+      assignedTo: lead.assignedTo || lead.consultantId
     };
     const result = await db.insert(leads).values(leadWithDefaults).returning();
     return result[0];
   }
 
   async updateLead(id: number, lead: Partial<Lead>): Promise<Lead | undefined> {
-    const result = await db.update(leads).set(lead).where(eq(leads.id, id)).returning();
+    // Update lastContactDate if not explicitly provided but other changes are made
+    const updatedLead = { 
+      ...lead,
+      lastContactDate: lead.lastContactDate || new Date()
+    };
+    
+    const result = await db.update(leads).set(updatedLead).where(eq(leads.id, id)).returning();
     return result[0];
   }
 
@@ -898,12 +951,28 @@ export class DatabaseStorage implements IStorage {
   
   // CRM - Campaigns methods
   async getCampaigns(): Promise<Campaign[]> {
-    return await db.select().from(campaigns);
+    return await db.select().from(campaigns).orderBy(desc(campaigns.createdAt));
   }
 
   async getCampaign(id: number): Promise<Campaign | undefined> {
     const result = await db.select().from(campaigns).where(eq(campaigns.id, id));
     return result[0];
+  }
+
+  async getCampaignsByPlatform(platform: string): Promise<Campaign[]> {
+    return await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.platform, platform))
+      .orderBy(desc(campaigns.createdAt));
+  }
+
+  async getActiveCampaigns(): Promise<Campaign[]> {
+    return await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.status, "active"))
+      .orderBy(desc(campaigns.startDate));
   }
 
   async createCampaign(campaign: InsertCampaign): Promise<Campaign> {
@@ -912,7 +981,14 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date(),
       budget: campaign.budget || null,
       platform: campaign.platform || null,
-      status: campaign.status || "Draft"
+      status: campaign.status || "planned",
+      description: campaign.description || null,
+      results: campaign.results || null,
+      adAccount: campaign.adAccount || null,
+      adCampaignId: campaign.adCampaignId || null,
+      targetAudience: campaign.targetAudience || null,
+      endDate: campaign.endDate || null,
+      costPerLead: campaign.costPerLead || null
     };
     const result = await db.insert(campaigns).values(campaignWithDefaults).returning();
     return result[0];
@@ -930,11 +1006,95 @@ export class DatabaseStorage implements IStorage {
   
   // CRM - Follow Ups methods
   async getFollowUps(): Promise<FollowUp[]> {
-    return await db.select().from(followUps);
+    return await db
+      .select()
+      .from(followUps)
+      .orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
   }
 
   async getFollowUpsByLeadId(leadId: number): Promise<FollowUp[]> {
-    return await db.select().from(followUps).where(eq(followUps.leadId, leadId));
+    return await db
+      .select()
+      .from(followUps)
+      .where(eq(followUps.leadId, leadId))
+      .orderBy(desc(followUps.contactDate));
+  }
+
+  async getFollowUpsByConsultant(consultantId: number): Promise<FollowUp[]> {
+    return await db
+      .select()
+      .from(followUps)
+      .where(eq(followUps.consultantId, consultantId))
+      .orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
+  }
+
+  async getPendingFollowUps(): Promise<FollowUp[]> {
+    return await db
+      .select()
+      .from(followUps)
+      .where(eq(followUps.status, "Pending"))
+      .orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
+  }
+
+  async getTodaysFollowUps(consultantId?: number): Promise<FollowUp[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    let query = db
+      .select()
+      .from(followUps)
+      .where(
+        and(
+          gte(followUps.nextFollowUp, today),
+          lt(followUps.nextFollowUp, tomorrow),
+          eq(followUps.status, "Pending")
+        )
+      );
+      
+    if (consultantId) {
+      query = query.where(eq(followUps.consultantId, consultantId));
+    }
+    
+    return await query.orderBy(asc(followUps.nextFollowUpTime));
+  }
+
+  async getHighPriorityFollowUps(consultantId?: number): Promise<FollowUp[]> {
+    let query = db
+      .select()
+      .from(followUps)
+      .where(
+        and(
+          eq(followUps.priority, "High"),
+          eq(followUps.status, "Pending")
+        )
+      );
+      
+    if (consultantId) {
+      query = query.where(eq(followUps.consultantId, consultantId));
+    }
+    
+    return await query.orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
+  }
+
+  async getFollowUpsToNotify(): Promise<FollowUp[]> {
+    const now = new Date();
+    const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
+    
+    return await db
+      .select()
+      .from(followUps)
+      .where(
+        and(
+          gte(followUps.nextFollowUp, now),
+          lte(followUps.nextFollowUp, thirtyMinutesFromNow),
+          eq(followUps.isNotified, false),
+          eq(followUps.status, "Pending")
+        )
+      )
+      .orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
   }
 
   async getFollowUp(id: number): Promise<FollowUp | undefined> {
@@ -946,7 +1106,14 @@ export class DatabaseStorage implements IStorage {
     const followUpWithDefaults = {
       ...followUp,
       createdAt: new Date(),
-      notes: followUp.notes || null
+      notes: followUp.notes || null,
+      outcome: followUp.outcome || null,
+      nextFollowUp: followUp.nextFollowUp || null,
+      nextFollowUpTime: followUp.nextFollowUpTime || null,
+      contactTime: followUp.contactTime || null,
+      priority: followUp.priority || "Medium",
+      status: followUp.status || "Pending",
+      isNotified: followUp.isNotified || false
     };
     const result = await db.insert(followUps).values(followUpWithDefaults).returning();
     return result[0];
@@ -954,6 +1121,15 @@ export class DatabaseStorage implements IStorage {
 
   async updateFollowUp(id: number, followUp: Partial<FollowUp>): Promise<FollowUp | undefined> {
     const result = await db.update(followUps).set(followUp).where(eq(followUps.id, id)).returning();
+    return result[0];
+  }
+
+  async markFollowUpAsNotified(id: number): Promise<FollowUp | undefined> {
+    const result = await db
+      .update(followUps)
+      .set({ isNotified: true })
+      .where(eq(followUps.id, id))
+      .returning();
     return result[0];
   }
 
