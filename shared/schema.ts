@@ -224,7 +224,7 @@ export const leads = pgTable("leads", {
   consultantId: integer("consultant_id").notNull(), // User ID of consultant
   source: text("source").notNull(), // website, social media, referral, etc.
   interestedCourses: text("interested_courses").notNull(), // Store as JSON array of course IDs
-  status: text("status").notNull().default("New"), // New, Interested Highly, Wrong Enquiry, Not Interested
+  status: text("status").notNull().default("New"), // New, Interested Highly, Register Soon, Wrong Enquiry, Not Interested
   priority: text("priority").notNull().default("Medium"), // High, Medium, Low
   notes: text("notes"),
   meetingDate: timestamp("meeting_date"),
@@ -298,3 +298,88 @@ export const insertFollowUpSchema = createInsertSchema(followUps).omit({
 
 export type InsertFollowUp = z.infer<typeof insertFollowUpSchema>;
 export type FollowUp = typeof followUps.$inferSelect;
+
+// WhatsApp Integration
+export const whatsappSettings = pgTable("whatsapp_settings", {
+  id: serial("id").primaryKey(),
+  apiKey: text("api_key").notNull(),
+  phoneNumberId: text("phone_number_id").notNull(),
+  businessAccountId: text("business_account_id").notNull(),
+  accessToken: text("access_token").notNull(),
+  webhookVerifyToken: text("webhook_verify_token").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertWhatsappSettingsSchema = createInsertSchema(whatsappSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertWhatsappSettings = z.infer<typeof insertWhatsappSettingsSchema>;
+export type WhatsappSettings = typeof whatsappSettings.$inferSelect;
+
+export const whatsappTemplates = pgTable("whatsapp_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  content: text("content").notNull(),
+  type: text("type").notNull(), // welcome, followup, course_info, payment_reminder, etc.
+  variables: text("variables"), // JSON array of variable names in the template
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertWhatsappTemplateSchema = createInsertSchema(whatsappTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertWhatsappTemplate = z.infer<typeof insertWhatsappTemplateSchema>;
+export type WhatsappTemplate = typeof whatsappTemplates.$inferSelect;
+
+export const whatsappChats = pgTable("whatsapp_chats", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  consultantId: integer("consultant_id"), // The consultant assigned to this chat
+  lastMessageTime: timestamp("last_message_time").notNull().defaultNow(),
+  unreadCount: integer("unread_count").default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertWhatsappChatSchema = createInsertSchema(whatsappChats).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertWhatsappChat = z.infer<typeof insertWhatsappChatSchema>;
+export type WhatsappChat = typeof whatsappChats.$inferSelect;
+
+export const whatsappMessages = pgTable("whatsapp_messages", {
+  id: serial("id").primaryKey(),
+  chatId: integer("chat_id").notNull(),
+  messageId: text("message_id"), // WhatsApp message ID for sent/received messages
+  content: text("content").notNull(),
+  mediaUrl: text("media_url"), // URL to any media in the message
+  mediaType: text("media_type"), // image, video, audio, document
+  direction: text("direction").notNull(), // inbound (received) or outbound (sent)
+  status: text("status").notNull(), // sent, delivered, read, failed
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  sentBy: integer("sent_by"), // User ID if sent by a user
+  isTemplateMessage: boolean("is_template_message").default(false),
+  templateId: integer("template_id"), // Reference to the template used
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertWhatsappMessageSchema = createInsertSchema(whatsappMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertWhatsappMessage = z.infer<typeof insertWhatsappMessageSchema>;
+export type WhatsappMessage = typeof whatsappMessages.$inferSelect;

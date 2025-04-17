@@ -11,7 +11,11 @@ import {
   insertCertificateSchema,
   insertQuotationSchema,
   insertProposalSchema,
-  insertUserSchema
+  insertUserSchema,
+  insertWhatsappSettingsSchema,
+  insertWhatsappTemplateSchema,
+  insertWhatsappChatSchema,
+  insertWhatsappMessageSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
