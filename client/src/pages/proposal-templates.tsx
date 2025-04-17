@@ -44,12 +44,19 @@ interface CoverPageField {
 
 interface PreviewData {
   companyName: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
   courseName: string;
   presenterName: string;
   presentedTo: string;
   proposalDate: string;
   logoUrl: string;
+  trainerName: string;
 }
+
+// CSS filter to make logo white
+const whiteLogoFilter = "invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(103%) contrast(103%)";
 
 const defaultCoverFields: CoverPageField[] = [
   {
@@ -61,6 +68,66 @@ const defaultCoverFields: CoverPageField[] = [
     width: 250,
     height: 842,
     backgroundColor: "#000000"
+  },
+  {
+    id: "contactPerson",
+    type: "text",
+    name: "Contact Person",
+    x: 400,
+    y: 350,
+    width: 300,
+    height: 30,
+    fontSize: 16,
+    fontFamily: "Arial, sans-serif",
+    color: "#333333",
+    bold: false,
+    italic: false,
+    placeholder: "{{contactPerson}}"
+  },
+  {
+    id: "email",
+    type: "text",
+    name: "Email",
+    x: 400,
+    y: 380,
+    width: 300,
+    height: 30,
+    fontSize: 16,
+    fontFamily: "Arial, sans-serif",
+    color: "#666666",
+    bold: false,
+    italic: false,
+    placeholder: "{{email}}"
+  },
+  {
+    id: "phone",
+    type: "text",
+    name: "Phone",
+    x: 400,
+    y: 410,
+    width: 300,
+    height: 30,
+    fontSize: 16,
+    fontFamily: "Arial, sans-serif",
+    color: "#666666",
+    bold: false,
+    italic: false,
+    placeholder: "{{phone}}"
+  },
+  {
+    id: "trainerName",
+    type: "text",
+    name: "Trainer Name",
+    x: 400,
+    y: 470,
+    width: 300,
+    height: 30,
+    fontSize: 16,
+    fontFamily: "Arial, sans-serif",
+    color: "#333333",
+    bold: true,
+    italic: false,
+    placeholder: "{{trainerName}}"
   },
   {
     id: "courseName",
@@ -195,11 +262,15 @@ export default function ProposalTemplates() {
   const [selectedFieldId, setSelectedFieldId] = useState<string>(defaultCoverFields[0].id);
   const [previewData, setPreviewData] = useState<PreviewData>({
     companyName: "ABC Corporation",
+    contactPerson: "Jane Doe",
+    email: "jane.doe@example.com",
+    phone: "+971 50 123 4567",
     courseName: "Advanced Web Development",
     presenterName: "Presented by: John Smith",
     presentedTo: "Presented to: XYZ Company",
     proposalDate: "April 15, 2023",
-    logoUrl: "https://via.placeholder.com/120"
+    logoUrl: "https://via.placeholder.com/120",
+    trainerName: "Alex Johnson"
   });
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("cover");
