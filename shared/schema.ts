@@ -384,3 +384,75 @@ export const insertWhatsappMessageSchema = createInsertSchema(whatsappMessages).
 
 export type InsertWhatsappMessage = z.infer<typeof insertWhatsappMessageSchema>;
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
+
+// Titan Email settings
+export const titanEmailSettings = pgTable("titan_email_settings", {
+  id: serial("id").primaryKey(),
+  apiKey: text("api_key"),
+  apiSecret: text("api_secret"),
+  senderName: text("sender_name").notNull(),
+  senderEmail: text("sender_email").notNull(),
+  replyToEmail: text("reply_to_email"),
+  enabled: boolean("enabled").default(false),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTitanEmailSettingsSchema = createInsertSchema(titanEmailSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertTitanEmailSettings = z.infer<typeof insertTitanEmailSettingsSchema>;
+export type TitanEmailSettings = typeof titanEmailSettings.$inferSelect;
+
+// Email Templates
+export const emailTemplates = pgTable("email_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  bodyText: text("body_text").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  isDefault: boolean("is_default").default(false),
+  category: text("category").notNull(), // lead_follow_up, course_info, invoice, etc.
+  variables: text("variables").array(), // Array of variable placeholders used in the template
+  createdBy: integer("created_by"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+
+// Email History
+export const emailHistory = pgTable("email_history", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id"),
+  subject: text("subject").notNull(),
+  bodyText: text("body_text"),
+  bodyHtml: text("body_html"),
+  recipientEmail: text("recipient_email").notNull(),
+  recipientName: text("recipient_name"),
+  senderId: integer("sender_id"), // User who sent the email
+  status: text("status").notNull(), // sent, failed, delivered, opened
+  sentAt: timestamp("sent_at").notNull().defaultNow(),
+  leadId: integer("lead_id"), // If the email was sent to a lead
+  studentId: integer("student_id"), // If the email was sent to a student
+  titanMessageId: text("titan_message_id"), // Message ID returned by Titan API
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
+export type EmailHistory = typeof emailHistory.$inferSelect;

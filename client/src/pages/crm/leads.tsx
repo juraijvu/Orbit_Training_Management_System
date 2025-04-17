@@ -472,11 +472,7 @@ export default function LeadsPage() {
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Lead
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              toast({
-                                description: "Add follow-up - to be implemented",
-                              });
-                            }}>
+                            <DropdownMenuItem onClick={() => handleOpenFollowUpForm(lead)}>
                               <Calendar className="mr-2 h-4 w-4" />
                               Add Follow-up
                             </DropdownMenuItem>
@@ -677,6 +673,180 @@ export default function LeadsPage() {
                 ) : (
                   <>{editMode ? "Update Lead" : "Save Lead"}</>
                 )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Follow-up Dialog */}
+      <Dialog open={followUpFormOpen} onOpenChange={(open) => {
+        if (!open) {
+          resetFollowUpForm();
+        }
+        setFollowUpFormOpen(open);
+      }}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Follow-up</DialogTitle>
+            <DialogDescription>
+              Schedule a follow-up for {selectedLead?.fullName}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (followUpData.leadId && followUpData.followUpDate) {
+              const combinedDateTime = new Date(followUpData.followUpDate);
+              const [hours, minutes] = followUpData.followUpTime.split(':');
+              combinedDateTime.setHours(parseInt(hours), parseInt(minutes));
+              
+              // Create follow-up record
+              const followUpRecord = {
+                leadId: followUpData.leadId,
+                notes: followUpData.notes,
+                followUpDate: combinedDateTime.toISOString(),
+                priority: followUpData.priority,
+                status: followUpData.status
+              };
+              
+              // Make API call to create follow-up
+              apiRequest("POST", "/api/crm/follow-ups", followUpRecord)
+                .then(response => response.json())
+                .then(() => {
+                  queryClient.invalidateQueries({ queryKey: ['/api/crm/leads'] });
+                  queryClient.invalidateQueries({ queryKey: ['/api/crm/follow-ups'] });
+                  toast({
+                    title: "Success",
+                    description: "Follow-up scheduled successfully!",
+                  });
+                  setFollowUpFormOpen(false);
+                })
+                .catch(error => {
+                  toast({
+                    title: "Error",
+                    description: `Failed to schedule follow-up: ${error.message}`,
+                    variant: "destructive"
+                  });
+                });
+            }
+          }}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="followUpDate" className="text-right">
+                  Date <span className="text-red-500">*</span>
+                </Label>
+                <div className="col-span-3">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        {followUpData.followUpDate ? (
+                          format(followUpData.followUpDate, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={followUpData.followUpDate}
+                        onSelect={(date) => 
+                          setFollowUpData((prev) => ({ ...prev, followUpDate: date || new Date() }))
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="followUpTime" className="text-right">
+                  Time <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="followUpTime"
+                  type="time"
+                  value={followUpData.followUpTime}
+                  onChange={(e) => 
+                    setFollowUpData((prev) => ({ ...prev, followUpTime: e.target.value }))
+                  }
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="priority" className="text-right">
+                  Priority
+                </Label>
+                <Select
+                  value={followUpData.priority}
+                  onValueChange={(value) => 
+                    setFollowUpData((prev) => ({ ...prev, priority: value }))
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Status
+                </Label>
+                <Select
+                  value={followUpData.status}
+                  onValueChange={(value) => 
+                    setFollowUpData((prev) => ({ ...prev, status: value }))
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Cancelled">Cancelled</SelectItem>
+                    <SelectItem value="Rescheduled">Rescheduled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="notes" className="text-right">
+                  Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  value={followUpData.notes}
+                  onChange={(e) => 
+                    setFollowUpData((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder="Follow-up details or discussion points"
+                  className="col-span-3"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => setFollowUpFormOpen(false)}
+                className="mr-2"
+              >
+                Cancel
+              </Button>
+              <Button type="submit">
+                Schedule Follow-up
               </Button>
             </DialogFooter>
           </form>
