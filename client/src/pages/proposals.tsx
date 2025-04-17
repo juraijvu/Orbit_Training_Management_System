@@ -550,7 +550,15 @@ const ProposalsPage: FC = () => {
                                 name: course.name,
                                 duration: course.duration,
                                 fee: parseFloat(course.fee.toString()),
-                                modules: course.content ? JSON.parse(course.content) : []
+                                modules: course.content ? (() => {
+                                  try {
+                                    return JSON.parse(course.content || '[]');
+                                  } catch (e) {
+                                    // If content is not valid JSON, treat it as a string
+                                    console.warn('Course content is not valid JSON', e);
+                                    return [{ name: 'Course Content', subItems: [course.content] }];
+                                  }
+                                })() : []
                               };
                               
                               setSelectedCourses([...selectedCourses, newCourse]);
