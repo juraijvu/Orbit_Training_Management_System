@@ -50,7 +50,9 @@ import {
   Edit,
   Eye,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  Clock,
+  Bell
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -60,6 +62,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { format } from "date-fns";
 
 export default function LeadsPage() {

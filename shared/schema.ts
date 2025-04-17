@@ -224,8 +224,9 @@ export const leads = pgTable("leads", {
   consultantId: integer("consultant_id").notNull(), // User ID of consultant
   source: text("source").notNull(), // website, social media, referral, etc.
   interestedCourses: text("interested_courses").notNull(), // Store as JSON array of course IDs
-  status: text("status").notNull().default("New"), // New, Interested Highly, Register Soon, Wrong Enquiry, Not Interested
+  status: text("status").notNull().default("New"), // New, Interested Highly, Register Soon, Wrong Enquiry, Not Interested, Called Back, Converted
   priority: text("priority").notNull().default("Medium"), // High, Medium, Low
+  followupStatus: text("followup_status").default("Pending"), // Pending, Completed, No Response
   notes: text("notes"),
   meetingDate: timestamp("meeting_date"),
   assignedTo: integer("assigned_to"), // User ID
