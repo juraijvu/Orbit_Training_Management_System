@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea"; 
 import { 
   Card, 
   CardContent, 
@@ -43,14 +45,41 @@ import {
   Mail, 
   Calendar,
   User,
-  FileText
+  FileText,
+  Trash,
+  Edit,
+  MoreHorizontal
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 
 export default function LeadsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [openDialog, setOpenDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    source: "",
+    interestedCourse: "",
+    notes: "",
+    status: "New"
+  });
 
   // Query to fetch leads
   const { 
@@ -58,6 +87,167 @@ export default function LeadsPage() {
     isLoading 
   } = useQuery({
     queryKey: ['/api/crm/leads'],
+  });
+  
+  // Query to fetch courses for dropdown
+  const {
+    data: courses = []
+  } = useQuery({
+    queryKey: ['/api/courses'],
+  });
+  
+  // Create lead mutation
+  const createLeadMutation = useMutation({
+    mutationFn: async (leadData) => {
+      const response = await apiRequest("POST", "/api/crm/leads", leadData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/crm/leads'] });
+      toast({
+        title: "Success",
+        description: "Lead added successfully!",
+      });
+      resetForm();
+      setOpenDialog(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to add lead: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Update lead mutation
+  const updateLeadMutation = useMutation({
+    mutationFn: async ({ id, data }) => {
+      const response = await apiRequest("PATCH", `/api/crm/leads/${id}`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/crm/leads'] });
+      toast({
+        title: "Success",
+        description: "Lead updated successfully!",
+      });
+      resetForm();
+      setOpenDialog(false);
+      setEditMode(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update lead: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Delete lead mutation
+  const deleteLeadMutation = useMutation({
+    mutationFn: async (id) => {
+      const response = await apiRequest("DELETE", `/api/crm/leads/${id}`);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/crm/leads'] });
+      toast({
+        title: "Success",
+        description: "Lead deleted successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete lead: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Handle input change in form
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+  
+  // Handle select change in form
+  const handleSelectChange = (id, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+  
+  // Reset form 
+  const resetForm = () => {
+    setFormData({
+      fullName: "",
+      phone: "",
+      email: "",
+      source: "",
+      interestedCourse: "",
+      notes: "",
+      status: "New"
+    });
+    setSelectedLead(null);
+  };
+  
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!formData.fullName || !formData.phone) {
+      toast({
+        title: "Validation Error",
+        description: "Full name and phone are required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (editMode && selectedLead) {
+      updateLeadMutation.mutate({ 
+        id: selectedLead.id, 
+        data: formData 
+      });
+    } else {
+      createLeadMutation.mutate(formData);
+    }
+  };
+  
+  // Handle edit lead
+  const handleEditLead = (lead) => {
+    setSelectedLead(lead);
+    setFormData({
+      fullName: lead.fullName,
+      phone: lead.phone,
+      email: lead.email || "",
+      source: lead.source || "",
+      interestedCourse: lead.interestedCourse?.toString() || "",
+      notes: lead.notes || "",
+      status: lead.status
+    });
+    setEditMode(true);
+    setOpenDialog(true);
+  };
+  
+  // Filter leads based on search and status
+  const filteredLeads = leads.filter(lead => {
+    const matchesSearch = searchQuery === "" || 
+      lead.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lead.phone.includes(searchQuery) ||
+      (lead.email && lead.email.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
 
   return (
@@ -83,19 +273,24 @@ export default function LeadsPage() {
               <Input
                 placeholder="Search leads..."
                 className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Select defaultValue="all">
+            <Select 
+              defaultValue="all"
+              onValueChange={(value) => setStatusFilter(value)}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Status filter" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="contacted">Contacted</SelectItem>
-                <SelectItem value="qualified">Qualified</SelectItem>
-                <SelectItem value="converted">Converted</SelectItem>
-                <SelectItem value="lost">Lost</SelectItem>
+                <SelectItem value="New">New</SelectItem>
+                <SelectItem value="Contacted">Contacted</SelectItem>
+                <SelectItem value="Qualified">Qualified</SelectItem>
+                <SelectItem value="Converted">Converted</SelectItem>
+                <SelectItem value="Lost">Lost</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -111,8 +306,26 @@ export default function LeadsPage() {
               <p className="text-muted-foreground mt-2">
                 Add your first lead to start tracking potential customers.
               </p>
-              <Button variant="outline" className="mt-4" onClick={() => setOpenDialog(true)}>
+              <Button variant="outline" className="mt-4" onClick={() => {
+                resetForm();
+                setEditMode(false);
+                setOpenDialog(true);
+              }}>
                 <Plus className="mr-2 h-4 w-4" /> Add New Lead
+              </Button>
+            </div>
+          ) : filteredLeads.length === 0 ? (
+            <div className="text-center py-12 border rounded-lg bg-muted/10">
+              <Search className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">No matching leads</h3>
+              <p className="text-muted-foreground mt-2">
+                Try adjusting your search or filter criteria.
+              </p>
+              <Button variant="outline" className="mt-4" onClick={() => {
+                setSearchQuery("");
+                setStatusFilter("all");
+              }}>
+                Clear Filters
               </Button>
             </div>
           ) : (
@@ -125,11 +338,11 @@ export default function LeadsPage() {
                     <TableHead>Status</TableHead>
                     <TableHead>Interested In</TableHead>
                     <TableHead>Last Contact</TableHead>
-                    <TableHead>Action</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leads.map((lead) => (
+                  {filteredLeads.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center">
@@ -163,7 +376,12 @@ export default function LeadsPage() {
                           {lead.status}
                         </div>
                       </TableCell>
-                      <TableCell>{lead.interestedCourse || 'Not specified'}</TableCell>
+                      <TableCell>
+                        {lead.interestedCourse ? (
+                          courses.find(c => c.id === lead.interestedCourse)?.name || 
+                          `Course #${lead.interestedCourse}`
+                        ) : 'Not specified'}
+                      </TableCell>
                       <TableCell>
                         {lead.lastContactDate ? (
                           <div className="flex items-center">
@@ -177,32 +395,40 @@ export default function LeadsPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 px-2"
-                            onClick={() => {
-                              toast({
-                                description: "View lead details - to be implemented",
-                              });
-                            }}
-                          >
-                            View
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 px-2"
-                            onClick={() => {
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleEditLead(lead)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Lead
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
                               toast({
                                 description: "Add follow-up - to be implemented",
                               });
-                            }}
-                          >
-                            Follow-up
-                          </Button>
-                        </div>
+                            }}>
+                              <Calendar className="mr-2 h-4 w-4" />
+                              Add Follow-up
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete ${lead.fullName}?`)) {
+                                  deleteLeadMutation.mutate(lead.id);
+                                }
+                              }}
+                            >
+                              <Trash className="mr-2 h-4 w-4" />
+                              Delete Lead
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -213,103 +439,180 @@ export default function LeadsPage() {
         </CardContent>
       </Card>
 
-      {/* Add Lead Dialog */}
-      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+      {/* Add/Edit Lead Dialog */}
+      <Dialog open={openDialog} onOpenChange={(open) => {
+        if (!open) {
+          resetForm();
+          setEditMode(false);
+        }
+        setOpenDialog(open);
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add New Lead</DialogTitle>
+            <DialogTitle>{editMode ? "Edit Lead" : "Add New Lead"}</DialogTitle>
             <DialogDescription>
-              Enter the details of the potential customer. Click save when you're done.
+              {editMode 
+                ? "Update the lead's information below." 
+                : "Enter the details of the potential customer. Click save when you're done."}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="fullName" className="text-right">
-                Full Name
-              </Label>
-              <Input
-                id="fullName"
-                placeholder="John Doe"
-                className="col-span-3"
-              />
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="fullName" className="text-right">
+                  Full Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  placeholder="John Doe"
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">
+                  Phone <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="+971 50 123 4567"
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="john@example.com"
+                  className="col-span-3"
+                  type="email"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="source" className="text-right">
+                  Source
+                </Label>
+                <Select
+                  value={formData.source}
+                  onValueChange={(value) => handleSelectChange("source", value)}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select lead source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Website">Website</SelectItem>
+                    <SelectItem value="Referral">Referral</SelectItem>
+                    <SelectItem value="Social Media">Social Media</SelectItem>
+                    <SelectItem value="Email Campaign">Email Campaign</SelectItem>
+                    <SelectItem value="Cold Call">Cold Call</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="interestedCourse" className="text-right">
+                  Interested In
+                </Label>
+                <Select
+                  value={formData.interestedCourse}
+                  onValueChange={(value) => handleSelectChange("interestedCourse", value)}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses && courses.length > 0 ? (
+                      courses.map(course => (
+                        <SelectItem key={course.id} value={String(course.id)}>
+                          {course.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="1">Web Development</SelectItem>
+                        <SelectItem value="2">Digital Marketing</SelectItem>
+                        <SelectItem value="3">Graphic Design</SelectItem>
+                        <SelectItem value="4">Data Science</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              {editMode && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="status" className="text-right">
+                    Status
+                  </Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => handleSelectChange("status", value)}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="New">New</SelectItem>
+                      <SelectItem value="Contacted">Contacted</SelectItem>
+                      <SelectItem value="Qualified">Qualified</SelectItem>
+                      <SelectItem value="Converted">Converted</SelectItem>
+                      <SelectItem value="Lost">Lost</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="notes" className="text-right">
+                  Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  placeholder="Any additional information"
+                  className="col-span-3"
+                  rows={3}
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="phone" className="text-right">
-                Phone
-              </Label>
-              <Input
-                id="phone"
-                placeholder="+1 234 567 8900"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                placeholder="john@example.com"
-                className="col-span-3"
-                type="email"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="source" className="text-right">
-                Source
-              </Label>
-              <Select>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select lead source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="website">Website</SelectItem>
-                  <SelectItem value="referral">Referral</SelectItem>
-                  <SelectItem value="social">Social Media</SelectItem>
-                  <SelectItem value="email">Email Campaign</SelectItem>
-                  <SelectItem value="call">Cold Call</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="interestedCourse" className="text-right">
-                Interested In
-              </Label>
-              <Select>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select course" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Web Development</SelectItem>
-                  <SelectItem value="2">Digital Marketing</SelectItem>
-                  <SelectItem value="3">Graphic Design</SelectItem>
-                  <SelectItem value="4">Data Science</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="notes" className="text-right">
-                Notes
-              </Label>
-              <Input
-                id="notes"
-                placeholder="Any additional information"
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit" onClick={() => {
-              toast({
-                title: "Success",
-                description: "Lead added successfully!",
-              });
-              setOpenDialog(false);
-            }}>
-              Save Lead
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              {editMode && (
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => {
+                    resetForm();
+                    setEditMode(false);
+                    setOpenDialog(false);
+                  }}
+                  className="mr-2"
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button 
+                type="submit"
+                disabled={createLeadMutation.isPending || updateLeadMutation.isPending}
+              >
+                {createLeadMutation.isPending || updateLeadMutation.isPending ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                    Saving...
+                  </div>
+                ) : (
+                  <>{editMode ? "Update Lead" : "Save Lead"}</>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
