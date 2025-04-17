@@ -987,40 +987,206 @@ export default function ProposalTemplates() {
         <TabsContent value="content">
           <Card>
             <CardHeader>
-              <CardTitle>Content Pages Editor</CardTitle>
+              <CardTitle>Content Pages Configuration</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <h3 className="text-lg font-medium mb-4">Content Pages Configuration</h3>
-                <p className="text-gray-500 mb-6">
-                  Here you can configure the inner pages of your proposal document.
-                  You can add sections such as:
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="p-4 h-full">
+                  <div className="flex flex-col h-full">
+                    <div>
+                      <h4 className="font-medium text-lg mb-2">Company Introduction</h4>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Upload company profile PDF or create content
+                      </p>
+                    </div>
+                    
+                    <Tabs defaultValue="upload" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="upload">PDF Upload</TabsTrigger>
+                        <TabsTrigger value="text">Text Editor</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="upload" className="space-y-4 pt-4">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                          <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-500 mb-2">
+                            Drag & drop your company profile PDF here
+                          </p>
+                          <p className="text-xs text-gray-400 mb-4">
+                            Max. file size: 10MB
+                          </p>
+                          <Button variant="outline" size="sm">
+                            Browse Files
+                          </Button>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <div className="bg-gray-100 rounded flex-1 p-2 flex items-center">
+                            <div className="text-xs text-gray-600 overflow-hidden overflow-ellipsis">
+                              No file selected
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="text" className="space-y-4 pt-4">
+                        <div>
+                          <Label htmlFor="intro-title">Section Title</Label>
+                          <Input id="intro-title" defaultValue="Company Introduction" className="mb-2" />
+                        </div>
+                        <div>
+                          <Label htmlFor="intro-content">Content</Label>
+                          <Textarea 
+                            id="intro-content" 
+                            rows={6} 
+                            placeholder="Enter your company introduction text here..."
+                            className="resize-none"
+                          />
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                </Card>
+                
+                <Card className="p-4 h-full">
+                  <div className="flex flex-col h-full">
+                    <div>
+                      <h4 className="font-medium text-lg mb-2">Course Modules</h4>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Select course to display its modules
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="course-select">Select Course</Label>
+                        <select
+                          id="course-select"
+                          className="w-full border border-gray-300 rounded p-2"
+                        >
+                          <option value="">Select a course...</option>
+                          <option value="1">AutoCAD</option>
+                          <option value="2">Adobe Photoshop</option>
+                          <option value="3">Web Development</option>
+                          <option value="4">Data Science</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="modules-display">Module Display Format</Label>
+                        <select
+                          id="modules-display"
+                          className="w-full border border-gray-300 rounded p-2"
+                        >
+                          <option value="list">Bulleted List</option>
+                          <option value="table">Table Format</option>
+                          <option value="cards">Cards</option>
+                        </select>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <input type="checkbox" id="include-duration" />
+                        <Label htmlFor="include-duration" className="text-sm">Include Duration</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <input type="checkbox" id="include-objectives" />
+                        <Label htmlFor="include-objectives" className="text-sm">Include Learning Objectives</Label>
+                      </div>
+                      
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div className="text-sm font-medium">Preview:</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          (Select a course to preview modules)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+                
+                <Card className="p-4 h-full">
+                  <div className="flex flex-col h-full">
+                    <div>
+                      <h4 className="font-medium text-lg mb-2">Pricing & Timeline</h4>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Set pricing and delivery timeline
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="pricing-type">Pricing Type</Label>
+                        <select
+                          id="pricing-type"
+                          className="w-full border border-gray-300 rounded p-2"
+                        >
+                          <option value="fixed">Fixed Price</option>
+                          <option value="participant">Per Participant</option>
+                          <option value="tiered">Tiered Pricing</option>
+                        </select>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="base-price">Base Price (AED)</Label>
+                          <Input id="base-price" type="number" placeholder="0.00" />
+                        </div>
+                        <div>
+                          <Label htmlFor="discount">Discount (%)</Label>
+                          <Input id="discount" type="number" max="20" placeholder="0" />
+                          <p className="text-xs text-gray-500 mt-1">Maximum 20% discount</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="timeline-weeks">Course Duration (Weeks)</Label>
+                        <Input id="timeline-weeks" type="number" placeholder="4" />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="timeline-hours">Hours Per Week</Label>
+                        <Input id="timeline-hours" type="number" placeholder="10" />
+                      </div>
+                      
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div className="text-sm font-medium">Total:</div>
+                        <div className="text-md mt-1">
+                          AED 0.00
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+              
+              <div className="flex flex-col items-center justify-center pt-4">
+                <h4 className="font-medium text-lg mb-2">Page Ordering</h4>
+                <p className="text-sm text-gray-500 mb-4 text-center">
+                  Arrange and customize the order of your proposal pages
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <Card className="p-4">
-                    <h4 className="font-medium">Introduction</h4>
-                    <p className="text-sm text-gray-500">Company overview and background</p>
-                  </Card>
-                  
-                  <Card className="p-4">
-                    <h4 className="font-medium">Course Modules</h4>
-                    <p className="text-sm text-gray-500">Details pulled from course content</p>
-                  </Card>
-                  
-                  <Card className="p-4">
-                    <h4 className="font-medium">Pricing & Timeline</h4>
-                    <p className="text-sm text-gray-500">Financial details and scheduling</p>
-                  </Card>
+                <div className="w-full max-w-md border rounded-md p-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center p-2 bg-gray-50 rounded border cursor-move">
+                      <span className="flex-1">1. Cover Page</span>
+                    </div>
+                    <div className="flex items-center p-2 bg-gray-50 rounded border cursor-move">
+                      <span className="flex-1">2. Company Introduction</span>
+                    </div>
+                    <div className="flex items-center p-2 bg-gray-50 rounded border cursor-move">
+                      <span className="flex-1">3. Course Modules</span>
+                    </div>
+                    <div className="flex items-center p-2 bg-gray-50 rounded border cursor-move">
+                      <span className="flex-1">4. Pricing & Timeline</span>
+                    </div>
+                  </div>
                 </div>
-                
-                <p className="text-yellow-600 mb-4">
-                  This feature is coming soon in the next update.
-                </p>
-                
-                <Button disabled>
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Continue to Content Editor
+              </div>
+              
+              <div className="flex justify-center pt-4">
+                <Button>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Configuration
                 </Button>
               </div>
             </CardContent>
