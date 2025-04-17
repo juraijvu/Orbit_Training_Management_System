@@ -385,6 +385,123 @@ export const insertWhatsappMessageSchema = createInsertSchema(whatsappMessages).
 export type InsertWhatsappMessage = z.infer<typeof insertWhatsappMessageSchema>;
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
 
+// WhatsApp Chatbot Tables
+export const chatbotFlows = pgTable("chatbot_flows", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  consultantId: integer("consultant_id").notNull(), // The consultant who owns this flow
+  isActive: boolean("is_active").default(true),
+  isDefault: boolean("is_default").default(false), // If true, this flow will be used as fallback
+  triggerKeywords: text("trigger_keywords"), // comma-separated keywords that trigger this flow
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertChatbotFlowSchema = createInsertSchema(chatbotFlows).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertChatbotFlow = z.infer<typeof insertChatbotFlowSchema>;
+export type ChatbotFlow = typeof chatbotFlows.$inferSelect;
+
+export const chatbotNodes = pgTable("chatbot_nodes", {
+  id: serial("id").primaryKey(),
+  flowId: integer("flow_id").notNull(), // Reference to the chatbot flow
+  nodeType: text("node_type").notNull(), // message, question, condition, action
+  content: text("content").notNull(), // Message content or condition logic (JSON)
+  responseType: text("response_type").default("text"), // text, buttons, list, media
+  responseOptions: text("response_options"), // JSON array of possible responses
+  position: integer("position").notNull(), // Order within the flow
+  nextNodeId: integer("next_node_id"), // Next node to execute
+  waitForInput: boolean("wait_for_input").default(false), // Whether to wait for user input
+  variableName: text("variable_name"), // If input is stored, the variable name
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertChatbotNodeSchema = createInsertSchema(chatbotNodes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertChatbotNode = z.infer<typeof insertChatbotNodeSchema>;
+export type ChatbotNode = typeof chatbotNodes.$inferSelect;
+
+export const chatbotConditions = pgTable("chatbot_conditions", {
+  id: serial("id").primaryKey(),
+  nodeId: integer("node_id").notNull(), // Reference to the parent node
+  conditionType: text("condition_type").notNull(), // equals, contains, greater_than, etc.
+  variable: text("variable").notNull(), // Variable to check
+  value: text("value").notNull(), // Value to compare against
+  nextNodeId: integer("next_node_id").notNull(), // Node to go to if condition is met
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertChatbotConditionSchema = createInsertSchema(chatbotConditions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertChatbotCondition = z.infer<typeof insertChatbotConditionSchema>;
+export type ChatbotCondition = typeof chatbotConditions.$inferSelect;
+
+export const chatbotActions = pgTable("chatbot_actions", {
+  id: serial("id").primaryKey(),
+  nodeId: integer("node_id").notNull(), // Reference to the parent node
+  actionType: text("action_type").notNull(), // create_lead, update_lead, assign_consultant, etc.
+  actionData: text("action_data").notNull(), // JSON with action parameters
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertChatbotActionSchema = createInsertSchema(chatbotActions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertChatbotAction = z.infer<typeof insertChatbotActionSchema>;
+export type ChatbotAction = typeof chatbotActions.$inferSelect;
+
+export const chatbotSessions = pgTable("chatbot_sessions", {
+  id: serial("id").primaryKey(),
+  chatId: integer("chat_id").notNull(), // Reference to the WhatsApp chat
+  flowId: integer("flow_id").notNull(), // Current flow being executed
+  currentNodeId: integer("current_node_id"), // Current node in the flow
+  sessionData: text("session_data"), // JSON with collected variables
+  isActive: boolean("is_active").default(true),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  lastInteractionAt: timestamp("last_interaction_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertChatbotSessionSchema = createInsertSchema(chatbotSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertChatbotSession = z.infer<typeof insertChatbotSessionSchema>;
+export type ChatbotSession = typeof chatbotSessions.$inferSelect;
+
+export const cannedResponses = pgTable("canned_responses", {
+  id: serial("id").primaryKey(),
+  consultantId: integer("consultant_id").notNull(), // Consultant who created this
+  shortcut: text("shortcut").notNull(), // Shortcut text to trigger the response
+  message: text("message").notNull(), // Full message content
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertCannedResponseSchema = createInsertSchema(cannedResponses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCannedResponse = z.infer<typeof insertCannedResponseSchema>;
+export type CannedResponse = typeof cannedResponses.$inferSelect;
+
 // Titan Email settings
 export const titanEmailSettings = pgTable("titan_email_settings", {
   id: serial("id").primaryKey(),

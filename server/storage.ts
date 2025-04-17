@@ -17,7 +17,14 @@ import {
   whatsappMessages, WhatsappMessage, InsertWhatsappMessage,
   titanEmailSettings, TitanEmailSettings, InsertTitanEmailSettings,
   emailTemplates, EmailTemplate, InsertEmailTemplate,
-  emailHistory, EmailHistory, InsertEmailHistory
+  emailHistory, EmailHistory, InsertEmailHistory,
+  // Chatbot related imports
+  chatbotFlows, ChatbotFlow, InsertChatbotFlow,
+  chatbotNodes, ChatbotNode, InsertChatbotNode,
+  chatbotConditions, ChatbotCondition, InsertChatbotCondition,
+  chatbotActions, ChatbotAction, InsertChatbotAction,
+  chatbotSessions, ChatbotSession, InsertChatbotSession,
+  cannedResponses, CannedResponse, InsertCannedResponse
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, asc, desc, gte, lte, lt } from "drizzle-orm";
