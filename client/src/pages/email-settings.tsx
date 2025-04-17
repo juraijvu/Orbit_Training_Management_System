@@ -43,7 +43,7 @@ import { Loader2, Mail, Save, Plus, Trash2, Send } from "lucide-react";
 export default function EmailSettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  // API Dialog no longer needed as settings are directly on the page
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("api-config");
   
@@ -99,7 +99,7 @@ export default function EmailSettingsPage() {
         description: "Your Titan Email API settings have been updated.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/email/settings"] });
-      setApiDialogOpen(false);
+      // API dialog management removed
     },
     onError: (error) => {
       toast({
@@ -261,20 +261,22 @@ export default function EmailSettingsPage() {
                     <Label htmlFor="apiKey">API Key</Label>
                     <Input 
                       id="apiKey"
+                      name="apiKey"
                       value={formData.apiKey || ""}
                       type="password"
                       placeholder="Enter your Titan Email API Key"
-                      disabled={true}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div>
                     <Label htmlFor="apiSecret">API Secret</Label>
                     <Input 
                       id="apiSecret"
+                      name="apiSecret"
                       value={formData.apiSecret || ""}
                       type="password"
                       placeholder="Enter your Titan Email API Secret"
-                      disabled={true}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -284,18 +286,20 @@ export default function EmailSettingsPage() {
                     <Label htmlFor="senderName">Sender Name</Label>
                     <Input 
                       id="senderName"
+                      name="senderName"
                       value={formData.senderName || ""}
                       placeholder="Orbit Institute"
-                      disabled={true}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div>
                     <Label htmlFor="senderEmail">Sender Email</Label>
                     <Input 
                       id="senderEmail"
+                      name="senderEmail"
                       value={formData.senderEmail || ""}
                       placeholder="info@orbitinstitute.com"
-                      disabled={true}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </div>
@@ -304,9 +308,10 @@ export default function EmailSettingsPage() {
                   <Label htmlFor="replyToEmail">Reply To Email</Label>
                   <Input 
                     id="replyToEmail"
+                    name="replyToEmail"
                     value={formData.replyToEmail || ""}
                     placeholder="support@orbitinstitute.com"
-                    disabled={true}
+                    onChange={handleInputChange}
                   />
                 </div>
 
@@ -314,16 +319,25 @@ export default function EmailSettingsPage() {
                   <Switch 
                     id="enabled"
                     checked={formData.enabled || false}
-                    disabled={true}
+                    onCheckedChange={handleEnabledChange}
                   />
                   <Label htmlFor="enabled">Enable Titan Email Integration</Label>
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="default" onClick={() => setApiDialogOpen(true)}>
+              <Button variant="default" onClick={() => {
+                toast({
+                  title: "Connection Test",
+                  description: "Testing connection functionality will be implemented in a future update.",
+                });
+              }}>
                 <Mail className="mr-2 h-4 w-4" />
-                Configure API Settings
+                Test Connection
+              </Button>
+              <Button onClick={handleSaveSettings}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Settings
               </Button>
             </CardFooter>
           </Card>
@@ -415,111 +429,7 @@ export default function EmailSettingsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* API Settings Dialog */}
-      <Dialog open={apiDialogOpen} onOpenChange={setApiDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Configure Titan Email API</DialogTitle>
-            <DialogDescription>
-              Enter your Titan Email API credentials to enable email functionality.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSaveSettings}>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="apiKey-input">API Key</Label>
-                  <Input 
-                    id="apiKey-input"
-                    name="apiKey"
-                    value={formData.apiKey}
-                    onChange={handleInputChange}
-                    placeholder="Enter your Titan Email API Key"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="apiSecret-input">API Secret</Label>
-                  <Input 
-                    id="apiSecret-input"
-                    name="apiSecret"
-                    value={formData.apiSecret}
-                    onChange={handleInputChange}
-                    type="password"
-                    placeholder="Enter your Titan Email API Secret"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="senderName-input">Sender Name</Label>
-                  <Input 
-                    id="senderName-input"
-                    name="senderName"
-                    value={formData.senderName}
-                    onChange={handleInputChange}
-                    placeholder="Orbit Institute"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="senderEmail-input">Sender Email</Label>
-                  <Input 
-                    id="senderEmail-input"
-                    name="senderEmail"
-                    value={formData.senderEmail}
-                    onChange={handleInputChange}
-                    placeholder="info@orbitinstitute.com"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="replyToEmail-input">Reply To Email (Optional)</Label>
-                  <Input 
-                    id="replyToEmail-input"
-                    name="replyToEmail"
-                    value={formData.replyToEmail}
-                    onChange={handleInputChange}
-                    placeholder="support@orbitinstitute.com"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id="enabled-input"
-                    checked={formData.enabled}
-                    onCheckedChange={handleEnabledChange}
-                  />
-                  <Label htmlFor="enabled-input">Enable Titan Email Integration</Label>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setApiDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={saveSettingsMutation.isPending}
-              >
-                {saveSettingsMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Settings
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* API Settings Dialog removed as settings are now directly on the main page */}
 
       {/* Create Template Dialog */}
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
