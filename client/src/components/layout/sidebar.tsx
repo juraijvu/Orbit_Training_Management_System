@@ -21,6 +21,8 @@ import {
   PhoneCall,
   Mail,
   MessageSquare,
+  MessageCircle,
+  MessagesSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -162,6 +164,22 @@ function Sidebar({ className }: SidebarNavProps) {
       icon: <Calendar className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
       section: "crm"
+    },
+    
+    // WhatsApp Integration
+    {
+      title: "WhatsApp Settings",
+      href: "/whatsapp-settings",
+      icon: <MessageCircle className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
+    {
+      title: "WhatsApp Chats",
+      href: "/whatsapp-chats",
+      icon: <MessagesSquare className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "main"
     },
     
     // Settings

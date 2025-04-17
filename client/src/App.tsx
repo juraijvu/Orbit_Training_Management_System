@@ -20,6 +20,8 @@ import Quotations from "@/pages/quotations";
 import Proposals from "@/pages/proposals";
 import ProposalTemplates from "@/pages/proposal-templates";
 import Settings from "@/pages/settings";
+import WhatsappSettings from "@/pages/whatsapp-settings";
+import WhatsappChats from "@/pages/whatsapp-chats";
 import { MainLayout } from "@/components/layout/main-layout";
 
 function Router() {
@@ -40,6 +42,9 @@ function Router() {
         <ProtectedRoute path="/proposals" component={Proposals} />
         <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
         <ProtectedRoute path="/settings" component={Settings} />
+        {/* WhatsApp Integration */}
+        <ProtectedRoute path="/whatsapp-settings" component={WhatsappSettings} />
+        <ProtectedRoute path="/whatsapp-chats" component={WhatsappChats} />
         {/* CRM Routes */}
         <ProtectedRoute path="/crm/leads" component={() => {
           const LeadsPage = React.lazy(() => import("@/pages/crm/leads"));
