@@ -208,9 +208,10 @@ export default function ProposalTemplates() {
   const [includeDuration, setIncludeDuration] = useState<boolean>(true);
   const [includeFees, setIncludeFees] = useState<boolean>(true);
   
-  // Fetch courses
+  // Fetch courses from API
   const { data: courses, isLoading: isCoursesLoading } = useQuery<Course[]>({
     queryKey: ['/api/courses'],
+    queryFn: getQueryFn()
   });
 
   // Find the selected field in our list
@@ -1190,16 +1191,32 @@ export default function ProposalTemplates() {
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="course-select">Select Course</Label>
-                        <select
-                          id="course-select"
-                          className="w-full border border-gray-300 rounded p-2"
-                        >
-                          <option value="">Select a course...</option>
-                          <option value="1">AutoCAD</option>
-                          <option value="2">Adobe Photoshop</option>
-                          <option value="3">Web Development</option>
-                          <option value="4">Data Science</option>
-                        </select>
+                        {isCoursesLoading ? (
+                          <div className="flex items-center space-x-2 h-10 p-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm">Loading courses...</span>
+                          </div>
+                        ) : (
+                          <select
+                            id="course-select"
+                            className="w-full border border-gray-300 rounded p-2"
+                            value={selectedCourseId}
+                            onChange={(e) => {
+                              setSelectedCourseId(e.target.value);
+                              const course = courses?.find(c => c.id.toString() === e.target.value);
+                              if (course) {
+                                updatePreviewData("courseName", course.name);
+                              }
+                            }}
+                          >
+                            <option value="">Select a course...</option>
+                            {courses?.map((course) => (
+                              <option key={course.id} value={course.id.toString()}>
+                                {course.name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                       
                       <div>
@@ -1207,6 +1224,8 @@ export default function ProposalTemplates() {
                         <select
                           id="modules-display"
                           className="w-full border border-gray-300 rounded p-2"
+                          value={moduleDisplayFormat}
+                          onChange={(e) => setModuleDisplayFormat(e.target.value)}
                         >
                           <option value="list">Bulleted List</option>
                           <option value="table">Table Format</option>
@@ -1215,19 +1234,45 @@ export default function ProposalTemplates() {
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="include-duration" />
+                        <input 
+                          type="checkbox" 
+                          id="include-duration" 
+                          checked={includeDuration}
+                          onChange={(e) => setIncludeDuration(e.target.checked)}
+                        />
                         <Label htmlFor="include-duration" className="text-sm">Include Duration</Label>
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="include-objectives" />
-                        <Label htmlFor="include-objectives" className="text-sm">Include Learning Objectives</Label>
+                        <input 
+                          type="checkbox" 
+                          id="include-fees" 
+                          checked={includeFees}
+                          onChange={(e) => setIncludeFees(e.target.checked)}
+                        />
+                        <Label htmlFor="include-fees" className="text-sm">Include Fees</Label>
                       </div>
                       
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                         <div className="text-sm font-medium">Preview:</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          (Select a course to preview modules)
+                        <div className="text-xs mt-1">
+                          {getSelectedCourse() && (
+                            <>
+                              {includeDuration && (
+                                <div className="mb-1 font-medium">
+                                  Duration: {getSelectedCourse()?.duration}
+                                </div>
+                              )}
+                              {includeFees && (
+                                <div className="mb-2 font-medium">
+                                  Fee: AED {getSelectedCourse()?.fee}
+                                </div>
+                              )}
+                            </>
+                          )}
+                          <div className={getSelectedCourse() ? "" : "text-gray-500"}>
+                            {renderModules()}
+                          </div>
                         </div>
                       </div>
                     </div>
