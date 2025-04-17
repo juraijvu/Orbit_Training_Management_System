@@ -180,6 +180,51 @@ export interface IStorage {
   getEmailHistoryByLeadId(leadId: number): Promise<EmailHistory[]>;
   getEmailHistoryByStudentId(studentId: number): Promise<EmailHistory[]>;
   createEmailHistory(email: InsertEmailHistory): Promise<EmailHistory>;
+  
+  // Chatbot Flows
+  getChatbotFlows(): Promise<ChatbotFlow[]>;
+  getChatbotFlowsByConsultant(consultantId: number): Promise<ChatbotFlow[]>;
+  getChatbotFlow(id: number): Promise<ChatbotFlow | undefined>;
+  getChatbotFlowByKeyword(keyword: string): Promise<ChatbotFlow | undefined>;
+  getDefaultChatbotFlow(): Promise<ChatbotFlow | undefined>;
+  createChatbotFlow(flow: InsertChatbotFlow): Promise<ChatbotFlow>;
+  updateChatbotFlow(id: number, flow: Partial<ChatbotFlow>): Promise<ChatbotFlow | undefined>;
+  deleteChatbotFlow(id: number): Promise<boolean>;
+  
+  // Chatbot Nodes
+  getChatbotNodes(flowId: number): Promise<ChatbotNode[]>;
+  getChatbotNode(id: number): Promise<ChatbotNode | undefined>;
+  createChatbotNode(node: InsertChatbotNode): Promise<ChatbotNode>;
+  updateChatbotNode(id: number, node: Partial<ChatbotNode>): Promise<ChatbotNode | undefined>;
+  deleteChatbotNode(id: number): Promise<boolean>;
+  
+  // Chatbot Conditions
+  getChatbotConditionsByNode(nodeId: number): Promise<ChatbotCondition[]>;
+  createChatbotCondition(condition: InsertChatbotCondition): Promise<ChatbotCondition>;
+  updateChatbotCondition(id: number, condition: Partial<ChatbotCondition>): Promise<ChatbotCondition | undefined>;
+  deleteChatbotCondition(id: number): Promise<boolean>;
+  
+  // Chatbot Actions
+  getChatbotActionsByNode(nodeId: number): Promise<ChatbotAction[]>;
+  createChatbotAction(action: InsertChatbotAction): Promise<ChatbotAction>;
+  updateChatbotAction(id: number, action: Partial<ChatbotAction>): Promise<ChatbotAction | undefined>;
+  deleteChatbotAction(id: number): Promise<boolean>;
+  
+  // Chatbot Sessions
+  getChatbotSessions(): Promise<ChatbotSession[]>;
+  getChatbotSessionsByChat(chatId: number): Promise<ChatbotSession[]>;
+  getChatbotActiveSession(chatId: number): Promise<ChatbotSession | undefined>;
+  createChatbotSession(session: InsertChatbotSession): Promise<ChatbotSession>;
+  updateChatbotSession(id: number, session: Partial<ChatbotSession>): Promise<ChatbotSession | undefined>;
+  endChatbotSession(id: number): Promise<ChatbotSession | undefined>;
+  
+  // Canned Responses
+  getCannedResponses(): Promise<CannedResponse[]>;
+  getCannedResponsesByConsultant(consultantId: number): Promise<CannedResponse[]>;
+  getCannedResponseByShortcut(shortcut: string, consultantId: number): Promise<CannedResponse | undefined>;
+  createCannedResponse(response: InsertCannedResponse): Promise<CannedResponse>;
+  updateCannedResponse(id: number, response: Partial<CannedResponse>): Promise<CannedResponse | undefined>;
+  deleteCannedResponse(id: number): Promise<boolean>;
 }
 
 // Memory Storage implementation
@@ -203,6 +248,12 @@ export class MemStorage implements IStorage {
   private titanEmailSettingsMap: Map<number, TitanEmailSettings>;
   private emailTemplatesMap: Map<number, EmailTemplate>;
   private emailHistoryMap: Map<number, EmailHistory>;
+  private chatbotFlowsMap: Map<number, ChatbotFlow>;
+  private chatbotNodesMap: Map<number, ChatbotNode>;
+  private chatbotConditionsMap: Map<number, ChatbotCondition>;
+  private chatbotActionsMap: Map<number, ChatbotAction>;
+  private chatbotSessionsMap: Map<number, ChatbotSession>;
+  private cannedResponsesMap: Map<number, CannedResponse>;
   
   private userId: number = 1;
   private studentId: number = 1;
@@ -223,6 +274,12 @@ export class MemStorage implements IStorage {
   private titanEmailSettingsId: number = 1;
   private emailTemplateId: number = 1;
   private emailHistoryId: number = 1;
+  private chatbotFlowId: number = 1;
+  private chatbotNodeId: number = 1;
+  private chatbotConditionId: number = 1;
+  private chatbotActionId: number = 1;
+  private chatbotSessionId: number = 1;
+  private cannedResponseId: number = 1;
   
   sessionStore: any;
 
@@ -246,6 +303,12 @@ export class MemStorage implements IStorage {
     this.titanEmailSettingsMap = new Map();
     this.emailTemplatesMap = new Map();
     this.emailHistoryMap = new Map();
+    this.chatbotFlowsMap = new Map();
+    this.chatbotNodesMap = new Map();
+    this.chatbotConditionsMap = new Map();
+    this.chatbotActionsMap = new Map();
+    this.chatbotSessionsMap = new Map();
+    this.cannedResponsesMap = new Map();
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
