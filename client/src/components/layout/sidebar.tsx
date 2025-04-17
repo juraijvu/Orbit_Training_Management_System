@@ -166,7 +166,7 @@ function Sidebar({ className }: SidebarNavProps) {
       section: "crm"
     },
     
-    // WhatsApp Integration
+    // External Integrations
     {
       title: "WhatsApp Settings",
       href: "/whatsapp-settings",
@@ -179,6 +179,13 @@ function Sidebar({ className }: SidebarNavProps) {
       href: "/whatsapp-chats",
       icon: <MessagesSquare className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
+      section: "main"
+    },
+    {
+      title: "Email Settings",
+      href: "/email-settings",
+      icon: <Mail className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
       section: "main"
     },
     

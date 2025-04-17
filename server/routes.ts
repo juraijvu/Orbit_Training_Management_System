@@ -1364,6 +1364,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ================== End of WhatsApp API ==================
 
+  // ================== Titan Email API ==================
+  
+  // Get Titan Email settings
+  app.get('/api/email/settings', isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getTitanEmailSettings();
+      res.json(settings || {});
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Titan Email settings" });
+    }
+  });
+
+  // Save Titan Email settings
+  app.post('/api/email/settings', isAdmin, async (req, res) => {
+    try {
+      const settingsData = insertTitanEmailSettingsSchema.parse(req.body);
+      const settings = await storage.getTitanEmailSettings();
+      
+      if (settings) {
+        // Update existing settings
+        const updatedSettings = await storage.updateTitanEmailSettings(settings.id, settingsData);
+        res.json(updatedSettings);
+      } else {
+        // Create new settings
+        const newSettings = await storage.createTitanEmailSettings(settingsData);
+        res.status(201).json(newSettings);
+      }
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to save Titan Email settings" });
+    }
+  });
+
+  // Get Email templates
+  app.get('/api/email/templates', isAuthenticated, async (req, res) => {
+    try {
+      const templates = await storage.getEmailTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Email templates" });
+    }
+  });
+
+  // Get Email template by ID
+  app.get('/api/email/templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getEmailTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Email template" });
+    }
+  });
+
+  // Get Email templates by category
+  app.get('/api/email/templates/category/:category', isAuthenticated, async (req, res) => {
+    try {
+      const { category } = req.params;
+      const templates = await storage.getEmailTemplatesByCategory(category);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Email templates by category" });
+    }
+  });
+
+  // Create Email template
+  app.post('/api/email/templates', isAuthenticated, async (req, res) => {
+    try {
+      const templateData = insertEmailTemplateSchema.parse(req.body);
+      const newTemplate = await storage.createEmailTemplate(templateData);
+      res.status(201).json(newTemplate);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create Email template" });
+    }
+  });
+
+  // Update Email template
+  app.patch('/api/email/templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const templateData = req.body;
+      const updatedTemplate = await storage.updateEmailTemplate(id, templateData);
+      if (!updatedTemplate) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json(updatedTemplate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update Email template" });
+    }
+  });
+
+  // Delete Email template
+  app.delete('/api/email/templates/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteEmailTemplate(id);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete Email template" });
+    }
+  });
+
+  // Get Email history
+  app.get('/api/email/history', isAuthenticated, async (req, res) => {
+    try {
+      const history = await storage.getEmailHistory();
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Email history" });
+    }
+  });
+
+  // Get Email history by lead ID
+  app.get('/api/email/history/lead/:leadId', isAuthenticated, async (req, res) => {
+    try {
+      const leadId = parseInt(req.params.leadId);
+      const history = await storage.getEmailHistoryByLeadId(leadId);
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Email history for lead" });
+    }
+  });
+
+  // Get Email history by student ID
+  app.get('/api/email/history/student/:studentId', isAuthenticated, async (req, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const history = await storage.getEmailHistoryByStudentId(studentId);
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Email history for student" });
+    }
+  });
+
+  // Send Email
+  app.post('/api/email/send', isAuthenticated, async (req, res) => {
+    try {
+      const emailData = insertEmailHistorySchema.parse(req.body);
+      const newEmail = await storage.createEmailHistory(emailData);
+      
+      // Here we would integrate with the Titan Email API to actually send the email
+      // This would require API key verification and using the Titan Email API client
+      
+      res.status(201).json(newEmail);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to send Email" });
+    }
+  });
+
+  // ================== End of Titan Email API ==================
+
   const httpServer = createServer(app);
   return httpServer;
 }
