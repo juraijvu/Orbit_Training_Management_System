@@ -213,3 +213,68 @@ export type Quotation = typeof quotations.$inferSelect;
 
 export type InsertProposal = z.infer<typeof insertProposalSchema>;
 export type Proposal = typeof proposals.$inferSelect;
+
+// CRM Tables
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  fullName: text("full_name").notNull(),
+  email: text("email"),
+  phone: text("phone").notNull(),
+  source: text("source").notNull(), // website, social media, referral, etc.
+  interestedCourse: integer("interested_course"),
+  status: text("status").notNull().default("new"), // new, contacted, qualified, converted, closed
+  notes: text("notes"),
+  assignedTo: integer("assigned_to"), // User ID
+  lastContactDate: timestamp("last_contact_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertLeadSchema = createInsertSchema(leads).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type Lead = typeof leads.$inferSelect;
+
+export const campaigns = pgTable("campaigns", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  platform: text("platform").notNull(), // facebook, instagram, email, etc.
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  budget: numeric("budget"),
+  status: text("status").notNull(), // planned, active, completed
+  results: text("results"), // Stored as JSON
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCampaignSchema = createInsertSchema(campaigns).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+export type Campaign = typeof campaigns.$inferSelect;
+
+export const followUps = pgTable("follow_ups", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull(),
+  contactDate: timestamp("contact_date").notNull(),
+  contactType: text("contact_type").notNull(), // call, email, meeting, etc.
+  notes: text("notes"),
+  outcome: text("outcome"), // interested, not interested, call back, etc.
+  nextFollowUp: timestamp("next_follow_up"),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertFollowUpSchema = createInsertSchema(followUps).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertFollowUp = z.infer<typeof insertFollowUpSchema>;
+export type FollowUp = typeof followUps.$inferSelect;
