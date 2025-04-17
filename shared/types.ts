@@ -142,6 +142,13 @@ export interface ProposalPdfData {
   discount: number;
   finalAmount: number;
   coverPage: string;
+  presenterName: string;
+  presenterDetails: string;
+  courseFormat: string;
+  trainingDuration: string;
+  trainingLocation: string;
   content: object;
   date: string;
+  logo?: string;
+  applyWhiteFilter?: boolean;
 }
