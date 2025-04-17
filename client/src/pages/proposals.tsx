@@ -1,4 +1,4 @@
-import { FC, useState, useRef } from 'react';
+import { FC, useState, useRef, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -6,6 +6,19 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/app-layout';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
 import { 
   FilePlus, 
   Loader2, 
@@ -19,7 +32,9 @@ import {
   Percent,
   Calendar,
   Upload,
-  Image
+  Image,
+  X,
+  ChevronRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -61,7 +76,8 @@ const proposalFormSchema = insertProposalSchema.extend({
   presenterPhone: z.string().optional(),
   
   // Course details
-  courseName: z.string().min(1, "Course name is required"),
+  courseIds: z.string().optional(), // Comma-separated course IDs
+  courseName: z.string().optional(), // For backward compatibility
   courseFormat: z.string().optional(),
   trainingDuration: z.string().optional(),
   trainingLocation: z.string().optional(),
@@ -84,11 +100,17 @@ const ProposalsPage: FC = () => {
   const [isNewProposalOpen, setIsNewProposalOpen] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [showWhiteFilter, setShowWhiteFilter] = useState<boolean>(true);
+  const [selectedCourses, setSelectedCourses] = useState<any[]>([]);
   const logoInputRef = useRef<HTMLInputElement>(null);
   
   // Fetch proposals
   const { data: proposals, isLoading } = useQuery({
     queryKey: ['/api/proposals'],
+  });
+  
+  // Fetch courses
+  const { data: courses, isLoading: isCoursesLoading } = useQuery({
+    queryKey: ['/api/courses'],
   });
   
   // New proposal form
