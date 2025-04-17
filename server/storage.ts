@@ -1548,56 +1548,88 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPendingFollowUps(): Promise<FollowUp[]> {
-    return await db
-      .select()
-      .from(followUps)
-      .where(eq(followUps.status, "Pending"))
-      .orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
+    try {
+      return await db
+        .select()
+        .from(followUps)
+        .where(eq(followUps.status, "Pending"))
+        .orderBy(asc(followUps.nextFollowUp));
+    } catch (error) {
+      console.error("Error fetching pending follow-ups:", error);
+      return [];
+    }
   }
 
   async getTodaysFollowUps(consultantId?: number): Promise<FollowUp[]> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    let query = db.select().from(followUps)
-      .where(eq(followUps.status, "Pending"))
-      .where(gte(followUps.nextFollowUp, today))
-      .where(lt(followUps.nextFollowUp, tomorrow));
-    
-    if (consultantId) {
-      query = query.where(eq(followUps.consultantId, consultantId));
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      let queryBuilder = db.select().from(followUps)
+        .where(
+          and(
+            eq(followUps.status, "Pending"),
+            gte(followUps.nextFollowUp, today),
+            lt(followUps.nextFollowUp, tomorrow)
+          )
+        );
+      
+      if (consultantId) {
+        queryBuilder = queryBuilder.where(eq(followUps.consultantId, consultantId));
+      }
+      
+      return await queryBuilder.orderBy(asc(followUps.contactDate));
+    } catch (error) {
+      console.error("Error fetching today's follow-ups:", error);
+      return [];
     }
-    
-    return await query.orderBy(asc(followUps.nextFollowUpTime));
   }
 
   async getHighPriorityFollowUps(consultantId?: number): Promise<FollowUp[]> {
-    let query = db.select().from(followUps)
-      .where(eq(followUps.priority, "High"))
-      .where(eq(followUps.status, "Pending"));
+    try {
+      let queryBuilder = db.select().from(followUps)
+        .where(
+          and(
+            eq(followUps.priority, "High"),
+            eq(followUps.status, "Pending")
+          )
+        );
+        
+      if (consultantId) {
+        queryBuilder = queryBuilder.where(eq(followUps.consultantId, consultantId));
+      }
       
-    if (consultantId) {
-      query = query.where(eq(followUps.consultantId, consultantId));
+      return await queryBuilder.orderBy(asc(followUps.nextFollowUp));
+    } catch (error) {
+      console.error("Error fetching high priority follow-ups:", error);
+      return [];
     }
-    
-    return await query.orderBy(asc(followUps.nextFollowUp));
   }
 
   async getFollowUpsToNotify(): Promise<FollowUp[]> {
-    const now = new Date();
-    const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
-    
-    return await db
-      .select()
-      .from(followUps)
-      .where(gte(followUps.nextFollowUp, now))
-      .where(lte(followUps.nextFollowUp, thirtyMinutesFromNow))
-      .where(eq(followUps.isNotified, false))
-      .where(eq(followUps.status, "Pending"))
-      .orderBy(asc(followUps.nextFollowUp));
+    try {
+      const now = new Date();
+      const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
+      
+      return await db
+        .select()
+        .from(followUps)
+        .where(
+          and(
+            gte(followUps.nextFollowUp, now),
+            lte(followUps.nextFollowUp, thirtyMinutesFromNow),
+            eq(followUps.isNotified, false),
+            eq(followUps.status, "Pending")
+          )
+        )
+        .orderBy(asc(followUps.nextFollowUp));
+    } catch (error) {
+      console.error("Error fetching follow-ups to notify:", error);
+      return [];
+    }
   }
 
   async getFollowUp(id: number): Promise<FollowUp | undefined> {
