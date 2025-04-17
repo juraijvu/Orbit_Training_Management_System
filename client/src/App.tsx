@@ -84,6 +84,14 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <ProtectedRoute path="/crm/emails" component={() => {
+          const EmailsPage = React.lazy(() => import("@/pages/crm/emails"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <EmailsPage />
+            </React.Suspense>
+          );
+        }} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

@@ -172,6 +172,13 @@ function Sidebar({ className }: SidebarNavProps) {
       roles: ["admin", "superadmin", "counselor"],
       section: "crm"
     },
+    {
+      title: "Emails",
+      href: "/crm/emails",
+      icon: <Mail className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
     
     // External Integrations
     {
