@@ -497,45 +497,167 @@ const ProposalsPage: FC = () => {
                 {/* Course Details */}
                 <div>
                   <h3 className="text-md font-medium text-gray-700 mb-4">Course Details</h3>
-                  <p className="text-sm text-gray-500 mb-4">Enter information about the training course</p>
+                  <p className="text-sm text-gray-500 mb-4">Select courses to include in the proposal</p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="courseName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Course Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <Label htmlFor="course-select">Available Courses</Label>
+                      {selectedCourses?.length > 0 && (
+                        <span className="text-xs text-gray-500">
+                          {selectedCourses.length} course(s) selected
+                        </span>
                       )}
-                    />
+                    </div>
                     
+                    {isCoursesLoading ? (
+                      <div className="flex items-center space-x-2 h-10 p-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm">Loading courses...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Select
+                          onValueChange={(value) => {
+                            const courseId = parseInt(value);
+                            const course = courses?.find(c => c.id === courseId);
+                            
+                            if (course && !selectedCourses.some(sc => sc.id === courseId)) {
+                              // Add course to selection
+                              const newCourse = {
+                                id: course.id,
+                                name: course.name,
+                                duration: course.duration,
+                                fee: parseFloat(course.fee.toString()),
+                                modules: course.content ? JSON.parse(course.content) : []
+                              };
+                              
+                              setSelectedCourses([...selectedCourses, newCourse]);
+                              
+                              // Update total amount
+                              const currentTotal = form.getValues('totalAmount') || 0;
+                              const newTotal = currentTotal + newCourse.fee;
+                              form.setValue('totalAmount', newTotal);
+                              
+                              // Calculate final amount with discount
+                              const discount = form.getValues('discount') || 0;
+                              form.setValue('finalAmount', newTotal - (newTotal * discount / 100));
+                              
+                              // Update courses field in the form
+                              const currentCourseIds = form.getValues('courseIds') || '';
+                              const courseIds = currentCourseIds ? 
+                                currentCourseIds + ',' + courseId : 
+                                courseId.toString();
+                              form.setValue('courseIds', courseIds);
+                            }
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a course to add" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {courses?.filter(course => course.active).map((course) => (
+                              <SelectItem 
+                                key={course.id} 
+                                value={course.id.toString()}
+                                disabled={selectedCourses.some(sc => sc.id === course.id)}
+                              >
+                                {course.name} - {course.duration} (AED {parseFloat(course.fee.toString()).toLocaleString()})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        {selectedCourses.length > 0 && (
+                          <div className="mt-4 space-y-3">
+                            <Label>Selected Courses</Label>
+                            {selectedCourses.map((course, index) => (
+                              <div 
+                                key={course.id}
+                                className="border rounded-md p-3 bg-gray-50 relative"
+                              >
+                                <div className="flex justify-between">
+                                  <div>
+                                    <h4 className="font-medium">{course.name}</h4>
+                                    <p className="text-sm text-gray-500">{course.duration}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-medium">AED {course.fee.toLocaleString()}</p>
+                                    <Button 
+                                      type="button"
+                                      variant="ghost" 
+                                      size="icon"
+                                      className="h-6 w-6 absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                                      onClick={() => {
+                                        // Remove course from selection
+                                        const newSelectedCourses = selectedCourses.filter((_, i) => i !== index);
+                                        setSelectedCourses(newSelectedCourses);
+                                        
+                                        // Update total amount
+                                        const currentTotal = form.getValues('totalAmount') || 0;
+                                        const newTotal = currentTotal - course.fee;
+                                        form.setValue('totalAmount', newTotal);
+                                        
+                                        // Calculate final amount with discount
+                                        const discount = form.getValues('discount') || 0;
+                                        form.setValue('finalAmount', newTotal - (newTotal * discount / 100));
+                                        
+                                        // Update courses field in the form
+                                        const newCourseIds = newSelectedCourses.map(c => c.id).join(',');
+                                        form.setValue('courseIds', newCourseIds);
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                {course.modules && course.modules.length > 0 && (
+                                  <div className="mt-2 pt-2 border-t">
+                                    <Collapsible>
+                                      <CollapsibleTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="flex items-center p-0 h-6">
+                                          <ChevronRight className="h-4 w-4 mr-1" />
+                                          <span className="text-xs">View Modules</span>
+                                        </Button>
+                                      </CollapsibleTrigger>
+                                      <CollapsibleContent>
+                                        <ul className="mt-2 list-disc pl-5 space-y-1">
+                                          {course.modules.map((module, i) => (
+                                            <li key={i} className="text-sm">
+                                              <span className="font-medium">{module.name}</span>
+                                              {module.subItems && module.subItems.length > 0 && (
+                                                <ul className="pl-4 mt-1 list-circle">
+                                                  {module.subItems.map((subItem, j) => (
+                                                    <li key={j} className="text-xs">{subItem}</li>
+                                                  ))}
+                                                </ul>
+                                              )}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </CollapsibleContent>
+                                    </Collapsible>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <FormField
                       control={form.control}
                       name="courseFormat"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Format</FormLabel>
+                          <FormLabel>Delivery Format</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="In-Person, Online, Hybrid" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="trainingDuration"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Duration</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="e.g. 5 Days" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -547,7 +669,7 @@ const ProposalsPage: FC = () => {
                       name="trainingLocation"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Location</FormLabel>
+                          <FormLabel>Training Location</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
