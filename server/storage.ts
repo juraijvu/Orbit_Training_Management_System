@@ -1236,17 +1236,11 @@ export class DatabaseStorage implements IStorage {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    let query = db
-      .select()
-      .from(followUps)
-      .where(
-        and(
-          gte(followUps.nextFollowUp, today),
-          lt(followUps.nextFollowUp, tomorrow),
-          eq(followUps.status, "Pending")
-        )
-      );
-      
+    let query = db.select().from(followUps)
+      .where(eq(followUps.status, "Pending"))
+      .where(gte(followUps.nextFollowUp, today))
+      .where(lt(followUps.nextFollowUp, tomorrow));
+    
     if (consultantId) {
       query = query.where(eq(followUps.consultantId, consultantId));
     }
@@ -1255,21 +1249,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getHighPriorityFollowUps(consultantId?: number): Promise<FollowUp[]> {
-    let query = db
-      .select()
-      .from(followUps)
-      .where(
-        and(
-          eq(followUps.priority, "High"),
-          eq(followUps.status, "Pending")
-        )
-      );
+    let query = db.select().from(followUps)
+      .where(eq(followUps.priority, "High"))
+      .where(eq(followUps.status, "Pending"));
       
     if (consultantId) {
       query = query.where(eq(followUps.consultantId, consultantId));
     }
     
-    return await query.orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
+    return await query.orderBy(asc(followUps.nextFollowUp));
   }
 
   async getFollowUpsToNotify(): Promise<FollowUp[]> {
@@ -1279,15 +1267,11 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(followUps)
-      .where(
-        and(
-          gte(followUps.nextFollowUp, now),
-          lte(followUps.nextFollowUp, thirtyMinutesFromNow),
-          eq(followUps.isNotified, false),
-          eq(followUps.status, "Pending")
-        )
-      )
-      .orderBy([asc(followUps.nextFollowUp), asc(followUps.nextFollowUpTime)]);
+      .where(gte(followUps.nextFollowUp, now))
+      .where(lte(followUps.nextFollowUp, thirtyMinutesFromNow))
+      .where(eq(followUps.isNotified, false))
+      .where(eq(followUps.status, "Pending"))
+      .orderBy(asc(followUps.nextFollowUp));
   }
 
   async getFollowUp(id: number): Promise<FollowUp | undefined> {
