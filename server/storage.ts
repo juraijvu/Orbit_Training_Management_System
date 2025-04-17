@@ -13,7 +13,7 @@ import {
   followUps, FollowUp, InsertFollowUp
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, asc, desc, gte, lte, lt } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -94,6 +94,10 @@ export interface IStorage {
   // CRM - Leads
   getLeads(): Promise<Lead[]>;
   getLead(id: number): Promise<Lead | undefined>;
+  getLeadsByConsultant(consultantId: number): Promise<Lead[]>;
+  getLeadsByStatus(status: string): Promise<Lead[]>;
+  getLeadsByPriority(priority: string): Promise<Lead[]>;
+  getLeadsDueForFollowUp(date?: Date): Promise<Lead[]>;
   createLead(lead: InsertLead): Promise<Lead>;
   updateLead(id: number, lead: Partial<Lead>): Promise<Lead | undefined>;
   deleteLead(id: number): Promise<boolean>;
@@ -101,6 +105,8 @@ export interface IStorage {
   // CRM - Campaigns
   getCampaigns(): Promise<Campaign[]>;
   getCampaign(id: number): Promise<Campaign | undefined>;
+  getCampaignsByPlatform(platform: string): Promise<Campaign[]>;
+  getActiveCampaigns(): Promise<Campaign[]>;
   createCampaign(campaign: InsertCampaign): Promise<Campaign>;
   updateCampaign(id: number, campaign: Partial<Campaign>): Promise<Campaign | undefined>;
   deleteCampaign(id: number): Promise<boolean>;
@@ -108,9 +114,15 @@ export interface IStorage {
   // CRM - Follow Ups
   getFollowUps(): Promise<FollowUp[]>;
   getFollowUpsByLeadId(leadId: number): Promise<FollowUp[]>;
+  getFollowUpsByConsultant(consultantId: number): Promise<FollowUp[]>;
+  getPendingFollowUps(): Promise<FollowUp[]>;
+  getTodaysFollowUps(consultantId?: number): Promise<FollowUp[]>;
+  getHighPriorityFollowUps(consultantId?: number): Promise<FollowUp[]>;
+  getFollowUpsToNotify(): Promise<FollowUp[]>;
   getFollowUp(id: number): Promise<FollowUp | undefined>;
   createFollowUp(followUp: InsertFollowUp): Promise<FollowUp>;
   updateFollowUp(id: number, followUp: Partial<FollowUp>): Promise<FollowUp | undefined>;
+  markFollowUpAsNotified(id: number): Promise<FollowUp | undefined>;
   deleteFollowUp(id: number): Promise<boolean>;
 }
 
@@ -466,11 +478,49 @@ export class MemStorage implements IStorage {
   
   // CRM - Leads methods
   async getLeads(): Promise<Lead[]> {
-    return Array.from(this.leadsMap.values());
+    return Array.from(this.leadsMap.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getLead(id: number): Promise<Lead | undefined> {
     return this.leadsMap.get(id);
+  }
+  
+  async getLeadsByConsultant(consultantId: number): Promise<Lead[]> {
+    return Array.from(this.leadsMap.values())
+      .filter(lead => lead.consultantId === consultantId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getLeadsByStatus(status: string): Promise<Lead[]> {
+    return Array.from(this.leadsMap.values())
+      .filter(lead => lead.status === status)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getLeadsByPriority(priority: string): Promise<Lead[]> {
+    return Array.from(this.leadsMap.values())
+      .filter(lead => lead.priority === priority)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getLeadsDueForFollowUp(date?: Date): Promise<Lead[]> {
+    const targetDate = date || new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    
+    return Array.from(this.leadsMap.values())
+      .filter(lead => {
+        if (!lead.nextFollowUpDate) return false;
+        const followUpDate = new Date(lead.nextFollowUpDate);
+        return followUpDate >= targetDate && followUpDate < nextDay;
+      })
+      .sort((a, b) => {
+        if (!a.nextFollowUpTime || !b.nextFollowUpTime) return 0;
+        return a.nextFollowUpTime.localeCompare(b.nextFollowUpTime);
+      });
   }
 
   async createLead(lead: InsertLead): Promise<Lead> {
@@ -479,7 +529,13 @@ export class MemStorage implements IStorage {
       ...lead, 
       id, 
       createdAt: new Date(),
-      status: lead.status || "New"
+      status: lead.status || "New",
+      priority: lead.priority || "Medium",
+      email: lead.email || null,
+      whatsappNumber: lead.whatsappNumber || null,
+      source: lead.source || null,
+      notes: lead.notes || null,
+      assignedTo: lead.assignedTo || lead.consultantId
     };
     this.leadsMap.set(id, newLead);
     return newLead;
@@ -489,7 +545,11 @@ export class MemStorage implements IStorage {
     const existingLead = this.leadsMap.get(id);
     if (!existingLead) return undefined;
 
-    const updatedLead = { ...existingLead, ...lead };
+    const updatedLead = { 
+      ...existingLead, 
+      ...lead,
+      lastContactDate: lead.lastContactDate || new Date()
+    };
     this.leadsMap.set(id, updatedLead);
     return updatedLead;
   }
@@ -500,11 +560,27 @@ export class MemStorage implements IStorage {
   
   // CRM - Campaigns methods
   async getCampaigns(): Promise<Campaign[]> {
-    return Array.from(this.campaignsMap.values());
+    return Array.from(this.campaignsMap.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getCampaign(id: number): Promise<Campaign | undefined> {
     return this.campaignsMap.get(id);
+  }
+  
+  async getCampaignsByPlatform(platform: string): Promise<Campaign[]> {
+    return Array.from(this.campaignsMap.values())
+      .filter(campaign => campaign.platform === platform)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getActiveCampaigns(): Promise<Campaign[]> {
+    return Array.from(this.campaignsMap.values())
+      .filter(campaign => campaign.status === "active")
+      .sort((a, b) => {
+        if (!a.startDate || !b.startDate) return 0;
+        return b.startDate.getTime() - a.startDate.getTime();
+      });
   }
 
   async createCampaign(campaign: InsertCampaign): Promise<Campaign> {
@@ -512,7 +588,20 @@ export class MemStorage implements IStorage {
     const newCampaign: Campaign = { 
       ...campaign, 
       id, 
-      createdAt: new Date()
+      createdAt: new Date(),
+      budget: campaign.budget || null,
+      platform: campaign.platform || null,
+      status: campaign.status || "planned",
+      description: campaign.description || null,
+      results: campaign.results || null,
+      adAccount: campaign.adAccount || null,
+      adCampaignId: campaign.adCampaignId || null,
+      targetAudience: campaign.targetAudience || null,
+      endDate: campaign.endDate || null,
+      costPerLead: campaign.costPerLead || null,
+      impressions: campaign.impressions || 0,
+      clicks: campaign.clicks || 0,
+      conversions: campaign.conversions || 0
     };
     this.campaignsMap.set(id, newCampaign);
     return newCampaign;
@@ -533,13 +622,100 @@ export class MemStorage implements IStorage {
   
   // CRM - Follow Ups methods
   async getFollowUps(): Promise<FollowUp[]> {
-    return Array.from(this.followUpsMap.values());
+    return Array.from(this.followUpsMap.values())
+      .sort((a, b) => {
+        if (!a.nextFollowUp || !b.nextFollowUp) return 0;
+        const result = a.nextFollowUp.getTime() - b.nextFollowUp.getTime();
+        if (result === 0 && a.nextFollowUpTime && b.nextFollowUpTime) {
+          return a.nextFollowUpTime.localeCompare(b.nextFollowUpTime);
+        }
+        return result;
+      });
   }
 
   async getFollowUpsByLeadId(leadId: number): Promise<FollowUp[]> {
-    return Array.from(this.followUpsMap.values()).filter(
-      (followUp) => followUp.leadId === leadId
-    );
+    return Array.from(this.followUpsMap.values())
+      .filter(followUp => followUp.leadId === leadId)
+      .sort((a, b) => b.contactDate.getTime() - a.contactDate.getTime());
+  }
+  
+  async getFollowUpsByConsultant(consultantId: number): Promise<FollowUp[]> {
+    return Array.from(this.followUpsMap.values())
+      .filter(followUp => followUp.consultantId === consultantId)
+      .sort((a, b) => {
+        if (!a.nextFollowUp || !b.nextFollowUp) return 0;
+        const result = a.nextFollowUp.getTime() - b.nextFollowUp.getTime();
+        if (result === 0 && a.nextFollowUpTime && b.nextFollowUpTime) {
+          return a.nextFollowUpTime.localeCompare(b.nextFollowUpTime);
+        }
+        return result;
+      });
+  }
+
+  async getPendingFollowUps(): Promise<FollowUp[]> {
+    return Array.from(this.followUpsMap.values())
+      .filter(followUp => followUp.status === "Pending")
+      .sort((a, b) => {
+        if (!a.nextFollowUp || !b.nextFollowUp) return 0;
+        const result = a.nextFollowUp.getTime() - b.nextFollowUp.getTime();
+        if (result === 0 && a.nextFollowUpTime && b.nextFollowUpTime) {
+          return a.nextFollowUpTime.localeCompare(b.nextFollowUpTime);
+        }
+        return result;
+      });
+  }
+
+  async getTodaysFollowUps(consultantId?: number): Promise<FollowUp[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    return Array.from(this.followUpsMap.values())
+      .filter(followUp => {
+        if (!followUp.nextFollowUp) return false;
+        const matchesDate = followUp.nextFollowUp >= today && followUp.nextFollowUp < tomorrow;
+        const matchesStatus = followUp.status === "Pending";
+        const matchesConsultant = !consultantId || followUp.consultantId === consultantId;
+        return matchesDate && matchesStatus && matchesConsultant;
+      })
+      .sort((a, b) => {
+        if (!a.nextFollowUpTime || !b.nextFollowUpTime) return 0;
+        return a.nextFollowUpTime.localeCompare(b.nextFollowUpTime);
+      });
+  }
+
+  async getHighPriorityFollowUps(consultantId?: number): Promise<FollowUp[]> {
+    return Array.from(this.followUpsMap.values())
+      .filter(followUp => {
+        const matchesPriority = followUp.priority === "High";
+        const matchesStatus = followUp.status === "Pending";
+        const matchesConsultant = !consultantId || followUp.consultantId === consultantId;
+        return matchesPriority && matchesStatus && matchesConsultant;
+      })
+      .sort((a, b) => {
+        if (!a.nextFollowUp || !b.nextFollowUp) return 0;
+        return a.nextFollowUp.getTime() - b.nextFollowUp.getTime();
+      });
+  }
+
+  async getFollowUpsToNotify(): Promise<FollowUp[]> {
+    const now = new Date();
+    const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
+    
+    return Array.from(this.followUpsMap.values())
+      .filter(followUp => {
+        if (!followUp.nextFollowUp) return false;
+        return followUp.nextFollowUp >= now && 
+               followUp.nextFollowUp <= thirtyMinutesFromNow && 
+               followUp.isNotified === false &&
+               followUp.status === "Pending";
+      })
+      .sort((a, b) => {
+        if (!a.nextFollowUp || !b.nextFollowUp) return 0;
+        return a.nextFollowUp.getTime() - b.nextFollowUp.getTime();
+      });
   }
 
   async getFollowUp(id: number): Promise<FollowUp | undefined> {
@@ -551,7 +727,15 @@ export class MemStorage implements IStorage {
     const newFollowUp: FollowUp = { 
       ...followUp, 
       id, 
-      createdAt: new Date()
+      createdAt: new Date(),
+      notes: followUp.notes || null,
+      outcome: followUp.outcome || null,
+      nextFollowUp: followUp.nextFollowUp || null,
+      nextFollowUpTime: followUp.nextFollowUpTime || null,
+      contactTime: followUp.contactTime || null,
+      priority: followUp.priority || "Medium",
+      status: followUp.status || "Pending",
+      isNotified: followUp.isNotified || false
     };
     this.followUpsMap.set(id, newFollowUp);
     return newFollowUp;
@@ -564,6 +748,15 @@ export class MemStorage implements IStorage {
     const updatedFollowUp = { ...existingFollowUp, ...followUp };
     this.followUpsMap.set(id, updatedFollowUp);
     return updatedFollowUp;
+  }
+  
+  async markFollowUpAsNotified(id: number): Promise<FollowUp | undefined> {
+    const existingFollowUp = this.followUpsMap.get(id);
+    if (!existingFollowUp) return undefined;
+
+    const notifiedFollowUp = { ...existingFollowUp, isNotified: true };
+    this.followUpsMap.set(id, notifiedFollowUp);
+    return notifiedFollowUp;
   }
 
   async deleteFollowUp(id: number): Promise<boolean> {
