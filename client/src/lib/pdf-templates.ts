@@ -321,29 +321,95 @@ export const generateQuotationPdf = (data: QuotationPdfData): string => {
 
 // Function to generate the proposal PDF content
 export const generateProposalPdf = (data: ProposalPdfData): string => {
-  const courseList = data.courses.map((course, index) => `
-    <div class="mb-6">
+  // Parse content to display modules properly
+  // We need to process the content in a way that properly displays course modules
+  let modules = [];
+  try {
+    // Try to parse the content if it's JSON
+    if (typeof data.content === 'string') {
+      modules = JSON.parse(data.content);
+    } else if (typeof data.content === 'object') {
+      modules = data.content;
+    }
+  } catch (e) {
+    console.error('Error parsing modules:', e);
+    modules = [];
+  }
+
+  // Generate course list HTML
+  const courseList = data.courses.map((course, index) => {
+    // Try to extract course details if available
+    let courseModules = '';
+    try {
+      if (modules && modules.length > 0) {
+        courseModules = `
+          <div class="mt-4">
+            <h4 class="font-medium mb-2">Module Outline:</h4>
+            <ul class="list-disc pl-5">
+              ${modules.map(m => `
+                <li class="mb-2">
+                  <span class="font-medium">${m.name || m.title}</span>
+                  ${m.subItems ? `
+                    <ul class="list-circle pl-5 mt-1">
+                      ${m.subItems.map(sub => `<li class="text-sm">${sub}</li>`).join('')}
+                    </ul>
+                  ` : ''}
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `;
+      }
+    } catch (e) {
+      console.error('Error rendering course modules:', e);
+    }
+
+    return `
+    <div class="mb-8">
       <h3 class="text-lg font-semibold">${index + 1}. ${course}</h3>
-      <p>Detailed course description and curriculum would be included here.</p>
+      <div class="mt-2">
+        <p class="mb-2">Format: ${data.courseFormat || 'In-Person'}</p>
+        <p class="mb-2">Duration: ${data.trainingDuration || '5 Days'}</p>
+        <p class="mb-2">Location: ${data.trainingLocation || 'Dubai, UAE'}</p>
+      </div>
+      ${courseModules}
     </div>
-  `).join('');
+  `;
+  }).join('');
+
+  // Company logo handling
+  const logoHtml = data.logo ? `
+    <div class="mb-8 text-center">
+      <img 
+        src="${data.logo}" 
+        alt="${data.companyName} Logo" 
+        class="max-h-24 mx-auto" 
+        ${data.applyWhiteFilter ? 'style="filter: brightness(0) invert(1);"' : ''}
+      />
+    </div>
+  ` : '';
 
   return `
     <div class="print-a4">
       <!-- Cover Page -->
-      <div class="mb-16 text-center">
-        <h1 class="text-3xl font-bold mb-6">Training Proposal</h1>
-        <h2 class="text-2xl mb-10">Prepared for</h2>
-        <h2 class="text-2xl font-bold mb-10">${data.companyName}</h2>
-        <div class="mb-10">
-          <p>Proposal Number: ${data.proposalNumber}</p>
-          <p>Date: ${data.date}</p>
+      <div style="background-color: #000842; color: white; padding: 3rem; min-height: 100vh; display: flex; flex-direction: column;">
+        ${logoHtml}
+        <div class="mb-16 text-center flex-grow flex flex-col justify-center">
+          <h1 class="text-3xl font-bold mb-6">${data.coverPage || 'Training Proposal'}</h1>
+          <h2 class="text-2xl mb-10">Prepared for</h2>
+          <h2 class="text-2xl font-bold mb-10">${data.companyName}</h2>
+          <div class="mb-10">
+            <p>Proposal Number: ${data.proposalNumber}</p>
+            <p>Date: ${data.date}</p>
+          </div>
         </div>
-        <div class="mt-16">
-          <h2 class="text-2xl mb-4">Presented By</h2>
-          <h1 class="text-3xl font-bold">Orbit Institute</h1>
-          <p>123, Education Hub, Tech City, India - 123456</p>
-          <p>Phone: +91 1234567890 | Email: info@orbitinstitute.com</p>
+        <div class="mt-8 text-center">
+          <h2 class="text-xl mb-4">Presented By</h2>
+          <h3 class="text-lg font-bold">${data.presenterName || 'Training Consultant'}</h3>
+          <p>${data.presenterDetails || ''}</p>
+          <h1 class="text-2xl font-bold mt-4">Orbit Institute</h1>
+          <p>Dubai, United Arab Emirates</p>
+          <p>Phone: +971 50 123 4567 | Email: info@orbitinstitute.ae</p>
         </div>
       </div>
       
@@ -383,7 +449,7 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
           <thead>
             <tr class="bg-gray-100">
               <th class="border border-gray-300 px-4 py-2 text-left">Description</th>
-              <th class="border border-gray-300 px-4 py-2 text-right">Amount (₹)</th>
+              <th class="border border-gray-300 px-4 py-2 text-right">Amount (AED)</th>
             </tr>
           </thead>
           <tbody>
