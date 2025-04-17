@@ -43,6 +43,14 @@ function Router() {
         <ProtectedRoute path="/certificate-templates" component={CertificateTemplates} />
         <ProtectedRoute path="/quotations" component={Quotations} />
         <ProtectedRoute path="/proposals" component={Proposals} />
+        <ProtectedRoute path="/proposals/:id" component={() => {
+          const ProposalDetailPage = React.lazy(() => import("@/pages/proposals/[id]"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ProposalDetailPage />
+            </React.Suspense>
+          );
+        }} />
         <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
         <ProtectedRoute path="/settings" component={Settings} />
         {/* External Integrations */}
