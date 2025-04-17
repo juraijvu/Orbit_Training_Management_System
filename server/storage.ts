@@ -167,6 +167,10 @@ export class MemStorage implements IStorage {
   private leadsMap: Map<number, Lead>;
   private campaignsMap: Map<number, Campaign>;
   private followUpsMap: Map<number, FollowUp>;
+  private whatsappSettingsMap: Map<number, WhatsappSettings>;
+  private whatsappTemplatesMap: Map<number, WhatsappTemplate>;
+  private whatsappChatsMap: Map<number, WhatsappChat>;
+  private whatsappMessagesMap: Map<number, WhatsappMessage>;
   
   private userId: number = 1;
   private studentId: number = 1;
@@ -180,6 +184,10 @@ export class MemStorage implements IStorage {
   private leadId: number = 1;
   private campaignId: number = 1;
   private followUpId: number = 1;
+  private whatsappSettingsId: number = 1;
+  private whatsappTemplateId: number = 1;
+  private whatsappChatId: number = 1;
+  private whatsappMessageId: number = 1;
   
   sessionStore: any;
 
@@ -196,6 +204,10 @@ export class MemStorage implements IStorage {
     this.leadsMap = new Map();
     this.campaignsMap = new Map();
     this.followUpsMap = new Map();
+    this.whatsappSettingsMap = new Map();
+    this.whatsappTemplatesMap = new Map();
+    this.whatsappChatsMap = new Map();
+    this.whatsappMessagesMap = new Map();
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
@@ -789,11 +801,143 @@ export class MemStorage implements IStorage {
   async deleteFollowUp(id: number): Promise<boolean> {
     return this.followUpsMap.delete(id);
   }
+  
+  // WhatsApp API Settings methods
+  async getWhatsappSettings(): Promise<WhatsappSettings | undefined> {
+    const settings = Array.from(this.whatsappSettingsMap.values());
+    return settings.length > 0 ? settings[0] : undefined;
+  }
+
+  async createWhatsappSettings(settings: InsertWhatsappSettings): Promise<WhatsappSettings> {
+    const id = this.whatsappSettingsId++;
+    const newSettings: WhatsappSettings = { 
+      ...settings, 
+      id, 
+      createdAt: new Date() 
+    };
+    this.whatsappSettingsMap.set(id, newSettings);
+    return newSettings;
+  }
+
+  async updateWhatsappSettings(id: number, settings: Partial<WhatsappSettings>): Promise<WhatsappSettings | undefined> {
+    const existingSettings = this.whatsappSettingsMap.get(id);
+    if (!existingSettings) return undefined;
+
+    const updatedSettings = { ...existingSettings, ...settings };
+    this.whatsappSettingsMap.set(id, updatedSettings);
+    return updatedSettings;
+  }
+
+  // WhatsApp Templates methods
+  async getWhatsappTemplates(): Promise<WhatsappTemplate[]> {
+    return Array.from(this.whatsappTemplatesMap.values());
+  }
+
+  async getWhatsappTemplate(id: number): Promise<WhatsappTemplate | undefined> {
+    return this.whatsappTemplatesMap.get(id);
+  }
+
+  async createWhatsappTemplate(template: InsertWhatsappTemplate): Promise<WhatsappTemplate> {
+    const id = this.whatsappTemplateId++;
+    const newTemplate: WhatsappTemplate = { 
+      ...template, 
+      id, 
+      createdAt: new Date() 
+    };
+    this.whatsappTemplatesMap.set(id, newTemplate);
+    return newTemplate;
+  }
+
+  async updateWhatsappTemplate(id: number, template: Partial<WhatsappTemplate>): Promise<WhatsappTemplate | undefined> {
+    const existingTemplate = this.whatsappTemplatesMap.get(id);
+    if (!existingTemplate) return undefined;
+
+    const updatedTemplate = { ...existingTemplate, ...template };
+    this.whatsappTemplatesMap.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+
+  async deleteWhatsappTemplate(id: number): Promise<boolean> {
+    return this.whatsappTemplatesMap.delete(id);
+  }
+
+  // WhatsApp Chats methods
+  async getWhatsappChats(): Promise<WhatsappChat[]> {
+    return Array.from(this.whatsappChatsMap.values())
+      .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
+  }
+
+  async getWhatsappChat(id: number): Promise<WhatsappChat | undefined> {
+    return this.whatsappChatsMap.get(id);
+  }
+
+  async getWhatsappChatsByConsultantId(consultantId: number): Promise<WhatsappChat[]> {
+    return Array.from(this.whatsappChatsMap.values())
+      .filter(chat => chat.consultantId === consultantId)
+      .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
+  }
+
+  async createWhatsappChat(chat: InsertWhatsappChat): Promise<WhatsappChat> {
+    const id = this.whatsappChatId++;
+    const newChat: WhatsappChat = { 
+      ...chat, 
+      id, 
+      createdAt: new Date(),
+      lastMessageTime: new Date(),
+      unreadCount: 0
+    };
+    this.whatsappChatsMap.set(id, newChat);
+    return newChat;
+  }
+
+  async updateWhatsappChat(id: number, chat: Partial<WhatsappChat>): Promise<WhatsappChat | undefined> {
+    const existingChat = this.whatsappChatsMap.get(id);
+    if (!existingChat) return undefined;
+
+    const updatedChat = { ...existingChat, ...chat };
+    this.whatsappChatsMap.set(id, updatedChat);
+    return updatedChat;
+  }
+
+  // WhatsApp Messages methods
+  async getWhatsappMessagesByChatId(chatId: number): Promise<WhatsappMessage[]> {
+    return Array.from(this.whatsappMessagesMap.values())
+      .filter(message => message.chatId === chatId)
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  }
+
+  async createWhatsappMessage(message: InsertWhatsappMessage): Promise<WhatsappMessage> {
+    const id = this.whatsappMessageId++;
+    const newMessage: WhatsappMessage = { 
+      ...message, 
+      id, 
+      createdAt: new Date() 
+    };
+    this.whatsappMessagesMap.set(id, newMessage);
+    
+    // Update the chat's last message time
+    const chat = this.whatsappChatsMap.get(message.chatId);
+    if (chat) {
+      const updatedChat = { 
+        ...chat, 
+        lastMessageTime: new Date(),
+        unreadCount: message.sentBy !== chat.consultantId ? chat.unreadCount + 1 : chat.unreadCount
+      };
+      this.whatsappChatsMap.set(chat.id, updatedChat);
+    }
+    
+    return newMessage;
+  }
 }
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
   sessionStore: any;
+  
+  private whatsappSettingsId: number = 1;
+  private whatsappTemplateId: number = 1;
+  private whatsappChatId: number = 1;
+  private whatsappMessageId: number = 1;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({
@@ -1340,6 +1484,106 @@ export class DatabaseStorage implements IStorage {
   async deleteFollowUp(id: number): Promise<boolean> {
     const result = await db.delete(followUps).where(eq(followUps.id, id)).returning();
     return result.length > 0;
+  }
+  // WhatsApp API Settings methods
+  async getWhatsappSettings(): Promise<WhatsappSettings | undefined> {
+    const result = await db.select().from(whatsappSettings);
+    return result[0];
+  }
+
+  async createWhatsappSettings(settings: InsertWhatsappSettings): Promise<WhatsappSettings> {
+    const settingsWithDefaults = {
+      ...settings,
+      createdAt: new Date()
+    };
+    const result = await db.insert(whatsappSettings).values(settingsWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateWhatsappSettings(id: number, settings: Partial<WhatsappSettings>): Promise<WhatsappSettings | undefined> {
+    const result = await db.update(whatsappSettings).set(settings).where(eq(whatsappSettings.id, id)).returning();
+    return result[0];
+  }
+
+  // WhatsApp Templates methods
+  async getWhatsappTemplates(): Promise<WhatsappTemplate[]> {
+    return await db.select().from(whatsappTemplates);
+  }
+
+  async getWhatsappTemplate(id: number): Promise<WhatsappTemplate | undefined> {
+    const result = await db.select().from(whatsappTemplates).where(eq(whatsappTemplates.id, id));
+    return result[0];
+  }
+
+  async createWhatsappTemplate(template: InsertWhatsappTemplate): Promise<WhatsappTemplate> {
+    const templateWithDefaults = {
+      ...template,
+      createdAt: new Date()
+    };
+    const result = await db.insert(whatsappTemplates).values(templateWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateWhatsappTemplate(id: number, template: Partial<WhatsappTemplate>): Promise<WhatsappTemplate | undefined> {
+    const result = await db.update(whatsappTemplates).set(template).where(eq(whatsappTemplates.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteWhatsappTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(whatsappTemplates).where(eq(whatsappTemplates.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // WhatsApp Chats methods
+  async getWhatsappChats(): Promise<WhatsappChat[]> {
+    return await db.select().from(whatsappChats).orderBy(desc(whatsappChats.lastMessageTime));
+  }
+
+  async getWhatsappChat(id: number): Promise<WhatsappChat | undefined> {
+    const result = await db.select().from(whatsappChats).where(eq(whatsappChats.id, id));
+    return result[0];
+  }
+
+  async getWhatsappChatsByConsultantId(consultantId: number): Promise<WhatsappChat[]> {
+    return await db
+      .select()
+      .from(whatsappChats)
+      .where(eq(whatsappChats.consultantId, consultantId))
+      .orderBy(desc(whatsappChats.lastMessageTime));
+  }
+
+  async createWhatsappChat(chat: InsertWhatsappChat): Promise<WhatsappChat> {
+    const chatWithDefaults = {
+      ...chat,
+      createdAt: new Date(),
+      lastMessageTime: new Date(),
+      unreadCount: 0
+    };
+    const result = await db.insert(whatsappChats).values(chatWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateWhatsappChat(id: number, chat: Partial<WhatsappChat>): Promise<WhatsappChat | undefined> {
+    const result = await db.update(whatsappChats).set(chat).where(eq(whatsappChats.id, id)).returning();
+    return result[0];
+  }
+
+  // WhatsApp Messages methods
+  async getWhatsappMessagesByChatId(chatId: number): Promise<WhatsappMessage[]> {
+    return await db
+      .select()
+      .from(whatsappMessages)
+      .where(eq(whatsappMessages.chatId, chatId))
+      .orderBy(asc(whatsappMessages.timestamp));
+  }
+
+  async createWhatsappMessage(message: InsertWhatsappMessage): Promise<WhatsappMessage> {
+    const messageWithDefaults = {
+      ...message,
+      createdAt: new Date()
+    };
+    const result = await db.insert(whatsappMessages).values(messageWithDefaults).returning();
+    return result[0];
   }
 }
 
