@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -6,6 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"; 
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Card, 
   CardContent, 
@@ -52,7 +53,8 @@ import {
   Trash2,
   MoreHorizontal,
   Clock,
-  Bell
+  Bell,
+  CalendarClock
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -63,12 +65,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { format } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 export default function LeadsPage() {
   const { user } = useAuth();
@@ -88,7 +96,20 @@ export default function LeadsPage() {
     source: "",
     interestedCourse: "",
     notes: "",
-    status: "New"
+    status: "New",
+    followUpDate: null,
+    followUpStatus: "None"
+  });
+  
+  // Follow-up form state
+  const [followUpFormOpen, setFollowUpFormOpen] = useState(false);
+  const [followUpData, setFollowUpData] = useState({
+    leadId: null,
+    notes: "",
+    followUpDate: new Date(),
+    followUpTime: "",
+    priority: "Medium",
+    status: "Pending"
   });
 
   // Query to fetch leads
@@ -203,9 +224,23 @@ export default function LeadsPage() {
       source: "",
       interestedCourse: "",
       notes: "",
-      status: "New"
+      status: "New",
+      followUpDate: null,
+      followUpStatus: "None"
     });
     setSelectedLead(null);
+  };
+  
+  // Reset follow-up form
+  const resetFollowUpForm = () => {
+    setFollowUpData({
+      leadId: null,
+      notes: "",
+      followUpDate: new Date(),
+      followUpTime: "",
+      priority: "Medium",
+      status: "Pending"
+    });
   };
   
   // Handle form submission
@@ -242,10 +277,26 @@ export default function LeadsPage() {
       source: lead.source || "",
       interestedCourse: lead.interestedCourse?.toString() || "",
       notes: lead.notes || "",
-      status: lead.status
+      status: lead.status,
+      followUpDate: lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate) : null,
+      followUpStatus: lead.followUpStatus || "None"
     });
     setEditMode(true);
     setOpenDialog(true);
+  };
+  
+  // Handle follow-up form
+  const handleOpenFollowUpForm = (lead) => {
+    setSelectedLead(lead);
+    setFollowUpData({
+      leadId: lead.id,
+      notes: "",
+      followUpDate: new Date(),
+      followUpTime: new Date().toTimeString().slice(0, 5), // Current time in HH:MM format
+      priority: "Medium",
+      status: "Pending"
+    });
+    setFollowUpFormOpen(true);
   };
   
   // Filter leads based on search and status
@@ -297,10 +348,12 @@ export default function LeadsPage() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="New">New</SelectItem>
-                <SelectItem value="Contacted">Contacted</SelectItem>
-                <SelectItem value="Qualified">Qualified</SelectItem>
+                <SelectItem value="Interested Highly">Interested Highly</SelectItem>
+                <SelectItem value="Register Soon">Register Soon</SelectItem>
+                <SelectItem value="Called Back">Called Back</SelectItem>
+                <SelectItem value="Wrong Enquiry">Wrong Enquiry</SelectItem>
+                <SelectItem value="Not Interested">Not Interested</SelectItem>
                 <SelectItem value="Converted">Converted</SelectItem>
-                <SelectItem value="Lost">Lost</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -378,10 +431,12 @@ export default function LeadsPage() {
                         <div className={`
                           px-2 py-1 rounded-full text-xs inline-flex items-center
                           ${lead.status === 'New' ? 'bg-blue-100 text-blue-800' : ''}
-                          ${lead.status === 'Contacted' ? 'bg-yellow-100 text-yellow-800' : ''}
-                          ${lead.status === 'Qualified' ? 'bg-purple-100 text-purple-800' : ''}
-                          ${lead.status === 'Converted' ? 'bg-green-100 text-green-800' : ''}
-                          ${lead.status === 'Lost' ? 'bg-red-100 text-red-800' : ''}
+                          ${lead.status === 'Interested Highly' ? 'bg-green-100 text-green-800' : ''}
+                          ${lead.status === 'Register Soon' ? 'bg-purple-100 text-purple-800' : ''}
+                          ${lead.status === 'Wrong Enquiry' ? 'bg-orange-100 text-orange-800' : ''}
+                          ${lead.status === 'Not Interested' ? 'bg-red-100 text-red-800' : ''}
+                          ${lead.status === 'Called Back' ? 'bg-yellow-100 text-yellow-800' : ''}
+                          ${lead.status === 'Converted' ? 'bg-emerald-100 text-emerald-800' : ''}
                         `}>
                           {lead.status}
                         </div>
@@ -571,10 +626,12 @@ export default function LeadsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="New">New</SelectItem>
-                      <SelectItem value="Contacted">Contacted</SelectItem>
-                      <SelectItem value="Qualified">Qualified</SelectItem>
+                      <SelectItem value="Interested Highly">Interested Highly</SelectItem>
+                      <SelectItem value="Register Soon">Register Soon</SelectItem>
+                      <SelectItem value="Called Back">Called Back</SelectItem>
+                      <SelectItem value="Wrong Enquiry">Wrong Enquiry</SelectItem>
+                      <SelectItem value="Not Interested">Not Interested</SelectItem>
                       <SelectItem value="Converted">Converted</SelectItem>
-                      <SelectItem value="Lost">Lost</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
