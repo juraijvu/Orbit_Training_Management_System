@@ -2500,7 +2500,422 @@ export class DatabaseStorage implements IStorage {
     const result = await db.insert(whatsappMessages).values(messageWithDefaults).returning();
     return result[0];
   }
+  // CRM Meetings implementation
+  async getCrmMeetings(): Promise<CrmMeeting[]> {
+    try {
+      return await db.select().from(crmMeetings).orderBy(desc(crmMeetings.meetingDate));
+    } catch (error) {
+      console.error("Error fetching CRM meetings:", error);
+      return [];
+    }
+  }
+
+  async getCrmMeetingsByLeadId(leadId: number): Promise<CrmMeeting[]> {
+    return await db
+      .select()
+      .from(crmMeetings)
+      .where(eq(crmMeetings.leadId, leadId))
+      .orderBy(desc(crmMeetings.meetingDate));
+  }
+
+  async getCrmMeetingsByCorporateLeadId(corporateLeadId: number): Promise<CrmMeeting[]> {
+    return await db
+      .select()
+      .from(crmMeetings)
+      .where(eq(crmMeetings.corporateLeadId, corporateLeadId))
+      .orderBy(desc(crmMeetings.meetingDate));
+  }
+
+  async getCrmMeetingsByAssignedTo(userId: number): Promise<CrmMeeting[]> {
+    return await db
+      .select()
+      .from(crmMeetings)
+      .where(eq(crmMeetings.assignedTo, userId))
+      .orderBy(desc(crmMeetings.meetingDate));
+  }
+
+  async getCrmMeetingsByDate(date: Date): Promise<CrmMeeting[]> {
+    // Format date to YYYY-MM-DD for comparison
+    const dateStr = date.toISOString().split('T')[0];
+    
+    // Create start and end date range for the given day
+    const startDate = new Date(`${dateStr}T00:00:00.000Z`);
+    const endDate = new Date(`${dateStr}T23:59:59.999Z`);
+    
+    return await db
+      .select()
+      .from(crmMeetings)
+      .where(
+        and(
+          gte(crmMeetings.meetingDate, startDate),
+          lte(crmMeetings.meetingDate, endDate)
+        )
+      )
+      .orderBy(asc(crmMeetings.meetingDate));
+  }
+
+  async getCrmMeetingsByStatus(status: string): Promise<CrmMeeting[]> {
+    return await db
+      .select()
+      .from(crmMeetings)
+      .where(eq(crmMeetings.status, status))
+      .orderBy(desc(crmMeetings.meetingDate));
+  }
+
+  async getCrmMeeting(id: number): Promise<CrmMeeting | undefined> {
+    const result = await db.select().from(crmMeetings).where(eq(crmMeetings.id, id));
+    return result[0];
+  }
+
+  async createCrmMeeting(meeting: InsertCrmMeeting): Promise<CrmMeeting> {
+    const meetingWithDefaults = {
+      ...meeting,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    const result = await db.insert(crmMeetings).values(meetingWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateCrmMeeting(id: number, meeting: Partial<CrmMeeting>): Promise<CrmMeeting | undefined> {
+    const updatedData = {
+      ...meeting,
+      updatedAt: new Date()
+    };
+    const result = await db.update(crmMeetings).set(updatedData).where(eq(crmMeetings.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCrmMeeting(id: number): Promise<boolean> {
+    const result = await db.delete(crmMeetings).where(eq(crmMeetings.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async markMeetingNotificationSent(id: number): Promise<CrmMeeting | undefined> {
+    const result = await db
+      .update(crmMeetings)
+      .set({ 
+        notificationSent: true,
+        updatedAt: new Date()
+      })
+      .where(eq(crmMeetings.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async markMeetingReminderSent(id: number): Promise<CrmMeeting | undefined> {
+    const result = await db
+      .update(crmMeetings)
+      .set({ 
+        reminderSent: true,
+        updatedAt: new Date()
+      })
+      .where(eq(crmMeetings.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Corporate Leads implementation
+  async getCorporateLeads(): Promise<CorporateLead[]> {
+    try {
+      return await db.select().from(corporateLeads).orderBy(desc(corporateLeads.createdAt));
+    } catch (error) {
+      console.error("Error fetching corporate leads:", error);
+      return [];
+    }
+  }
+
+  async getCorporateLeadsByConsultant(consultantId: number): Promise<CorporateLead[]> {
+    return await db
+      .select()
+      .from(corporateLeads)
+      .where(eq(corporateLeads.consultantId, consultantId))
+      .orderBy(desc(corporateLeads.createdAt));
+  }
+
+  async getCorporateLeadsByStatus(status: string): Promise<CorporateLead[]> {
+    return await db
+      .select()
+      .from(corporateLeads)
+      .where(eq(corporateLeads.status, status))
+      .orderBy(desc(corporateLeads.createdAt));
+  }
+
+  async getCorporateLeadsByPriority(priority: string): Promise<CorporateLead[]> {
+    return await db
+      .select()
+      .from(corporateLeads)
+      .where(eq(corporateLeads.priority, priority))
+      .orderBy(desc(corporateLeads.createdAt));
+  }
+
+  async getCorporateLead(id: number): Promise<CorporateLead | undefined> {
+    const result = await db.select().from(corporateLeads).where(eq(corporateLeads.id, id));
+    return result[0];
+  }
+
+  async createCorporateLead(lead: InsertCorporateLead): Promise<CorporateLead> {
+    const leadWithDefaults = {
+      ...lead,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    const result = await db.insert(corporateLeads).values(leadWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateCorporateLead(id: number, lead: Partial<CorporateLead>): Promise<CorporateLead | undefined> {
+    const updatedData = {
+      ...lead,
+      updatedAt: new Date()
+    };
+    const result = await db.update(corporateLeads).set(updatedData).where(eq(corporateLeads.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCorporateLead(id: number): Promise<boolean> {
+    const result = await db.delete(corporateLeads).where(eq(corporateLeads.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // CRM Posts implementation
+  async getCrmPosts(): Promise<CrmPost[]> {
+    try {
+      return await db.select().from(crmPosts).orderBy(desc(crmPosts.createdAt));
+    } catch (error) {
+      console.error("Error fetching CRM posts:", error);
+      return [];
+    }
+  }
+
+  async getCrmPostsByCategory(category: string): Promise<CrmPost[]> {
+    return await db
+      .select()
+      .from(crmPosts)
+      .where(eq(crmPosts.category, category))
+      .orderBy(desc(crmPosts.createdAt));
+  }
+
+  async getCrmPostsByCreator(userId: number): Promise<CrmPost[]> {
+    return await db
+      .select()
+      .from(crmPosts)
+      .where(eq(crmPosts.createdBy, userId))
+      .orderBy(desc(crmPosts.createdAt));
+  }
+
+  async getCrmPostsByTags(tags: string[]): Promise<CrmPost[]> {
+    // This is a simplified implementation - ideally we would use an array contains operator
+    // But for simplicity, we'll fetch all posts and filter in memory
+    const allPosts = await this.getCrmPosts();
+    
+    return allPosts.filter(post => {
+      if (!post.tags || !post.tags.length) return false;
+      
+      // Check if any of the requested tags exists in the post's tags
+      return tags.some(tag => post.tags.includes(tag));
+    });
+  }
+
+  async getCrmPost(id: number): Promise<CrmPost | undefined> {
+    const result = await db.select().from(crmPosts).where(eq(crmPosts.id, id));
+    return result[0];
+  }
+
+  async createCrmPost(post: InsertCrmPost): Promise<CrmPost> {
+    const postWithDefaults = {
+      ...post,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      viewCount: 0,
+      downloadCount: 0,
+      shareCount: 0,
+      approved: false,
+      approvedBy: null,
+      approvedAt: null
+    };
+    const result = await db.insert(crmPosts).values(postWithDefaults).returning();
+    return result[0];
+  }
+
+  async updateCrmPost(id: number, post: Partial<CrmPost>): Promise<CrmPost | undefined> {
+    const updatedData = {
+      ...post,
+      updatedAt: new Date()
+    };
+    const result = await db.update(crmPosts).set(updatedData).where(eq(crmPosts.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCrmPost(id: number): Promise<boolean> {
+    const result = await db.delete(crmPosts).where(eq(crmPosts.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async incrementCrmPostViewCount(id: number): Promise<CrmPost | undefined> {
+    const post = await this.getCrmPost(id);
+    if (!post) return undefined;
+    
+    const result = await db
+      .update(crmPosts)
+      .set({ 
+        viewCount: (post.viewCount || 0) + 1,
+        updatedAt: new Date()
+      })
+      .where(eq(crmPosts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async incrementCrmPostDownloadCount(id: number): Promise<CrmPost | undefined> {
+    const post = await this.getCrmPost(id);
+    if (!post) return undefined;
+    
+    const result = await db
+      .update(crmPosts)
+      .set({ 
+        downloadCount: (post.downloadCount || 0) + 1,
+        updatedAt: new Date()
+      })
+      .where(eq(crmPosts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async incrementCrmPostShareCount(id: number): Promise<CrmPost | undefined> {
+    const post = await this.getCrmPost(id);
+    if (!post) return undefined;
+    
+    const result = await db
+      .update(crmPosts)
+      .set({ 
+        shareCount: (post.shareCount || 0) + 1,
+        updatedAt: new Date()
+      })
+      .where(eq(crmPosts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async approveCrmPost(id: number, approvedBy: number): Promise<CrmPost | undefined> {
+    const result = await db
+      .update(crmPosts)
+      .set({ 
+        approved: true,
+        approvedBy,
+        approvedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(crmPosts.id, id))
+      .returning();
+    return result[0];
+  }
+  
+  // WhatsApp Integration methods (new format)
+  async getWhatsAppTemplates(): Promise<WhatsAppTemplate[]> {
+    try {
+      return await db.select().from(whatsAppTemplates);
+    } catch (error) {
+      console.error("Error fetching WhatsApp templates:", error);
+      return [];
+    }
+  }
+  
+  async getWhatsAppTemplatesByCategory(category: string): Promise<WhatsAppTemplate[]> {
+    return await db
+      .select()
+      .from(whatsAppTemplates)
+      .where(eq(whatsAppTemplates.category, category));
+  }
+  
+  async getWhatsAppTemplate(id: number): Promise<WhatsAppTemplate | undefined> {
+    const result = await db.select().from(whatsAppTemplates).where(eq(whatsAppTemplates.id, id));
+    return result[0];
+  }
+  
+  async createWhatsAppTemplate(template: InsertWhatsAppTemplate): Promise<WhatsAppTemplate> {
+    const result = await db.insert(whatsAppTemplates).values(template).returning();
+    return result[0];
+  }
+  
+  async updateWhatsAppTemplate(id: number, template: Partial<WhatsAppTemplate>): Promise<WhatsAppTemplate | undefined> {
+    const result = await db.update(whatsAppTemplates).set(template).where(eq(whatsAppTemplates.id, id)).returning();
+    return result[0];
+  }
+  
+  async deleteWhatsAppTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(whatsAppTemplates).where(eq(whatsAppTemplates.id, id)).returning();
+    return result.length > 0;
+  }
+  
+  // WhatsApp Chats (new format)
+  async getWhatsAppChats(): Promise<WhatsAppChat[]> {
+    try {
+      return await db.select().from(whatsAppChats).orderBy(desc(whatsAppChats.lastActivity));
+    } catch (error) {
+      console.error("Error fetching WhatsApp chats:", error);
+      return [];
+    }
+  }
+  
+  async getWhatsAppChatsByPhoneNumber(phoneNumber: string): Promise<WhatsAppChat[]> {
+    return await db
+      .select()
+      .from(whatsAppChats)
+      .where(eq(whatsAppChats.phoneNumber, phoneNumber))
+      .orderBy(desc(whatsAppChats.lastActivity));
+  }
+  
+  async getWhatsAppChatsByLead(leadId: number): Promise<WhatsAppChat[]> {
+    return await db
+      .select()
+      .from(whatsAppChats)
+      .where(eq(whatsAppChats.leadId, leadId))
+      .orderBy(desc(whatsAppChats.lastActivity));
+  }
+  
+  async getWhatsAppChatsByCorporateLead(corporateLeadId: number): Promise<WhatsAppChat[]> {
+    return await db
+      .select()
+      .from(whatsAppChats)
+      .where(eq(whatsAppChats.corporateLeadId, corporateLeadId))
+      .orderBy(desc(whatsAppChats.lastActivity));
+  }
+  
+  async getWhatsAppChatsByMeeting(meetingId: number): Promise<WhatsAppChat[]> {
+    return await db
+      .select()
+      .from(whatsAppChats)
+      .where(eq(whatsAppChats.meetingId, meetingId))
+      .orderBy(desc(whatsAppChats.lastActivity));
+  }
+  
+  async getWhatsAppChat(id: number): Promise<WhatsAppChat | undefined> {
+    const result = await db.select().from(whatsAppChats).where(eq(whatsAppChats.id, id));
+    return result[0];
+  }
+  
+  async createWhatsAppChat(chat: InsertWhatsAppChat): Promise<WhatsAppChat> {
+    const chatWithDefaults = {
+      ...chat,
+      lastActivity: new Date(),
+      createdAt: new Date()
+    };
+    const result = await db.insert(whatsAppChats).values(chatWithDefaults).returning();
+    return result[0];
+  }
+  
+  async updateWhatsAppChatStatus(id: number, status: string): Promise<WhatsAppChat | undefined> {
+    const result = await db
+      .update(whatsAppChats)
+      .set({ 
+        status,
+        lastActivity: new Date()
+      })
+      .where(eq(whatsAppChats.id, id))
+      .returning();
+    return result[0];
+  }
 }
 
-// Create a storage instance (database or memory)
 export const storage = new DatabaseStorage();
