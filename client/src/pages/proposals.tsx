@@ -194,9 +194,49 @@ const ProposalsPage: FC = () => {
     },
   });
   
+  // Handle company profile file upload
+  const handleCompanyProfileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload a PDF file for company profile',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Create a URL for preview purposes
+      const url = URL.createObjectURL(file);
+      form.setValue('companyProfile', url);
+      form.setValue('companyProfileFile', file);
+      
+      toast({
+        title: 'File uploaded',
+        description: 'Company profile PDF has been uploaded successfully',
+      });
+    }
+  };
+  
+  // Handle logo upload
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const url = URL.createObjectURL(file);
+      setLogoUrl(url);
+      form.setValue('logoUrl', url);
+    }
+  };
+
   // Handle form submission
   const onSubmit = (values: ProposalFormValues) => {
-    createProposalMutation.mutate(values);
+    // Remove the file object before sending to API
+    const submitData = {...values};
+    delete (submitData as any).companyProfileFile;
+    
+    createProposalMutation.mutate(submitData);
   };
   
   // Handle new proposal button click
@@ -874,14 +914,52 @@ const ProposalsPage: FC = () => {
                     name="companyProfile"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Company Profile Content</FormLabel>
+                        <FormLabel>Company Profile (PDF)</FormLabel>
                         <FormControl>
-                          <textarea
-                            className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Enter your company profile information here..."
-                            {...field}
-                          />
+                          <div className="flex flex-col space-y-2">
+                            <input
+                              type="file"
+                              accept=".pdf"
+                              ref={companyProfileFileRef}
+                              className="hidden"
+                              onChange={handleCompanyProfileUpload}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full flex items-center justify-center"
+                              onClick={() => companyProfileFileRef.current?.click()}
+                            >
+                              <Upload className="mr-2 h-4 w-4" />
+                              Upload Company Profile PDF
+                            </Button>
+                            {field.value && (
+                              <div className="flex items-center justify-between p-2 border rounded-md mt-2">
+                                <div className="flex items-center">
+                                  <FileText className="h-4 w-4 mr-2 text-primary" />
+                                  <span className="text-sm">Company Profile PDF</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-red-500"
+                                    onClick={() => {
+                                      form.setValue('companyProfile', '');
+                                      form.setValue('companyProfileFile', undefined);
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </FormControl>
+                        <FormDescription>
+                          Upload a PDF file for your company profile. This will appear as the last page of your proposal.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

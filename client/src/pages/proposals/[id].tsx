@@ -21,7 +21,9 @@ import {
   Edit,
   Send,
   Check,
-  ExternalLink
+  ExternalLink,
+  FileText,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -545,8 +547,18 @@ const ProposalDetailPage: FC = () => {
                       {proposal.companyProfile && (
                         <div>
                           <h2 className="text-xl font-semibold mb-4">Company Profile</h2>
-                          <div className="prose max-w-none">
-                            <div dangerouslySetInnerHTML={{ __html: proposal.companyProfile }} />
+                          <div className="p-4 border rounded-md bg-gray-50 flex flex-col items-center justify-center">
+                            <FileText className="h-12 w-12 text-gray-400 mb-3" />
+                            <p className="mb-4 text-center">Company Profile PDF attached to this proposal</p>
+                            <a 
+                              href={proposal.companyProfile} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center text-primary hover:underline"
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              View Company Profile PDF
+                            </a>
                           </div>
                         </div>
                       )}
