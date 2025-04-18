@@ -111,8 +111,11 @@ export const schedules = pgTable("schedules", {
   courseId: integer("course_id").notNull(),
   trainerId: integer("trainer_id").notNull(),
   studentIds: text("student_ids").notNull(), // Stored as comma-separated student IDs
+  sessionType: text("session_type").notNull().default("one_to_one"), // batch, one_to_one, private, corporate
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
+  duration: integer("duration").notNull(), // Duration in minutes
+  occurrenceDays: text("occurrence_days").notNull(), // Stored as comma-separated days (mon,tue,wed,thu,fri,sat,sun)
   status: text("status").notNull().default("confirmed"), // confirmed, pending, cancelled
   createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
