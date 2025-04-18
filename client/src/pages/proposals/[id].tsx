@@ -64,6 +64,17 @@ const ProposalDetailPage: FC = () => {
     },
     enabled: !!proposal?.courseId
   });
+  
+  // Fetch trainer data if trainerId is available
+  const { data: trainer } = useQuery({
+    queryKey: ['/api/trainers', proposal?.trainerId],
+    queryFn: async () => {
+      if (!proposal?.trainerId) return null;
+      const res = await apiRequest('GET', `/api/trainers/${proposal.trainerId}`);
+      return await res.json();
+    },
+    enabled: !!proposal?.trainerId
+  });
 
   // Update proposal status mutation
   const updateStatusMutation = useMutation({
@@ -130,8 +141,77 @@ const ProposalDetailPage: FC = () => {
       description: 'Your proposal PDF is being generated...',
     });
     
-    // TODO: Implement PDF generation
-    // This would connect to a server endpoint that generates and returns a PDF
+    try {
+      // Prepare trainer data for PDF
+      const trainerData = trainer ? {
+        id: trainer.id,
+        fullName: trainer.fullName,
+        specialization: trainer.specialization,
+        email: trainer.email,
+        phone: trainer.phone,
+        profilePdf: trainer.profilePdf
+      } : undefined;
+      
+      // Create PDF data object
+      const pdfData = {
+        proposalNumber: proposal.proposalNumber,
+        companyName: proposal.companyName,
+        contactPerson: proposal.contactPerson,
+        email: proposal.email,
+        phone: proposal.phone,
+        courses: course ? [course.name] : ['Training Course'],
+        totalAmount: proposal.totalAmount,
+        discount: proposal.discount,
+        finalAmount: proposal.finalAmount,
+        coverPage: proposal.coverPage,
+        presenterName: proposal.presenterName,
+        presenterDetails: proposal.presenterDetails,
+        courseFormat: proposal.courseFormat,
+        trainingDuration: proposal.trainingDuration,
+        trainingLocation: proposal.trainingLocation,
+        content: course?.content ? JSON.parse(course.content) : {},
+        date: new Date(proposal.date).toLocaleDateString(),
+        logo: proposal.logoUrl,
+        applyWhiteFilter: proposal.applyWhiteFilter,
+        trainer: trainerData,
+        companyProfile: proposal.companyProfile
+      };
+      
+      // Generate the HTML content
+      const htmlContent = generateProposalPdf(pdfData);
+      
+      // Create PDF document
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Add HTML content to PDF (simplified for now)
+      // In a real implementation, you would use html2canvas or similar
+      pdf.html(htmlContent, {
+        callback: function(doc) {
+          // Save the PDF
+          doc.save(`Proposal_${proposal.proposalNumber}_${proposal.companyName}.pdf`);
+          
+          toast({
+            title: 'PDF Generated',
+            description: 'Your proposal PDF has been generated successfully.',
+          });
+        },
+        x: 0,
+        y: 0,
+        width: 210, // A4 width in mm
+        windowWidth: 800
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: 'PDF Generation Failed',
+        description: 'There was an error generating the PDF. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
   
   // Handle proposal status change
@@ -243,6 +323,9 @@ const ProposalDetailPage: FC = () => {
                   <TabsTrigger value="coverPage">Cover Page</TabsTrigger>
                   <TabsTrigger value="content">Content</TabsTrigger>
                   <TabsTrigger value="pricing">Pricing</TabsTrigger>
+                  {(trainer || proposal.companyProfile) && (
+                    <TabsTrigger value="profiles">Profiles</TabsTrigger>
+                  )}
                 </TabsList>
                 
                 <TabsContent value="coverPage" className="border rounded-lg p-6">
@@ -423,6 +506,53 @@ const ProposalDetailPage: FC = () => {
                     </div>
                   </div>
                 </TabsContent>
+                
+                {(trainer || proposal.companyProfile) && (
+                  <TabsContent value="profiles">
+                    <div className="border rounded-lg p-6">
+                      {trainer && (
+                        <div className="mb-8">
+                          <h2 className="text-xl font-semibold mb-4">Trainer Profile</h2>
+                          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                            <div className="flex items-start">
+                              <div className="flex-grow">
+                                <h3 className="font-bold text-lg mb-1">{trainer.fullName}</h3>
+                                <p className="text-sm text-gray-600 mb-3">{trainer.specialization}</p>
+                                <div className="space-y-1 text-sm">
+                                  <p><Mail className="inline h-4 w-4 mr-1" /> {trainer.email}</p>
+                                  <p><Phone className="inline h-4 w-4 mr-1" /> {trainer.phone}</p>
+                                </div>
+                                {trainer.profilePdf && (
+                                  <div className="mt-4">
+                                    <p className="text-sm text-gray-700 mb-1">Profile Document:</p>
+                                    <a 
+                                      href={trainer.profilePdf} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline flex items-center"
+                                    >
+                                      <Download className="h-4 w-4 mr-1" />
+                                      Download Trainer Profile
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {proposal.companyProfile && (
+                        <div>
+                          <h2 className="text-xl font-semibold mb-4">Company Profile</h2>
+                          <div className="prose max-w-none">
+                            <div dangerouslySetInnerHTML={{ __html: proposal.companyProfile }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                )}
               </Tabs>
             </CardContent>
           </Card>
@@ -439,6 +569,14 @@ const ProposalDetailPage: FC = () => {
                   <p className="text-sm text-gray-500">Company</p>
                   <p className="font-medium">{proposal.companyName}</p>
                 </div>
+                
+                {trainer && (
+                  <div>
+                    <p className="text-sm text-gray-500">Trainer</p>
+                    <p className="font-medium">{trainer.fullName}</p>
+                    <p className="text-sm text-gray-600">{trainer.specialization}</p>
+                  </div>
+                )}
                 
                 <div>
                   <p className="text-sm text-gray-500">Contact Person</p>

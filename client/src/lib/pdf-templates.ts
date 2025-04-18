@@ -412,9 +412,7 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
         <div class="mt-8 text-center">
           <h2 class="text-xl mb-4">Presented By</h2>
           <h3 class="text-lg font-bold">${data.presenterName || 'Training Consultant'}</h3>
-          <p>${data.presenterTitle || ''}</p>
-          ${data.presenterEmail ? `<p>Email: ${data.presenterEmail}</p>` : ''}
-          ${data.presenterPhone ? `<p>Phone: ${data.presenterPhone}</p>` : ''}
+          <p>${data.presenterDetails || ''}</p>
           <h1 class="text-2xl font-bold mt-4">Orbit Institute</h1>
           <p>Dubai, United Arab Emirates</p>
           <p>Phone: +971 50 123 4567 | Email: info@orbitinstitute.ae</p>
