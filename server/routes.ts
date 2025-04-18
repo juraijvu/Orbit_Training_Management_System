@@ -8,6 +8,7 @@ import { fromZodError } from "zod-validation-error";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import * as chatbot from "./chatbot";
+import { emailNotificationService } from "./notifications";
 import {
   insertStudentSchema,
   insertCourseSchema,
