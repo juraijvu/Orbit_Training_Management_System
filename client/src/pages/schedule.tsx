@@ -743,7 +743,7 @@ const SchedulePage: FC = () => {
       
       {/* Create Schedule Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Schedule</DialogTitle>
             <DialogDescription>
@@ -752,7 +752,7 @@ const SchedulePage: FC = () => {
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-2">
               <FormField
                 control={form.control}
                 name="title"
@@ -998,7 +998,7 @@ const SchedulePage: FC = () => {
                     <FormDescription>
                       Select the days of the week when this schedule occurs (up to 4 days except for corporate sessions)
                     </FormDescription>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid grid-cols-7 gap-1 mt-1">
                       {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => {
                         const isSelected = field.value?.includes(day);
                         const isCorporate = form.getValues('sessionType') === SessionType.CORPORATE;
@@ -1010,7 +1010,8 @@ const SchedulePage: FC = () => {
                             key={day}
                             type="button"
                             variant={isSelected ? "default" : "outline"}
-                            className={`px-3 py-2 h-auto ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            size="sm"
+                            className={`px-1 py-1 h-auto text-xs ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                             onClick={() => {
                               if (disabled) return;
                               
@@ -1028,6 +1029,16 @@ const SchedulePage: FC = () => {
                         );
                       })}
                     </div>
+                    {field.value?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        <div className="text-xs text-muted-foreground mr-1">Selected:</div>
+                        {field.value?.map((day: string) => (
+                          <Badge key={day} variant="secondary" className="text-xs">
+                            {day}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1042,7 +1053,7 @@ const SchedulePage: FC = () => {
                     <FormDescription>
                       Select the students who will attend this session
                     </FormDescription>
-                    <div className="max-h-48 overflow-auto border rounded-md p-4">
+                    <div className="max-h-40 overflow-y-auto overflow-x-hidden border rounded-md p-2">
                       {!watchedCourseId ? (
                         <div className="text-center text-gray-500 py-4">
                           Please select a course first
@@ -1052,37 +1063,39 @@ const SchedulePage: FC = () => {
                           No students found for this course
                         </div>
                       ) : (
-                        courseStudents?.map((student) => (
-                          <div key={student.id} className="flex items-center mb-2">
-                            <input
-                              type="checkbox"
-                              id={`student-${student.id}`}
-                              className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
-                              checked={form.getValues('selectedStudents')?.includes(student.id.toString())}
-                              onChange={(e) => {
-                                const currentStudents = form.getValues('selectedStudents') || [];
-                                const studentId = student.id.toString();
-                                
-                                if (e.target.checked) {
-                                  form.setValue('selectedStudents', [...currentStudents, studentId]);
-                                } else {
-                                  form.setValue('selectedStudents', 
-                                    currentStudents.filter(id => id !== studentId)
-                                  );
-                                }
-                                
-                                // Also update the studentIds string
-                                form.setValue('studentIds', form.getValues('selectedStudents')?.join(',') || '');
-                              }}
-                            />
-                            <label 
-                              htmlFor={`student-${student.id}`}
-                              className="ml-2 text-sm text-gray-700"
-                            >
-                              {student.fullName} ({student.studentId})
-                            </label>
-                          </div>
-                        ))
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                          {courseStudents?.map((student) => (
+                            <div key={student.id} className="flex items-center py-1">
+                              <input
+                                type="checkbox"
+                                id={`student-${student.id}`}
+                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+                                checked={form.getValues('selectedStudents')?.includes(student.id.toString())}
+                                onChange={(e) => {
+                                  const currentStudents = form.getValues('selectedStudents') || [];
+                                  const studentId = student.id.toString();
+                                  
+                                  if (e.target.checked) {
+                                    form.setValue('selectedStudents', [...currentStudents, studentId]);
+                                  } else {
+                                    form.setValue('selectedStudents', 
+                                      currentStudents.filter(id => id !== studentId)
+                                    );
+                                  }
+                                  
+                                  // Also update the studentIds string
+                                  form.setValue('studentIds', form.getValues('selectedStudents')?.join(',') || '');
+                                }}
+                              />
+                              <label 
+                                htmlFor={`student-${student.id}`}
+                                className="ml-2 text-sm text-gray-700 truncate"
+                              >
+                                {student.fullName} ({student.studentId})
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <FormMessage />
