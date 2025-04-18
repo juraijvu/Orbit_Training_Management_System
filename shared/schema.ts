@@ -516,6 +516,7 @@ export const titanEmailSettings = pgTable("titan_email_settings", {
   senderEmail: text("sender_email").notNull(),
   emailPassword: text("email_password"),
   replyToEmail: text("reply_to_email"),
+  signature: text("signature"), // HTML signature
   
   // Incoming server settings (IMAP)
   imapServer: text("imap_server"),
@@ -586,6 +587,9 @@ export const emailHistory = pgTable("email_history", {
   bodyHtml: text("body_html"),
   recipientEmail: text("recipient_email").notNull(),
   recipientName: text("recipient_name"),
+  ccRecipients: text("cc_recipients").array(),
+  bccRecipients: text("bcc_recipients").array(),
+  attachments: text("attachments").array(), // Array of file paths for attachments
   senderId: integer("sender_id"), // User who sent the email
   status: text("status").notNull(), // sent, failed, delivered, opened
   sentAt: timestamp("sent_at").notNull().defaultNow(),
