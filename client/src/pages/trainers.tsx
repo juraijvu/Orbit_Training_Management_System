@@ -1,4 +1,4 @@
-import { FC, useState, useRef } from 'react';
+import { FC, useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useForm } from 'react-hook-form';
@@ -63,7 +63,11 @@ import {
   Check, 
   X,
   Calendar,
-  CheckCircle
+  CheckCircle,
+  FileText,
+  Upload,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -75,6 +79,7 @@ interface Trainer {
   specialization: string;
   courses: string;
   availability: string;
+  profilePdf?: string;
   createdAt: string;
 }
 
@@ -111,6 +116,8 @@ const trainerFormSchema = insertTrainerSchema.extend({
   availability: z.string().min(1, "Please select availability"),
   selectedCourses: z.array(z.string()).optional(),
   availabilityMatrix: z.record(z.string(), z.array(z.string())).optional(),
+  profilePdf: z.string().optional(),
+  profilePdfFile: z.instanceof(File).optional(),
 });
 
 type TrainerFormValues = z.infer<typeof trainerFormSchema>;
@@ -136,8 +143,37 @@ const TrainersPage: FC = () => {
       availability: '{}',
       selectedCourses: [],
       availabilityMatrix: {},
+      profilePdf: '',
     },
   });
+  
+  // File input reference
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Handle file upload
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload a PDF file',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Setup for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Here we'd typically upload the file to a server endpoint 
+      // For this demo, we're creating a temporary URL and storing the file
+      form.setValue('profilePdfFile', file);
+      const tempUrl = URL.createObjectURL(file);
+      form.setValue('profilePdf', tempUrl);
+    }
+  }, [form, toast]);
   
   // Fetch trainers
   const { data: trainers, isLoading: trainersLoading } = useQuery<Trainer[]>({
@@ -158,15 +194,27 @@ const TrainersPage: FC = () => {
       // Convert the availability matrix to a JSON string
       const availabilityString = JSON.stringify(data.availabilityMatrix || {});
       
+      // Handle file upload if needed
+      let profilePdfUrl = data.profilePdf;
+      
+      if (data.profilePdfFile) {
+        // In a real implementation, we would upload the file to a server here
+        // For now, we'll just use the URL.createObjectURL result
+        console.log('Would upload file:', data.profilePdfFile.name);
+        // profilePdfUrl would be the URL returned from the server after upload
+      }
+      
       const trainerData = {
         ...data,
         courses: coursesString,
         availability: availabilityString,
+        profilePdf: profilePdfUrl
       };
       
       // Remove the additional fields that are not part of the schema
       delete (trainerData as any).selectedCourses;
       delete (trainerData as any).availabilityMatrix;
+      delete (trainerData as any).profilePdfFile;
       
       const res = await apiRequest('POST', '/api/trainers', trainerData);
       return await res.json();
@@ -295,6 +343,7 @@ const TrainersPage: FC = () => {
         availability: trainer.availability,
         selectedCourses,
         availabilityMatrix,
+        profilePdf: trainer.profilePdf || '',
       });
       
       setIsEditMode(true);
@@ -454,27 +503,58 @@ const TrainersPage: FC = () => {
                     <span className="text-sm font-medium text-gray-500 block mb-1">Availability:</span>
                     <p className="text-xs text-gray-600">{formatAvailability(trainer.availability)}</p>
                   </div>
+                  
+                  {trainer.profilePdf && (
+                    <div className="mt-3 pt-3 border-t">
+                      <a 
+                        href={trainer.profilePdf} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center text-primary hover:text-primary-dark text-sm"
+                      >
+                        <FileText className="h-4 w-4 mr-1.5" />
+                        View Profile PDF
+                        <ExternalLink className="h-3 w-3 ml-1.5" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end space-x-2 border-t pt-4">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="flex items-center"
-                  onClick={() => openEditTrainerDialog(trainer)}
-                >
-                  <Pencil className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => confirmDeleteTrainer(trainer)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
+              <CardFooter className="flex justify-between space-x-2 border-t pt-4">
+                {trainer.profilePdf ? (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="flex items-center text-gray-600"
+                    onClick={() => window.open(trainer.profilePdf, '_blank')}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Download CV
+                  </Button>
+                ) : (
+                  <div></div>
+                )}
+                
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="flex items-center"
+                    onClick={() => openEditTrainerDialog(trainer)}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => confirmDeleteTrainer(trainer)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           ))}
@@ -642,6 +722,80 @@ const TrainersPage: FC = () => {
                       {...form.register('availability')} 
                       value={JSON.stringify(form.getValues('availabilityMatrix') || {})} 
                     />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="profilePdf"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Trainer Profile (PDF)</FormLabel>
+                    <FormDescription>
+                      Upload the trainer's CV or detailed profile in PDF format
+                    </FormDescription>
+                    <div className="mt-2 space-y-4">
+                      {field.value ? (
+                        <div className="flex items-center justify-between border rounded-md p-3 bg-gray-50">
+                          <div className="flex items-center">
+                            <FileText className="h-5 w-5 text-gray-500 mr-2" />
+                            <span className="text-sm truncate max-w-[200px]">
+                              {field.value.split('/').pop()}
+                            </span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              className="h-8"
+                              onClick={() => window.open(field.value, '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              className="h-8 text-red-500 hover:text-red-600 border-red-200 hover:border-red-300"
+                              onClick={() => form.setValue('profilePdf', '')}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-6 cursor-pointer"
+                             onClick={() => fileInputRef.current?.click()}>
+                          <div className="space-y-1 text-center">
+                            <Upload className="h-8 w-8 text-gray-400 mx-auto" />
+                            <div className="text-sm text-gray-600">
+                              <label
+                                htmlFor="file-upload"
+                                className="relative cursor-pointer font-medium text-primary hover:text-primary-dark"
+                              >
+                                <span>Upload a PDF file</span>
+                              </label>
+                              <p className="pl-1">or drag and drop</p>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              PDF up to 10MB
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
+                    </div>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
