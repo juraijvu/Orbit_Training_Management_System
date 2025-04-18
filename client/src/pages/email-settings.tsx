@@ -736,20 +736,8 @@ export default function EmailSettingsPage() {
             <CardFooter className="flex justify-between">
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  if (formData.useApi) {
-                    toast({
-                      title: "API Connection Test",
-                      description: "Testing API connection functionality will be implemented in a future update.",
-                    });
-                  } else {
-                    toast({
-                      title: "API Not Enabled",
-                      description: "Please enable API usage in the Server Settings tab first.",
-                      variant: "warning",
-                    });
-                  }
-                }}
+                onClick={handleTestConnection}
+                disabled={!formData.useApi || !formData.apiKey || !formData.apiSecret}
               >
                 <Mail className="mr-2 h-4 w-4" />
                 Test API Connection
