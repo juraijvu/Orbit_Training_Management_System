@@ -563,7 +563,7 @@ const TrainersPage: FC = () => {
       
       {/* Add/Edit Trainer Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEditMode ? 'Edit Trainer' : 'Add New Trainer'}</DialogTitle>
             <DialogDescription>
@@ -574,7 +574,7 @@ const TrainersPage: FC = () => {
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
               <FormField
                 control={form.control}
                 name="fullName"
