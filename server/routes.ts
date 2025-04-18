@@ -2168,7 +2168,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Send Email
   app.post('/api/email/send', isAuthenticated, async (req, res) => {
     try {
-      const emailData = insertEmailHistorySchema.parse(req.body);
+      const emailData = insertEmailHistorySchema.parse({
+        ...req.body,
+        createdBy: req.user?.id
+      });
       const newEmail = await storage.createEmailHistory(emailData);
       
       // Here we would integrate with the Titan Email API to actually send the email
@@ -2181,6 +2184,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: validationError.message });
       }
       res.status(500).json({ message: "Failed to send Email" });
+    }
+  });
+  
+  // Send email with attachments
+  app.post('/api/email/send-with-attachments', isAuthenticated, upload.array('emailAttachment', 10), async (req, res) => {
+    try {
+      // Parse form data fields
+      const { recipientEmail, subject, bodyText, bodyHtml, useHtml, templateId } = req.body;
+      
+      if (!recipientEmail || !subject || (!bodyText && !bodyHtml)) {
+        return res.status(400).json({ message: "Required fields missing" });
+      }
+      
+      // Get file attachments from the request
+      const files = req.files as Express.Multer.File[];
+      const attachments = files.map(file => ({
+        filename: file.originalname,
+        path: file.filename,
+        mimetype: file.mimetype,
+        size: file.size
+      }));
+      
+      // Create email history record
+      const emailData = {
+        recipientEmail,
+        subject,
+        bodyText,
+        bodyHtml: useHtml === 'true' ? bodyHtml : null,
+        status: "sent",
+        createdBy: req.user?.id,
+        templateId: templateId ? parseInt(templateId) : null,
+        attachments: attachments
+      };
+      
+      const newEmail = await storage.createEmailHistory(emailData);
+      
+      // Here we would integrate with the Titan Email API to actually send the email
+      // This would require API key verification and using the Titan Email API client
+      
+      res.status(201).json(newEmail);
+    } catch (error) {
+      console.error("Failed to send email with attachments:", error);
+      res.status(500).json({ message: "Failed to send email with attachments" });
     }
   });
 
