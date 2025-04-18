@@ -166,6 +166,7 @@ export interface IStorage {
   getTitanEmailSettings(): Promise<TitanEmailSettings | undefined>;
   createTitanEmailSettings(settings: InsertTitanEmailSettings): Promise<TitanEmailSettings>;
   updateTitanEmailSettings(id: number, settings: Partial<TitanEmailSettings>): Promise<TitanEmailSettings | undefined>;
+  testEmailConnection(settings: Partial<TitanEmailSettings>): Promise<boolean>;
   
   // Email Templates
   getEmailTemplates(): Promise<EmailTemplate[]>;
@@ -1059,6 +1060,45 @@ export class MemStorage implements IStorage {
     };
     this.titanEmailSettingsMap.set(id, updatedSettings);
     return updatedSettings;
+  }
+  
+  async testEmailConnection(settings: Partial<TitanEmailSettings>): Promise<boolean> {
+    // Here we would implement actual email connection testing functionality
+    // This is a simplified mock implementation for demonstration purposes
+    
+    // Simulate connection testing based on whether required fields are provided
+    try {
+      // Check if using API
+      if (settings.useApi) {
+        // Test API connection
+        if (!settings.apiKey || !settings.apiSecret) {
+          throw new Error("API Key and API Secret are required for API connection");
+        }
+        
+        // Simulate API connection success (in a real implementation, we would make an actual API call)
+        return true;
+      } else {
+        // Test SMTP connection
+        if (!settings.smtpServer || !settings.smtpPort) {
+          throw new Error("SMTP Server and Port are required");
+        }
+        
+        if (settings.smtpAuthRequired && (!settings.smtpUsername || !settings.smtpPassword)) {
+          throw new Error("SMTP Username and Password are required when authentication is enabled");
+        }
+        
+        // Test IMAP connection if provided
+        if (settings.imapServer && !settings.imapPort) {
+          throw new Error("IMAP Port is required when IMAP Server is specified");
+        }
+        
+        // Simulate connection success (in a real implementation, we would attempt to connect to the servers)
+        return true;
+      }
+    } catch (error) {
+      console.error("Email connection test failed:", error);
+      return false;
+    }
   }
   
   // Email Templates
