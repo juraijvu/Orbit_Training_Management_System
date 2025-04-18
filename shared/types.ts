@@ -52,6 +52,13 @@ export enum ScheduleStatus {
   CANCELLED = "cancelled"
 }
 
+export enum SessionType {
+  BATCH = "batch",
+  ONE_TO_ONE = "one_to_one",
+  PRIVATE = "private",
+  CORPORATE = "corporate"
+}
+
 // Activity Interface
 export interface Activity {
   id: string;

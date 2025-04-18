@@ -69,7 +69,7 @@ import {
   X,
   Trash2
 } from 'lucide-react';
-import { ScheduleStatus } from '@shared/types';
+import { ScheduleStatus, SessionType } from '@shared/types';
 
 interface Schedule {
   id: number;
@@ -77,8 +77,11 @@ interface Schedule {
   courseId: number;
   trainerId: number;
   studentIds: string;
+  sessionType: string;
   startTime: string;
   endTime: string;
+  duration: number;
+  occurrenceDays: string;
   status: string;
   createdBy: number;
   createdAt: string;
@@ -109,11 +112,15 @@ interface Student {
 const scheduleFormSchema = insertScheduleSchema.extend({
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
+  sessionType: z.string().min(1, "Session type is required"),
+  duration: z.number().min(30, "Duration must be at least 30 minutes"),
+  occurrenceDays: z.string().default(""),
   status: z.string().min(1, "Status is required"),
   selectedDate: z.date(),
   selectedStartTime: z.string(),
   selectedEndTime: z.string(),
   selectedStudents: z.array(z.string()).min(1, "Please select at least one student"),
+  selectedOccurrenceDays: z.array(z.string()).default([]),
 });
 
 type ScheduleFormValues = z.infer<typeof scheduleFormSchema>;
