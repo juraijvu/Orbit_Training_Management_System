@@ -233,12 +233,43 @@ const ProposalsPage: FC = () => {
   };
 
   // Handle form submission
-  const onSubmit = (values: ProposalFormValues) => {
-    // Remove the file object before sending to API
-    const submitData = {...values};
-    delete (submitData as any).companyProfileFile;
-    
-    createProposalMutation.mutate(submitData);
+  const onSubmit = async (values: ProposalFormValues) => {
+    try {
+      // First create the proposal with basic data
+      const submitData = {...values};
+      delete (submitData as any).companyProfileFile;
+      
+      const newProposal = await createProposalMutation.mutateAsync(submitData);
+      
+      // If we have a company profile file, upload it separately
+      if (values.companyProfileFile) {
+        const formData = new FormData();
+        formData.append('companyProfileFile', values.companyProfileFile);
+        
+        // Upload the file
+        const uploadRes = await apiRequest(
+          'POST', 
+          `/api/proposals/${newProposal.id}/upload-company-profile`, 
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+        
+        if (!uploadRes.ok) {
+          throw new Error('Failed to upload company profile file');
+        }
+        
+        toast({
+          title: 'Company Profile Uploaded',
+          description: 'The company profile PDF has been uploaded successfully.',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create proposal',
+        variant: 'destructive',
+      });
+    }
   };
   
   // Handle new proposal button click

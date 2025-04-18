@@ -1,5 +1,10 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import path from "path";
+import fs from "fs";
+import multer from "multer";
+import { ZodError } from "zod";
+import { fromZodError } from "zod-validation-error";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import * as chatbot from "./chatbot";
@@ -23,8 +28,6 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
-import { ZodError } from "zod";
-import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
