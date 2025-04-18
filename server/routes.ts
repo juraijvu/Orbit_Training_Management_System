@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import path from "path";
 import fs from "fs";
@@ -30,6 +30,48 @@ import { z } from "zod";
 import { format } from "date-fns";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve uploaded files statically
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  
+  // Set up multer for file uploads
+  const fileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      // Create uploads directory if it doesn't exist
+      const uploadDir = path.join(process.cwd(), 'uploads');
+      const proposalUploadsDir = path.join(uploadDir, 'proposals');
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir);
+      }
+      
+      if (!fs.existsSync(proposalUploadsDir)) {
+        fs.mkdirSync(proposalUploadsDir);
+      }
+      
+      cb(null, proposalUploadsDir);
+    },
+    filename: (req, file, cb) => {
+      // Generate unique filename to prevent conflicts
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname);
+      cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+  });
+  
+  const upload = multer({ 
+    storage: fileStorage,
+    fileFilter: (req, file, cb) => {
+      // Accept only PDFs for company profile
+      if (file.fieldname === 'companyProfileFile' && file.mimetype !== 'application/pdf') {
+        return cb(new Error('Only PDF files are allowed for company profile'));
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 10 * 1024 * 1024 // 10MB limit
+    }
+  });
+  
   setupAuth(app);
 
   // Middleware to check for authenticated users
@@ -596,6 +638,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedProposal);
     } catch (error) {
       res.status(500).json({ message: "Failed to update proposal" });
+    }
+  });
+
+  // Upload company profile for a proposal
+  app.post('/api/proposals/:id/upload-company-profile', isAuthenticated, upload.single('companyProfileFile'), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingProposal = await storage.getProposal(id);
+      
+      if (!existingProposal) {
+        return res.status(404).json({ message: "Proposal not found" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Get file information
+      const file = req.file;
+      const companyProfile = `/uploads/proposals/${file.filename}`;
+      const companyProfileFileSize = file.size;
+      const companyProfileFileType = file.mimetype;
+      
+      // Update the proposal with the file information
+      const updatedProposal = await storage.updateProposal(id, {
+        companyProfile,
+        companyProfileFilename: file.filename,
+        companyProfileMimeType: file.mimetype
+      });
+      
+      res.json(updatedProposal);
+    } catch (error) {
+      console.error('Error uploading company profile:', error);
+      res.status(500).json({ message: "Failed to upload company profile" });
     }
   });
 
