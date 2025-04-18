@@ -82,6 +82,12 @@ const proposalFormSchema = insertProposalSchema.extend({
   trainingDuration: z.string().optional(),
   trainingLocation: z.string().optional(),
   
+  // Trainer selection
+  trainerId: z.number().optional(),
+  
+  // Company profile (last page)
+  companyProfile: z.string().optional(),
+  
   // Cover page customization
   coverBackgroundColor: z.string().default("#000000"),
   coverTextColor: z.string().default("#ffffff"),
@@ -111,6 +117,11 @@ const ProposalsPage: FC = () => {
   // Fetch courses
   const { data: courses, isLoading: isCoursesLoading } = useQuery({
     queryKey: ['/api/courses'],
+  });
+  
+  // Fetch trainers
+  const { data: trainers, isLoading: isTrainersLoading } = useQuery({
+    queryKey: ['/api/trainers'],
   });
   
   // New proposal form
@@ -709,6 +720,48 @@ const ProposalsPage: FC = () => {
                         </FormItem>
                       )}
                     />
+                    
+                    <FormField
+                      control={form.control}
+                      name="trainerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Select Trainer</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(parseInt(value));
+                              }}
+                              value={field.value?.toString() || ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a trainer" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {isTrainersLoading ? (
+                                  <div className="flex items-center justify-center p-4">
+                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    <span className="text-sm">Loading trainers...</span>
+                                  </div>
+                                ) : (
+                                  trainers?.map((trainer) => (
+                                    <SelectItem 
+                                      key={trainer.id} 
+                                      value={trainer.id.toString()}
+                                    >
+                                      {trainer.fullName} - {trainer.specialization}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
                 
@@ -803,6 +856,34 @@ const ProposalsPage: FC = () => {
                       </div>
                     )}
                   </div>
+                </div>
+                
+                {/* Company Profile (Last Page) */}
+                <div className="grid grid-cols-1 gap-6 mt-6">
+                  <div>
+                    <h3 className="text-md font-medium text-gray-700 mb-4">Company Profile (Last Page)</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      This content will appear as the last page of the proposal. Enter your company profile information.
+                    </p>
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="companyProfile"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Profile Content</FormLabel>
+                        <FormControl>
+                          <textarea
+                            className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Enter your company profile information here..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
               
