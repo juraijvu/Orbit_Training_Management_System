@@ -381,23 +381,9 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
     </div>
   ` : '';
 
-  // Company profile page (last page)
-  const companyProfileHtml = data.companyProfile ? `
-    <!-- Page Break -->
-    <div style="page-break-after: always;"></div>
-    
-    <!-- Company Profile (Last Page) -->
-    <div class="mb-10">
-      <h2 class="text-2xl font-bold mb-4">Company Profile</h2>
-      <div class="flex flex-col items-center justify-center p-4">
-        <p class="mb-4 text-center">See attached PDF for the complete Orbit Institute company profile.</p>
-        <p class="text-sm text-gray-600">
-          Our company profile showcases our history, achievements, and commitment to providing 
-          high-quality training and development programs customized to meet client needs.
-        </p>
-      </div>
-    </div>
-  ` : '';
+  // We're no longer handling the company profile in the HTML template
+  // It will be attached separately as a PDF in the download function
+  // This variable has been removed
 
   return `
     <div class="print-a4">
@@ -467,8 +453,7 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
         </div>
       </div>
       
-      <!-- Company profile as the last page -->
-      ${companyProfileHtml}
+      <!-- Company profile is now added separately in the download function -->
     </div>
   `;
 };

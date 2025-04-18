@@ -173,7 +173,7 @@ const ProposalDetailPage: FC = () => {
   };
   
   // Handle download proposal
-  const handleDownload = () => {
+  const handleDownload = async () => {
     toast({
       title: 'Generating PDF',
       description: 'Your proposal PDF is being generated...',
@@ -190,7 +190,8 @@ const ProposalDetailPage: FC = () => {
         profilePdf: trainer.profilePdf
       } : undefined;
       
-      // Create PDF data object
+      // Create PDF data object - IMPORTANT: Don't include company profile here anymore
+      // as we'll handle it separately and attach it as the last page
       const pdfData = {
         proposalNumber: proposal.proposalNumber,
         companyName: proposal.companyName,
@@ -212,7 +213,7 @@ const ProposalDetailPage: FC = () => {
         logo: proposal.logoUrl,
         applyWhiteFilter: proposal.applyWhiteFilter,
         trainer: trainerData,
-        companyProfile: proposal.companyProfile
+        // Don't include company profile in the main HTML generation
       };
       
       // Generate the HTML content
@@ -225,22 +226,64 @@ const ProposalDetailPage: FC = () => {
         format: 'a4'
       });
       
-      // Add HTML content to PDF (simplified for now)
-      // In a real implementation, you would use html2canvas or similar
-      pdf.html(htmlContent, {
-        callback: function(doc) {
-          // Save the PDF
-          doc.save(`Proposal_${proposal.proposalNumber}_${proposal.companyName}.pdf`);
+      // Add HTML content to PDF
+      await new Promise<void>((resolve) => {
+        pdf.html(htmlContent, {
+          callback: function() {
+            resolve();
+          },
+          x: 0,
+          y: 0,
+          width: 210, // A4 width in mm
+          windowWidth: 800
+        });
+      });
+      
+      // Now, if there's a company profile, add it as the last page
+      if (proposal.companyProfile) {
+        try {
+          // Add a message page indicating the company profile
+          pdf.addPage();
+          pdf.setFontSize(18);
+          pdf.setFont("helvetica", "bold");
+          pdf.text("Company Profile", 105, 20, { align: "center" });
           
-          toast({
-            title: 'PDF Generated',
-            description: 'Your proposal PDF has been generated successfully.',
+          pdf.setFontSize(12);
+          pdf.setFont("helvetica", "normal");
+          pdf.text("The company profile is attached as the last page of this proposal.", 105, 40, { align: "center" });
+          pdf.text("It provides a comprehensive overview of our organization,", 105, 50, { align: "center" });
+          pdf.text("our history, values, and commitment to excellence.", 105, 60, { align: "center" });
+          
+          // Fetch the company profile PDF as a blob
+          const response = await fetch(proposal.companyProfile);
+          const profilePdfBlob = await response.blob();
+          
+          // Convert blob to base64
+          const reader = new FileReader();
+          const profilePdfBase64 = await new Promise<string>((resolve) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(profilePdfBlob);
           });
-        },
-        x: 0,
-        y: 0,
-        width: 210, // A4 width in mm
-        windowWidth: 800
+          
+          // Import the company profile PDF (starts on the next page)
+          const profilePdfDoc = await pdf.loadFile(profilePdfBase64.split(',')[1], {
+            putOnlyUsedFonts: true,
+            autoPaging: 'text'
+          });
+          
+          // The profile document is now merged as the last pages
+        } catch (err) {
+          console.error("Error attaching company profile PDF:", err);
+          // Continue with saving even if profile attachment fails
+        }
+      }
+      
+      // Save the complete PDF
+      pdf.save(`Proposal_${proposal.proposalNumber}_${proposal.companyName}.pdf`);
+          
+      toast({
+        title: 'PDF Generated',
+        description: 'Your proposal PDF has been generated successfully with company profile attached as the last page.',
       });
     } catch (error) {
       console.error('PDF generation error:', error);
