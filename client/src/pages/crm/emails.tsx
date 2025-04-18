@@ -103,8 +103,45 @@ export default function EmailsPage() {
   // Send email mutation
   const sendEmailMutation = useMutation({
     mutationFn: async (emailData: any) => {
-      const res = await apiRequest("POST", "/api/email/send", emailData);
-      return res.json();
+      // If we have attachments, we need to use FormData
+      if (emailData.attachments && emailData.attachments.length > 0) {
+        const formData = new FormData();
+        
+        // Add email data
+        formData.append('recipientEmail', emailData.recipientEmail);
+        formData.append('subject', emailData.subject);
+        formData.append('bodyText', emailData.bodyText);
+        formData.append('bodyHtml', emailData.bodyHtml || '');
+        formData.append('useHtml', String(emailData.useHtml));
+        formData.append('signature', emailData.signature || '');
+        formData.append('useSignature', String(emailData.useSignature));
+        
+        if (emailData.templateId) {
+          formData.append('templateId', String(emailData.templateId));
+        }
+        
+        // Add each attachment
+        emailData.attachments.forEach((file: File, index: number) => {
+          formData.append(`emailAttachment`, file);
+        });
+        
+        // Send FormData request
+        const res = await fetch('/api/email/send-with-attachments', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        
+        if (!res.ok) {
+          throw new Error('Failed to send email with attachments');
+        }
+        
+        return res.json();
+      } else {
+        // Regular JSON request without attachments
+        const res = await apiRequest("POST", "/api/email/send", emailData);
+        return res.json();
+      }
     },
     onSuccess: () => {
       toast({
@@ -116,7 +153,12 @@ export default function EmailsPage() {
         recipientEmail: "",
         subject: "",
         bodyText: "",
+        bodyHtml: "",
+        useHtml: false,
+        signature: "",
+        useSignature: false,
         templateId: null,
+        attachments: [],
       });
       queryClient.invalidateQueries({ queryKey: ["/api/email/history"] });
     },
@@ -137,9 +179,49 @@ export default function EmailsPage() {
         ...newEmail,
         subject: template.subject,
         bodyText: template.bodyText,
+        bodyHtml: template.bodyHtml || '',
         templateId: template.id,
       });
     }
+  };
+  
+  // Handle file attachments
+  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setNewEmail({
+        ...newEmail,
+        attachments: [...newEmail.attachments, ...newFiles]
+      });
+    }
+  };
+  
+  // Remove an attachment
+  const handleRemoveAttachment = (index: number) => {
+    const updatedAttachments = [...newEmail.attachments];
+    updatedAttachments.splice(index, 1);
+    setNewEmail({
+      ...newEmail,
+      attachments: updatedAttachments
+    });
+  };
+  
+  // Toggle HTML editor
+  const handleToggleHtml = (checked: boolean) => {
+    setNewEmail({
+      ...newEmail,
+      useHtml: checked,
+      // If switching to HTML for the first time, convert plain text to HTML
+      bodyHtml: checked && !newEmail.bodyHtml ? newEmail.bodyText.replace(/\n/g, "<br />") : newEmail.bodyHtml
+    });
+  };
+  
+  // Toggle signature
+  const handleToggleSignature = (checked: boolean) => {
+    setNewEmail({
+      ...newEmail,
+      useSignature: checked
+    });
   };
 
   // Filter emails based on tab and search query
@@ -377,19 +459,129 @@ export default function EmailsPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-4">
-              <Label htmlFor="message" className="text-right pt-2">
-                Message:
+              <div className="text-right pt-2 flex items-center justify-end gap-2">
+                <Label htmlFor="useHtml">HTML</Label>
+                <Switch 
+                  id="useHtml" 
+                  checked={newEmail.useHtml}
+                  onCheckedChange={handleToggleHtml}
+                />
+              </div>
+              <div className="col-span-3 flex items-center gap-4">
+                <TabsComponent value={composeTab} onValueChange={setComposeTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="text">Text</TabsTrigger>
+                    <TabsTrigger value="html" disabled={!newEmail.useHtml}>HTML</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="text" className="mt-2">
+                    <Textarea
+                      id="message"
+                      className="w-full"
+                      placeholder="Write your message here"
+                      rows={8}
+                      value={newEmail.bodyText}
+                      onChange={(e) =>
+                        setNewEmail({ ...newEmail, bodyText: e.target.value })
+                      }
+                    />
+                  </TabsContent>
+                  <TabsContent value="html" className="mt-2">
+                    <Textarea
+                      id="html-message"
+                      className="w-full font-mono text-sm"
+                      placeholder="<p>Write your HTML message here</p>"
+                      rows={8}
+                      value={newEmail.bodyHtml}
+                      onChange={(e) =>
+                        setNewEmail({ ...newEmail, bodyHtml: e.target.value })
+                      }
+                    />
+                  </TabsContent>
+                </TabsComponent>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4">
+              <div className="text-right pt-2 flex items-center justify-end gap-2">
+                <Label htmlFor="useSignature">Signature</Label>
+                <Switch 
+                  id="useSignature" 
+                  checked={newEmail.useSignature}
+                  onCheckedChange={handleToggleSignature}
+                />
+              </div>
+              <div className="col-span-3">
+                {newEmail.useSignature && (
+                  <Textarea
+                    id="signature"
+                    className="w-full"
+                    placeholder="Add your signature here"
+                    rows={3}
+                    value={newEmail.signature}
+                    onChange={(e) =>
+                      setNewEmail({ ...newEmail, signature: e.target.value })
+                    }
+                  />
+                )}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-4">
+              <Label className="text-right pt-2">
+                Attachments:
               </Label>
-              <Textarea
-                id="message"
-                className="col-span-3"
-                placeholder="Write your message here"
-                rows={8}
-                value={newEmail.bodyText}
-                onChange={(e) =>
-                  setNewEmail({ ...newEmail, bodyText: e.target.value })
-                }
-              />
+              <div className="col-span-3">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                      Add Attachment
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      onChange={handleAttachmentChange}
+                      multiple
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      Max file size: 15MB
+                    </span>
+                  </div>
+                  
+                  {newEmail.attachments.length > 0 && (
+                    <div className="border rounded-md p-3 mt-2">
+                      <h4 className="text-sm font-medium mb-2">Attached Files ({newEmail.attachments.length})</h4>
+                      <ul className="space-y-2">
+                        {newEmail.attachments.map((file, index) => (
+                          <li key={index} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-primary" />
+                              <span className="truncate max-w-[200px]">{file.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                ({Math.round(file.size / 1024)} KB)
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveAttachment(index)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -462,10 +654,50 @@ export default function EmailsPage() {
 
               <div className="grid grid-cols-4 gap-4">
                 <div className="text-sm font-medium text-right">Message:</div>
-                <div className="col-span-3 border rounded-md p-4 whitespace-pre-wrap">
-                  {selectedEmail.bodyText || selectedEmail.bodyHtml}
+                <div className="col-span-3 border rounded-md p-4">
+                  {selectedEmail.bodyHtml ? (
+                    <div 
+                      dangerouslySetInnerHTML={{ __html: selectedEmail.bodyHtml }}
+                      className="prose prose-sm max-w-none"
+                    />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{selectedEmail.bodyText}</div>
+                  )}
                 </div>
               </div>
+
+              {selectedEmail.attachments && selectedEmail.attachments.length > 0 && (
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="text-sm font-medium text-right">Attachments:</div>
+                  <div className="col-span-3">
+                    <div className="border rounded-md p-3">
+                      <ul className="space-y-2">
+                        {selectedEmail.attachments.map((attachment: any, index: number) => (
+                          <li key={index} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-primary" />
+                              <span className="truncate max-w-[200px]">{attachment.filename}</span>
+                              {attachment.size && (
+                                <span className="text-xs text-muted-foreground">
+                                  ({Math.round(attachment.size / 1024)} KB)
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(`/uploads/emails/${attachment.path}`, '_blank')}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
