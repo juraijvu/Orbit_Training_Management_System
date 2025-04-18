@@ -2,6 +2,13 @@ import { storage } from './storage';
 import { Invoice, Schedule, Student } from '@shared/schema';
 import { format } from 'date-fns';
 
+// Helper utilities
+const formatPrice = (amount: number | string): string => {
+  return typeof amount === 'string' 
+    ? `AED ${parseFloat(amount).toFixed(2)}`
+    : `AED ${amount.toFixed(2)}`;
+};
+
 export interface EmailNotificationService {
   // Schedule notifications
   sendScheduleCreationNotice(schedule: Schedule, students: Student[], courseName: string, trainerName: string): Promise<boolean>;
@@ -74,7 +81,7 @@ Orbit Institute</p>`;
           bodyHtml,
           status: "sent",
           studentId: student.id,
-          createdBy: schedule.createdBy
+          senderId: schedule.createdBy // User who created this schedule
         });
         
         return true;
@@ -143,7 +150,7 @@ Orbit Institute</p>`;
           bodyHtml,
           status: "sent",
           studentId: student.id,
-          createdBy: schedule.createdBy
+          senderId: schedule.createdBy
         });
         
         return true;
@@ -211,7 +218,7 @@ Orbit Institute</p>`;
           bodyHtml,
           status: "sent",
           studentId: student.id,
-          createdBy: schedule.createdBy
+          senderId: schedule.createdBy
         });
         
         return true;
@@ -280,7 +287,7 @@ Orbit Institute</p>`;
           bodyHtml,
           status: "sent",
           studentId: student.id,
-          createdBy: schedule.createdBy
+          senderId: schedule.createdBy
         });
         
         return true;
@@ -310,7 +317,7 @@ An invoice has been created for your course registration:
 
 Invoice Number: ${invoice.invoiceNumber}
 Course: ${courseName}
-Amount: AED ${invoice.amount}
+Amount: ${formatPrice(invoice.amount)}
 Payment Status: ${invoice.status}
 Date: ${paymentDate}
 
@@ -327,7 +334,7 @@ Orbit Institute`;
 <ul>
   <li><strong>Invoice Number:</strong> ${invoice.invoiceNumber}</li>
   <li><strong>Course:</strong> ${courseName}</li>
-  <li><strong>Amount:</strong> AED ${invoice.amount}</li>
+  <li><strong>Amount:</strong> ${formatPrice(invoice.amount)}</li>
   <li><strong>Payment Status:</strong> ${invoice.status}</li>
   <li><strong>Date:</strong> ${paymentDate}</li>
 </ul>
@@ -346,7 +353,7 @@ Orbit Institute</p>`;
         bodyHtml,
         status: "sent",
         studentId: student.id,
-        createdBy: 1 // system user
+        senderId: 1 // System user
       });
       
       return true;
@@ -372,7 +379,7 @@ Thank you for your payment. We've received your payment for:
 
 Invoice Number: ${invoice.invoiceNumber}
 Course: ${courseName}
-Amount: AED ${invoice.amount}
+Amount: ${formatPrice(invoice.amount)}
 Payment Method: ${invoice.paymentMode}
 Transaction ID: ${invoice.transactionId || 'N/A'}
 Date: ${paymentDate}
@@ -390,7 +397,7 @@ Orbit Institute`;
 <ul>
   <li><strong>Invoice Number:</strong> ${invoice.invoiceNumber}</li>
   <li><strong>Course:</strong> ${courseName}</li>
-  <li><strong>Amount:</strong> AED ${invoice.amount}</li>
+  <li><strong>Amount:</strong> ${formatPrice(invoice.amount)}</li>
   <li><strong>Payment Method:</strong> ${invoice.paymentMode}</li>
   <li><strong>Transaction ID:</strong> ${invoice.transactionId || 'N/A'}</li>
   <li><strong>Date:</strong> ${paymentDate}</li>
@@ -410,7 +417,7 @@ Orbit Institute</p>`;
         bodyHtml,
         status: "sent",
         studentId: student.id,
-        createdBy: 1 // system user
+        senderId: 1 // system user
       });
       
       return true;
@@ -436,7 +443,7 @@ This is a friendly reminder that payment for the following invoice is now ${days
 
 Invoice Number: ${invoice.invoiceNumber}
 Course: ${courseName}
-Amount: AED ${invoice.amount}
+Amount: ${formatPrice(invoice.amount)}
 Due Date: ${paymentDate}
 
 Please arrange payment as soon as possible to avoid any disruption to your course access.
@@ -452,7 +459,7 @@ Orbit Institute`;
 <ul>
   <li><strong>Invoice Number:</strong> ${invoice.invoiceNumber}</li>
   <li><strong>Course:</strong> ${courseName}</li>
-  <li><strong>Amount:</strong> AED ${invoice.amount}</li>
+  <li><strong>Amount:</strong> ${formatPrice(invoice.amount)}</li>
   <li><strong>Due Date:</strong> ${paymentDate}</li>
 </ul>
 
@@ -470,7 +477,7 @@ Orbit Institute</p>`;
         bodyHtml,
         status: "sent",
         studentId: student.id,
-        createdBy: 1 // system user
+        senderId: 1 // system user
       });
       
       return true;

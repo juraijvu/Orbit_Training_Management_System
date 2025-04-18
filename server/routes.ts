@@ -422,6 +422,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const invoiceNumber = generateId('INV', invoices.length + 1);
       
       const newInvoice = await storage.createInvoice({ ...invoiceData, invoiceNumber });
+      
+      // Send email notification about the new invoice
+      try {
+        const student = await storage.getStudent(newInvoice.studentId);
+        if (student) {
+          const course = await storage.getCourse(student.courseId);
+          if (course) {
+            await emailNotificationService.sendInvoiceCreationNotice(
+              newInvoice, 
+              student, 
+              course.name
+            );
+          }
+        }
+      } catch (notificationError) {
+        console.error("Failed to send invoice notification:", notificationError);
+        // Continue with the response even if the notification fails
+      }
+      
       res.status(201).json(newInvoice);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -429,6 +448,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: validationError.message });
       }
       res.status(500).json({ message: "Failed to create invoice" });
+    }
+  });
+  
+  // Update invoice
+  app.patch('/api/invoices/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingInvoice = await storage.getInvoice(id);
+      if (!existingInvoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      
+      const updatedInvoice = await storage.updateInvoice(id, req.body);
+      
+      // Send payment receipt notification when invoice is marked as paid
+      if (req.body.status === 'paid' && existingInvoice.status !== 'paid') {
+        try {
+          const student = await storage.getStudent(updatedInvoice.studentId);
+          if (student) {
+            const course = await storage.getCourse(student.courseId);
+            if (course) {
+              await emailNotificationService.sendPaymentReceiptNotice(
+                updatedInvoice,
+                student,
+                course.name
+              );
+            }
+          }
+        } catch (notificationError) {
+          console.error("Failed to send payment receipt notification:", notificationError);
+          // Continue with the response even if the notification fails
+        }
+      }
+      
+      res.json(updatedInvoice);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update invoice" });
     }
   });
 
