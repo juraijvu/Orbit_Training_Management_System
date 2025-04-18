@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -42,7 +42,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Mail, Search, Send, Plus, RefreshCw, Eye, Edit, Trash } from "lucide-react";
+import { Mail, Search, Send, Plus, RefreshCw, Eye, Edit, Trash, Paperclip, X, FileText, File, Download } from "lucide-react";
+import { Tabs as TabsComponent } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 
 export default function EmailsPage() {
   const { user } = useAuth();
@@ -57,8 +59,16 @@ export default function EmailsPage() {
     recipientEmail: "",
     subject: "",
     bodyText: "",
+    bodyHtml: "",
+    useHtml: false,
+    signature: "",
+    useSignature: false,
     templateId: null,
+    attachments: [] as File[],
   });
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [composeTab, setComposeTab] = useState("text");
 
   // Fetch email history
   const { data: emailHistory = [], isLoading } = useQuery({

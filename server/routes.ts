@@ -24,7 +24,11 @@ import {
   insertWhatsappMessageSchema,
   insertTitanEmailSettingsSchema,
   insertEmailTemplateSchema,
-  insertEmailHistorySchema
+  insertEmailHistorySchema,
+  insertCrmMeetingSchema,
+  insertCorporateLeadSchema,
+  insertCrmPostSchema,
+  insertWhatsAppTemplateSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { format } from "date-fns";
@@ -38,17 +42,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     destination: (req, file, cb) => {
       // Create uploads directory if it doesn't exist
       const uploadDir = path.join(process.cwd(), 'uploads');
-      const proposalUploadsDir = path.join(uploadDir, 'proposals');
+      
+      // Create subdirectories based on file type
+      let uploadSubDir;
+      if (file.fieldname === 'companyProfileFile') {
+        uploadSubDir = path.join(uploadDir, 'proposals');
+      } else if (file.fieldname === 'emailAttachment') {
+        uploadSubDir = path.join(uploadDir, 'emails');
+      } else if (file.fieldname === 'crmPost') {
+        uploadSubDir = path.join(uploadDir, 'crm/posts');
+      } else if (file.fieldname === 'whatsappMedia') {
+        uploadSubDir = path.join(uploadDir, 'whatsapp');
+      } else {
+        uploadSubDir = uploadDir;
+      }
       
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir);
       }
       
-      if (!fs.existsSync(proposalUploadsDir)) {
-        fs.mkdirSync(proposalUploadsDir);
+      if (!fs.existsSync(uploadSubDir)) {
+        fs.mkdirSync(uploadSubDir, { recursive: true });
       }
       
-      cb(null, proposalUploadsDir);
+      cb(null, uploadSubDir);
     },
     filename: (req, file, cb) => {
       // Generate unique filename to prevent conflicts
@@ -65,10 +82,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (file.fieldname === 'companyProfileFile' && file.mimetype !== 'application/pdf') {
         return cb(new Error('Only PDF files are allowed for company profile'));
       }
+      
+      // For email attachments, allow common file types
+      if (file.fieldname === 'emailAttachment') {
+        const allowedMimeTypes = [
+          'application/pdf', 
+          'application/msword', 
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-powerpoint',
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'text/plain',
+          'application/zip',
+          'application/x-zip-compressed'
+        ];
+        
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return cb(new Error('Unsupported file type for email attachment'));
+        }
+      }
+      
+      // For CRM posts, only allow images and videos
+      if (file.fieldname === 'crmPost') {
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'video/mp4',
+          'video/quicktime',
+          'video/webm'
+        ];
+        
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return cb(new Error('Only images and videos are allowed for CRM posts'));
+        }
+      }
+      
       cb(null, true);
     },
     limits: {
-      fileSize: 10 * 1024 * 1024 // 10MB limit
+      fileSize: 15 * 1024 * 1024 // 15MB limit
     }
   });
   

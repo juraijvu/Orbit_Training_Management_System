@@ -606,3 +606,137 @@ export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
 
 export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
 export type EmailHistory = typeof emailHistory.$inferSelect;
+
+// CRM Meetings
+export const crmMeetings = pgTable("crm_meetings", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  meetingDate: timestamp("meeting_date").notNull(),
+  duration: integer("duration").notNull(), // in minutes
+  location: text("location"), // can be physical or virtual
+  meetingLink: text("meeting_link"), // for virtual meetings
+  status: text("status").notNull().default("scheduled"), // scheduled, completed, cancelled, rescheduled
+  meetingType: text("meeting_type").notNull(), // initial, follow-up, presentation, demo, etc.
+  clientName: text("client_name").notNull(),
+  clientEmail: text("client_email"),
+  clientPhone: text("client_phone"),
+  attendees: text("attendees").array(), // array of names or user IDs
+  leadId: integer("lead_id"), // optional link to a lead
+  corporateLeadId: integer("corporate_lead_id"), // optional link to a corporate lead
+  notificationSent: boolean("notification_sent").default(false),
+  reminderSent: boolean("reminder_sent").default(false),
+  createdBy: integer("created_by").notNull(),
+  updatedBy: integer("updated_by"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCrmMeetingSchema = createInsertSchema(crmMeetings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCrmMeeting = z.infer<typeof insertCrmMeetingSchema>;
+export type CrmMeeting = typeof crmMeetings.$inferSelect;
+
+// Corporate Leads
+export const corporateLeads = pgTable("corporate_leads", {
+  id: serial("id").primaryKey(),
+  companyName: text("company_name").notNull(),
+  industry: text("industry"),
+  website: text("website"),
+  employeeCount: integer("employee_count"),
+  annualRevenue: text("annual_revenue"),
+  address: text("address"),
+  city: text("city"),
+  country: text("country"),
+  primaryContactName: text("primary_contact_name").notNull(),
+  primaryContactTitle: text("primary_contact_title"),
+  primaryContactEmail: text("primary_contact_email"),
+  primaryContactPhone: text("primary_contact_phone").notNull(),
+  secondaryContactName: text("secondary_contact_name"),
+  secondaryContactTitle: text("secondary_contact_title"),
+  secondaryContactEmail: text("secondary_contact_email"),
+  secondaryContactPhone: text("secondary_contact_phone"),
+  leadSource: text("lead_source"), // website, referral, event, etc.
+  leadStatus: text("lead_status").notNull().default("new"), // new, contacted, qualified, proposal, converted, closed
+  priority: text("priority").default("medium"), // low, medium, high
+  notes: text("notes"),
+  requirements: text("requirements"),
+  budget: text("budget"),
+  timeframe: text("timeframe"),
+  assignedTo: integer("assigned_to").notNull(),
+  lastContactDate: timestamp("last_contact_date"),
+  nextFollowUpDate: timestamp("next_follow_up_date"),
+  tags: text("tags").array(),
+  createdBy: integer("created_by").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCorporateLeadSchema = createInsertSchema(corporateLeads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCorporateLead = z.infer<typeof insertCorporateLeadSchema>;
+export type CorporateLead = typeof corporateLeads.$inferSelect;
+
+// Today's Posts & Status
+export const crmPosts = pgTable("crm_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  mediaUrl: text("media_url"), // URL to an image or video
+  tags: text("tags").array(),
+  category: text("category").notNull(), // motivational, promotional, informational, etc.
+  postType: text("post_type").notNull(), // text, image, video, carousel
+  isApproved: boolean("is_approved").default(false),
+  approvedBy: integer("approved_by"),
+  viewCount: integer("view_count").default(0),
+  downloadCount: integer("download_count").default(0),
+  shareCount: integer("share_count").default(0),
+  expiryDate: timestamp("expiry_date"), // When the post should no longer be visible
+  createdBy: integer("created_by").notNull(),
+  updatedBy: integer("updated_by"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCrmPostSchema = createInsertSchema(crmPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+  downloadCount: true,
+  shareCount: true,
+});
+
+export type InsertCrmPost = z.infer<typeof insertCrmPostSchema>;
+export type CrmPost = typeof crmPosts.$inferSelect;
+
+// WhatsApp Message Templates
+export const whatsAppTemplates = pgTable("whatsapp_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(), // meeting_invitation, follow_up, welcome, etc.
+  variables: text("variables").array(), // Array of variables used in the template
+  isApproved: boolean("is_approved").default(false),
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertWhatsAppTemplateSchema = createInsertSchema(whatsAppTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertWhatsAppTemplate = z.infer<typeof insertWhatsAppTemplateSchema>;
+export type WhatsAppTemplate = typeof whatsAppTemplates.$inferSelect;
