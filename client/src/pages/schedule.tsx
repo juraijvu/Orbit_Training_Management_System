@@ -67,7 +67,9 @@ import {
   Calendar as CalendarIcon,
   Check,
   X,
-  Trash2
+  Trash2,
+  CalendarDays,
+  Repeat
 } from 'lucide-react';
 import { ScheduleStatus, SessionType } from '@shared/types';
 
@@ -91,6 +93,7 @@ interface Course {
   id: number;
   name: string;
   duration: string;
+  active: boolean;
 }
 
 interface Trainer {
@@ -126,11 +129,12 @@ const scheduleFormSchema = insertScheduleSchema.extend({
 type ScheduleFormValues = z.infer<typeof scheduleFormSchema>;
 
 const SchedulePage: FC = () => {
-  const [location, params] = useLocation();
+  const [location] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("upcoming");
-  const [isDialogOpen, setIsDialogOpen] = useState(params?.search?.includes('new=true') || false);
+  const urlParams = new URLSearchParams(window.location.search);
+  const [isDialogOpen, setIsDialogOpen] = useState(urlParams.get('new') === 'true');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [date, setDate] = useState<Date>(new Date());
