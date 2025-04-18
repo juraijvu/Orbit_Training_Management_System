@@ -18,6 +18,12 @@ import {
   titanEmailSettings, TitanEmailSettings, InsertTitanEmailSettings,
   emailTemplates, EmailTemplate, InsertEmailTemplate,
   emailHistory, EmailHistory, InsertEmailHistory,
+  // CRM and WhatsApp features
+  crmMeetings, CrmMeeting, InsertCrmMeeting,
+  corporateLeads, CorporateLead, InsertCorporateLead,
+  crmPosts, CrmPost, InsertCrmPost,
+  whatsAppTemplates, WhatsAppTemplate, InsertWhatsAppTemplate,
+  whatsAppChats, WhatsAppChat, InsertWhatsAppChat,
   // Chatbot related imports
   chatbotFlows, ChatbotFlow, InsertChatbotFlow,
   chatbotNodes, ChatbotNode, InsertChatbotNode,
@@ -162,6 +168,62 @@ export interface IStorage {
   getWhatsappMessagesByChatId(chatId: number): Promise<WhatsappMessage[]>;
   createWhatsappMessage(message: InsertWhatsappMessage): Promise<WhatsappMessage>;
   
+  // CRM Meetings
+  getCrmMeetings(): Promise<CrmMeeting[]>;
+  getCrmMeetingsByLeadId(leadId: number): Promise<CrmMeeting[]>;
+  getCrmMeetingsByCorporateLeadId(corporateLeadId: number): Promise<CrmMeeting[]>;
+  getCrmMeetingsByAssignedTo(userId: number): Promise<CrmMeeting[]>;
+  getCrmMeetingsByDate(date: Date): Promise<CrmMeeting[]>;
+  getCrmMeetingsByStatus(status: string): Promise<CrmMeeting[]>;
+  getCrmMeeting(id: number): Promise<CrmMeeting | undefined>;
+  createCrmMeeting(meeting: InsertCrmMeeting): Promise<CrmMeeting>;
+  updateCrmMeeting(id: number, meeting: Partial<CrmMeeting>): Promise<CrmMeeting | undefined>;
+  deleteCrmMeeting(id: number): Promise<boolean>;
+  markMeetingNotificationSent(id: number): Promise<CrmMeeting | undefined>;
+  markMeetingReminderSent(id: number): Promise<CrmMeeting | undefined>;
+  
+  // Corporate Leads
+  getCorporateLeads(): Promise<CorporateLead[]>;
+  getCorporateLeadsByConsultant(consultantId: number): Promise<CorporateLead[]>;
+  getCorporateLeadsByStatus(status: string): Promise<CorporateLead[]>;
+  getCorporateLeadsByPriority(priority: string): Promise<CorporateLead[]>;
+  getCorporateLead(id: number): Promise<CorporateLead | undefined>;
+  createCorporateLead(lead: InsertCorporateLead): Promise<CorporateLead>;
+  updateCorporateLead(id: number, lead: Partial<CorporateLead>): Promise<CorporateLead | undefined>;
+  deleteCorporateLead(id: number): Promise<boolean>;
+  
+  // Today's Posts and Status
+  getCrmPosts(): Promise<CrmPost[]>;
+  getCrmPostsByCategory(category: string): Promise<CrmPost[]>;
+  getCrmPostsByCreator(userId: number): Promise<CrmPost[]>;
+  getCrmPostsByTags(tags: string[]): Promise<CrmPost[]>;
+  getCrmPost(id: number): Promise<CrmPost | undefined>;
+  createCrmPost(post: InsertCrmPost): Promise<CrmPost>;
+  updateCrmPost(id: number, post: Partial<CrmPost>): Promise<CrmPost | undefined>;
+  deleteCrmPost(id: number): Promise<boolean>;
+  incrementCrmPostViewCount(id: number): Promise<CrmPost | undefined>;
+  incrementCrmPostDownloadCount(id: number): Promise<CrmPost | undefined>;
+  incrementCrmPostShareCount(id: number): Promise<CrmPost | undefined>;
+  approveCrmPost(id: number, approvedBy: number): Promise<CrmPost | undefined>;
+  
+  // WhatsApp Integration (new format)
+  getWhatsAppTemplates(): Promise<WhatsAppTemplate[]>;
+  getWhatsAppTemplatesByCategory(category: string): Promise<WhatsAppTemplate[]>;
+  getWhatsAppTemplate(id: number): Promise<WhatsAppTemplate | undefined>;
+  createWhatsAppTemplate(template: InsertWhatsAppTemplate): Promise<WhatsAppTemplate>;
+  updateWhatsAppTemplate(id: number, template: Partial<WhatsAppTemplate>): Promise<WhatsAppTemplate | undefined>;
+  deleteWhatsAppTemplate(id: number): Promise<boolean>;
+  
+  // WhatsApp Chats (new format)
+  getWhatsAppChats(): Promise<WhatsAppChat[]>;
+  getWhatsAppChatsByPhoneNumber(phoneNumber: string): Promise<WhatsAppChat[]>;
+  getWhatsAppChatsByLead(leadId: number): Promise<WhatsAppChat[]>;
+  getWhatsAppChatsByCorporateLead(corporateLeadId: number): Promise<WhatsAppChat[]>;
+  getWhatsAppChatsByMeeting(meetingId: number): Promise<WhatsAppChat[]>;
+  getWhatsAppChat(id: number): Promise<WhatsAppChat | undefined>;
+  createWhatsAppChat(chat: InsertWhatsAppChat): Promise<WhatsAppChat>;
+  updateWhatsAppChatStatus(id: number, status: string): Promise<WhatsAppChat | undefined>;
+  
   // Titan Email Settings
   getTitanEmailSettings(): Promise<TitanEmailSettings | undefined>;
   createTitanEmailSettings(settings: InsertTitanEmailSettings): Promise<TitanEmailSettings>;
@@ -256,6 +318,13 @@ export class MemStorage implements IStorage {
   private chatbotSessionsMap: Map<number, ChatbotSession>;
   private cannedResponsesMap: Map<number, CannedResponse>;
   
+  // New CRM and WhatsApp features
+  private crmMeetingsMap: Map<number, CrmMeeting>;
+  private corporateLeadsMap: Map<number, CorporateLead>;
+  private crmPostsMap: Map<number, CrmPost>;
+  private whatsAppTemplatesMap: Map<number, WhatsAppTemplate>;
+  private whatsAppChatsMap: Map<number, WhatsAppChat>;
+  
   private userId: number = 1;
   private studentId: number = 1;
   private courseId: number = 1;
@@ -281,6 +350,13 @@ export class MemStorage implements IStorage {
   private chatbotActionId: number = 1;
   private chatbotSessionId: number = 1;
   private cannedResponseId: number = 1;
+  
+  // New IDs for the CRM and WhatsApp features
+  private crmMeetingId: number = 1;
+  private corporateLeadId: number = 1;
+  private crmPostId: number = 1;
+  private whatsAppTemplateId: number = 1;
+  private whatsAppChatId: number = 1;
   
   sessionStore: any;
 
@@ -310,6 +386,13 @@ export class MemStorage implements IStorage {
     this.chatbotActionsMap = new Map();
     this.chatbotSessionsMap = new Map();
     this.cannedResponsesMap = new Map();
+    
+    // Initialize new CRM and WhatsApp feature maps
+    this.crmMeetingsMap = new Map();
+    this.corporateLeadsMap = new Map();
+    this.crmPostsMap = new Map();
+    this.whatsAppTemplatesMap = new Map();
+    this.whatsAppChatsMap = new Map();
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
@@ -617,6 +700,383 @@ export class MemStorage implements IStorage {
     return updatedProposal;
   }
   
+  // CRM Meetings methods
+  async getCrmMeetings(): Promise<CrmMeeting[]> {
+    return Array.from(this.crmMeetingsMap.values())
+      .sort((a, b) => new Date(b.meetingDate).getTime() - new Date(a.meetingDate).getTime());
+  }
+
+  async getCrmMeetingsByLeadId(leadId: number): Promise<CrmMeeting[]> {
+    return Array.from(this.crmMeetingsMap.values())
+      .filter(meeting => meeting.leadId === leadId)
+      .sort((a, b) => new Date(b.meetingDate).getTime() - new Date(a.meetingDate).getTime());
+  }
+
+  async getCrmMeetingsByCorporateLeadId(corporateLeadId: number): Promise<CrmMeeting[]> {
+    return Array.from(this.crmMeetingsMap.values())
+      .filter(meeting => meeting.corporateLeadId === corporateLeadId)
+      .sort((a, b) => new Date(b.meetingDate).getTime() - new Date(a.meetingDate).getTime());
+  }
+
+  async getCrmMeetingsByAssignedTo(userId: number): Promise<CrmMeeting[]> {
+    return Array.from(this.crmMeetingsMap.values())
+      .filter(meeting => meeting.assignedTo === userId)
+      .sort((a, b) => new Date(b.meetingDate).getTime() - new Date(a.meetingDate).getTime());
+  }
+
+  async getCrmMeetingsByDate(date: Date): Promise<CrmMeeting[]> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    return Array.from(this.crmMeetingsMap.values())
+      .filter(meeting => {
+        const meetingDate = new Date(meeting.meetingDate);
+        return meetingDate >= startOfDay && meetingDate <= endOfDay;
+      })
+      .sort((a, b) => new Date(a.meetingDate).getTime() - new Date(b.meetingDate).getTime());
+  }
+
+  async getCrmMeetingsByStatus(status: string): Promise<CrmMeeting[]> {
+    return Array.from(this.crmMeetingsMap.values())
+      .filter(meeting => meeting.status === status)
+      .sort((a, b) => new Date(b.meetingDate).getTime() - new Date(a.meetingDate).getTime());
+  }
+
+  async getCrmMeeting(id: number): Promise<CrmMeeting | undefined> {
+    return this.crmMeetingsMap.get(id);
+  }
+
+  async createCrmMeeting(meeting: InsertCrmMeeting): Promise<CrmMeeting> {
+    const id = this.crmMeetingId++;
+    const newMeeting: CrmMeeting = { 
+      ...meeting, 
+      id, 
+      notificationSent: false,
+      reminderSent: false,
+      createdAt: new Date(),
+      updatedAt: new Date() 
+    };
+    this.crmMeetingsMap.set(id, newMeeting);
+    return newMeeting;
+  }
+
+  async updateCrmMeeting(id: number, meeting: Partial<CrmMeeting>): Promise<CrmMeeting | undefined> {
+    const existingMeeting = this.crmMeetingsMap.get(id);
+    if (!existingMeeting) return undefined;
+
+    const updatedMeeting = { 
+      ...existingMeeting, 
+      ...meeting,
+      updatedAt: new Date()
+    };
+    this.crmMeetingsMap.set(id, updatedMeeting);
+    return updatedMeeting;
+  }
+
+  async deleteCrmMeeting(id: number): Promise<boolean> {
+    return this.crmMeetingsMap.delete(id);
+  }
+
+  async markMeetingNotificationSent(id: number): Promise<CrmMeeting | undefined> {
+    const meeting = this.crmMeetingsMap.get(id);
+    if (!meeting) return undefined;
+    
+    const updatedMeeting = { 
+      ...meeting, 
+      notificationSent: true,
+      updatedAt: new Date()
+    };
+    this.crmMeetingsMap.set(id, updatedMeeting);
+    return updatedMeeting;
+  }
+
+  async markMeetingReminderSent(id: number): Promise<CrmMeeting | undefined> {
+    const meeting = this.crmMeetingsMap.get(id);
+    if (!meeting) return undefined;
+    
+    const updatedMeeting = { 
+      ...meeting, 
+      reminderSent: true,
+      updatedAt: new Date()
+    };
+    this.crmMeetingsMap.set(id, updatedMeeting);
+    return updatedMeeting;
+  }
+
+  // Corporate Leads methods
+  async getCorporateLeads(): Promise<CorporateLead[]> {
+    return Array.from(this.corporateLeadsMap.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCorporateLeadsByConsultant(consultantId: number): Promise<CorporateLead[]> {
+    return Array.from(this.corporateLeadsMap.values())
+      .filter(lead => lead.assignedTo === consultantId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCorporateLeadsByStatus(status: string): Promise<CorporateLead[]> {
+    return Array.from(this.corporateLeadsMap.values())
+      .filter(lead => lead.leadStatus === status)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCorporateLeadsByPriority(priority: string): Promise<CorporateLead[]> {
+    return Array.from(this.corporateLeadsMap.values())
+      .filter(lead => lead.priority === priority)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCorporateLead(id: number): Promise<CorporateLead | undefined> {
+    return this.corporateLeadsMap.get(id);
+  }
+
+  async createCorporateLead(lead: InsertCorporateLead): Promise<CorporateLead> {
+    const id = this.corporateLeadId++;
+    const newLead: CorporateLead = { 
+      ...lead, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.corporateLeadsMap.set(id, newLead);
+    return newLead;
+  }
+
+  async updateCorporateLead(id: number, lead: Partial<CorporateLead>): Promise<CorporateLead | undefined> {
+    const existingLead = this.corporateLeadsMap.get(id);
+    if (!existingLead) return undefined;
+
+    const updatedLead = { 
+      ...existingLead, 
+      ...lead,
+      updatedAt: new Date()
+    };
+    this.corporateLeadsMap.set(id, updatedLead);
+    return updatedLead;
+  }
+
+  async deleteCorporateLead(id: number): Promise<boolean> {
+    return this.corporateLeadsMap.delete(id);
+  }
+
+  // Today's Posts methods
+  async getCrmPosts(): Promise<CrmPost[]> {
+    return Array.from(this.crmPostsMap.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCrmPostsByCategory(category: string): Promise<CrmPost[]> {
+    return Array.from(this.crmPostsMap.values())
+      .filter(post => post.category === category)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCrmPostsByCreator(userId: number): Promise<CrmPost[]> {
+    return Array.from(this.crmPostsMap.values())
+      .filter(post => post.createdBy === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCrmPostsByTags(tags: string[]): Promise<CrmPost[]> {
+    return Array.from(this.crmPostsMap.values())
+      .filter(post => post.tags && post.tags.some(tag => tags.includes(tag)))
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCrmPost(id: number): Promise<CrmPost | undefined> {
+    return this.crmPostsMap.get(id);
+  }
+
+  async createCrmPost(post: InsertCrmPost): Promise<CrmPost> {
+    const id = this.crmPostId++;
+    const newPost: CrmPost = { 
+      ...post, 
+      id, 
+      viewCount: 0,
+      downloadCount: 0,
+      shareCount: 0,
+      isApproved: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.crmPostsMap.set(id, newPost);
+    return newPost;
+  }
+
+  async updateCrmPost(id: number, post: Partial<CrmPost>): Promise<CrmPost | undefined> {
+    const existingPost = this.crmPostsMap.get(id);
+    if (!existingPost) return undefined;
+
+    const updatedPost = { 
+      ...existingPost, 
+      ...post,
+      updatedAt: new Date()
+    };
+    this.crmPostsMap.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  async deleteCrmPost(id: number): Promise<boolean> {
+    return this.crmPostsMap.delete(id);
+  }
+
+  async incrementCrmPostViewCount(id: number): Promise<CrmPost | undefined> {
+    const post = this.crmPostsMap.get(id);
+    if (!post) return undefined;
+    
+    const updatedPost = { 
+      ...post, 
+      viewCount: (post.viewCount || 0) + 1,
+      updatedAt: new Date()
+    };
+    this.crmPostsMap.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  async incrementCrmPostDownloadCount(id: number): Promise<CrmPost | undefined> {
+    const post = this.crmPostsMap.get(id);
+    if (!post) return undefined;
+    
+    const updatedPost = { 
+      ...post, 
+      downloadCount: (post.downloadCount || 0) + 1,
+      updatedAt: new Date()
+    };
+    this.crmPostsMap.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  async incrementCrmPostShareCount(id: number): Promise<CrmPost | undefined> {
+    const post = this.crmPostsMap.get(id);
+    if (!post) return undefined;
+    
+    const updatedPost = { 
+      ...post, 
+      shareCount: (post.shareCount || 0) + 1,
+      updatedAt: new Date()
+    };
+    this.crmPostsMap.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  async approveCrmPost(id: number, approvedBy: number): Promise<CrmPost | undefined> {
+    const post = this.crmPostsMap.get(id);
+    if (!post) return undefined;
+    
+    const updatedPost = { 
+      ...post, 
+      isApproved: true,
+      approvedBy,
+      updatedAt: new Date()
+    };
+    this.crmPostsMap.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  // WhatsApp Templates (new format)
+  async getWhatsAppTemplates(): Promise<WhatsAppTemplate[]> {
+    return Array.from(this.whatsAppTemplatesMap.values())
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getWhatsAppTemplatesByCategory(category: string): Promise<WhatsAppTemplate[]> {
+    return Array.from(this.whatsAppTemplatesMap.values())
+      .filter(template => template.category === category)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getWhatsAppTemplate(id: number): Promise<WhatsAppTemplate | undefined> {
+    return this.whatsAppTemplatesMap.get(id);
+  }
+
+  async createWhatsAppTemplate(template: InsertWhatsAppTemplate): Promise<WhatsAppTemplate> {
+    const id = this.whatsAppTemplateId++;
+    const newTemplate: WhatsAppTemplate = {
+      ...template,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.whatsAppTemplatesMap.set(id, newTemplate);
+    return newTemplate;
+  }
+
+  async updateWhatsAppTemplate(id: number, template: Partial<WhatsAppTemplate>): Promise<WhatsAppTemplate | undefined> {
+    const existingTemplate = this.whatsAppTemplatesMap.get(id);
+    if (!existingTemplate) return undefined;
+
+    const updatedTemplate = {
+      ...existingTemplate,
+      ...template,
+      updatedAt: new Date()
+    };
+    this.whatsAppTemplatesMap.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+
+  async deleteWhatsAppTemplate(id: number): Promise<boolean> {
+    return this.whatsAppTemplatesMap.delete(id);
+  }
+
+  // WhatsApp Chats (new format)
+  async getWhatsAppChats(): Promise<WhatsAppChat[]> {
+    return Array.from(this.whatsAppChatsMap.values())
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+
+  async getWhatsAppChatsByPhoneNumber(phoneNumber: string): Promise<WhatsAppChat[]> {
+    return Array.from(this.whatsAppChatsMap.values())
+      .filter(chat => chat.phoneNumber === phoneNumber)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+
+  async getWhatsAppChatsByLead(leadId: number): Promise<WhatsAppChat[]> {
+    return Array.from(this.whatsAppChatsMap.values())
+      .filter(chat => chat.leadId === leadId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+
+  async getWhatsAppChatsByCorporateLead(corporateLeadId: number): Promise<WhatsAppChat[]> {
+    return Array.from(this.whatsAppChatsMap.values())
+      .filter(chat => chat.corporateLeadId === corporateLeadId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+
+  async getWhatsAppChatsByMeeting(meetingId: number): Promise<WhatsAppChat[]> {
+    return Array.from(this.whatsAppChatsMap.values())
+      .filter(chat => chat.meetingId === meetingId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+
+  async getWhatsAppChat(id: number): Promise<WhatsAppChat | undefined> {
+    return this.whatsAppChatsMap.get(id);
+  }
+
+  async createWhatsAppChat(chat: InsertWhatsAppChat): Promise<WhatsAppChat> {
+    const id = this.whatsAppChatId++;
+    const newChat: WhatsAppChat = {
+      ...chat,
+      id,
+      timestamp: new Date(),
+      createdAt: new Date()
+    };
+    this.whatsAppChatsMap.set(id, newChat);
+    return newChat;
+  }
+
+  async updateWhatsAppChatStatus(id: number, status: string): Promise<WhatsAppChat | undefined> {
+    const chat = this.whatsAppChatsMap.get(id);
+    if (!chat) return undefined;
+    
+    const updatedChat = { ...chat, status };
+    this.whatsAppChatsMap.set(id, updatedChat);
+    return updatedChat;
+  }
+
   // CRM - Leads methods
   async getLeads(): Promise<Lead[]> {
     return Array.from(this.leadsMap.values())

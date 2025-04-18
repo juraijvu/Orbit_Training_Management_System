@@ -709,6 +709,44 @@ export const insertWhatsAppTemplateSchema = createInsertSchema(whatsAppTemplates
 export type InsertWhatsAppTemplate = z.infer<typeof insertWhatsAppTemplateSchema>;
 export type WhatsAppTemplate = typeof whatsAppTemplates.$inferSelect;
 
+// CRM Meetings
+export const crmMeetings = pgTable("crm_meetings", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  meetingType: text("meeting_type").notNull(), // in-person, virtual, phone
+  meetingDate: timestamp("meeting_date").notNull(),
+  duration: integer("duration").notNull(), // in minutes
+  location: text("location"),
+  meetingLink: text("meeting_link"), // For virtual meetings
+  status: text("status").notNull().default("scheduled"), // scheduled, completed, cancelled, rescheduled
+  leadId: integer("lead_id"), // If meeting is with a regular lead
+  corporateLeadId: integer("corporate_lead_id"), // If meeting is with a corporate lead
+  attendees: text("attendees").array(), // Array of user IDs who will attend
+  notes: text("notes"), // Notes before the meeting
+  followUpNotes: text("follow_up_notes"), // Notes after the meeting
+  outcome: text("outcome"), // Result of the meeting
+  notificationSent: boolean("notification_sent").default(false), // Whether WhatsApp notification was sent
+  notificationTemplateId: integer("notification_template_id"), // Which template was used
+  reminderScheduled: boolean("reminder_scheduled").default(false), // Whether reminder is scheduled
+  reminderSent: boolean("reminder_sent").default(false), // Whether reminder was sent
+  assignedTo: integer("assigned_to").notNull(), // User responsible for the meeting
+  createdBy: integer("created_by").notNull(),
+  updatedBy: integer("updated_by"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCrmMeetingSchema = createInsertSchema(crmMeetings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  notificationSent: true,
+  reminderSent: true,
+});
+
+export type InsertCrmMeeting = z.infer<typeof insertCrmMeetingSchema>;
+export type CrmMeeting = typeof crmMeetings.$inferSelect;
 
 
 // WhatsApp Chat Messages
