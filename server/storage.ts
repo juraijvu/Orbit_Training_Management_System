@@ -1653,9 +1653,10 @@ export class DatabaseStorage implements IStorage {
   private emailHistoryId: number = 1;
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      tableName: 'user_sessions',
+      createTableIfMissing: true 
     });
   }
 
