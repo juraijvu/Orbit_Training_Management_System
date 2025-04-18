@@ -522,6 +522,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const newSchedule = await storage.createSchedule(scheduleData);
+      
+      // Send email notification about the new schedule
+      try {
+        // Get associated course
+        const course = await storage.getCourse(newSchedule.courseId);
+        if (course) {
+          // Get trainer info
+          const trainer = await storage.getTrainer(newSchedule.trainerId);
+          // Get students enrolled in this course
+          const students = await storage.getStudentsByCourseId(course.id);
+          
+          if (students && students.length > 0 && trainer) {
+            await emailNotificationService.sendScheduleCreationNotice(
+              newSchedule,
+              students,
+              course.name,
+              trainer.name
+            );
+          }
+        }
+      } catch (notificationError) {
+        console.error("Failed to send schedule notification:", notificationError);
+        // Continue with the response even if the notification fails
+      }
+      
       res.status(201).json(newSchedule);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -542,6 +567,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updatedSchedule = await storage.updateSchedule(id, req.body);
+      
+      // Check if important schedule details have changed (time, date, title)
+      const timeChanged = req.body.startTime || req.body.endTime;
+      const detailsChanged = req.body.title || req.body.description || timeChanged;
+      
+      // If details changed, send update notification
+      if (detailsChanged) {
+        try {
+          // Get associated course
+          const course = await storage.getCourse(updatedSchedule.courseId);
+          if (course) {
+            // Get trainer info
+            const trainer = await storage.getTrainer(updatedSchedule.trainerId);
+            // Get students enrolled in this course
+            const students = await storage.getStudentsByCourseId(course.id);
+            
+            if (students && students.length > 0 && trainer) {
+              await emailNotificationService.sendScheduleUpdateNotice(
+                updatedSchedule,
+                students,
+                course.name,
+                trainer.name
+              );
+            }
+          }
+        } catch (notificationError) {
+          console.error("Failed to send schedule update notification:", notificationError);
+          // Continue with the response even if the notification fails
+        }
+      }
+      
       res.json(updatedSchedule);
     } catch (error) {
       res.status(500).json({ message: "Failed to update schedule" });
@@ -555,6 +611,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingSchedule = await storage.getSchedule(id);
       if (!existingSchedule) {
         return res.status(404).json({ message: "Schedule not found" });
+      }
+      
+      // Send cancellation notification before deleting the schedule
+      try {
+        // Get associated course
+        const course = await storage.getCourse(existingSchedule.courseId);
+        if (course) {
+          // Get trainer info
+          const trainer = await storage.getTrainer(existingSchedule.trainerId);
+          // Get students enrolled in this course
+          const students = await storage.getStudentsByCourseId(course.id);
+          
+          if (students && students.length > 0 && trainer) {
+            await emailNotificationService.sendScheduleCancellationNotice(
+              existingSchedule,
+              students,
+              course.name,
+              trainer.fullName
+            );
+          }
+        }
+      } catch (notificationError) {
+        console.error("Failed to send schedule cancellation notification:", notificationError);
+        // Continue with the deletion even if the notification fails
       }
       
       const result = await storage.deleteSchedule(id);

@@ -1269,6 +1269,15 @@ export class DatabaseStorage implements IStorage {
     const result = await db.select().from(students).where(eq(students.studentId, studentId));
     return result[0];
   }
+  
+  async getStudentsByCourseId(courseId: number): Promise<Student[]> {
+    // In an actual implementation, this would use a proper relationship
+    // For now, we're checking if the courseId matches
+    const result = await db.select()
+      .from(students)
+      .where(eq(students.courseId, courseId));
+    return result;
+  }
 
   async createStudent(student: InsertStudent): Promise<Student> {
     const studentWithDefaults = {
@@ -1370,6 +1379,11 @@ export class DatabaseStorage implements IStorage {
       paymentDate: invoice.paymentDate || new Date()
     };
     const result = await db.insert(invoices).values(invoiceWithDefaults).returning();
+    return result[0];
+  }
+  
+  async updateInvoice(id: number, invoice: Partial<Invoice>): Promise<Invoice | undefined> {
+    const result = await db.update(invoices).set(invoice).where(eq(invoices.id, id)).returning();
     return result[0];
   }
 
