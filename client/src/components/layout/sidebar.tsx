@@ -20,7 +20,7 @@ import {
   BarChart,
   PhoneCall,
   Mail,
-  MessageSquare,
+  MessagesSquare as MessageSquare,
   MessageCircle,
   MessagesSquare,
 } from "lucide-react";
@@ -176,6 +176,27 @@ function Sidebar({ className }: SidebarNavProps) {
       title: "Emails",
       href: "/crm/emails",
       icon: <Mail className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
+      title: "Meetings",
+      href: "/crm/meetings",
+      icon: <MessageSquare className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
+      title: "Corporate Leads",
+      href: "/crm/corporate-leads",
+      icon: <FileText className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
+      title: "Posts",
+      href: "/crm/posts",
+      icon: <FileText className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
       section: "crm"
     },

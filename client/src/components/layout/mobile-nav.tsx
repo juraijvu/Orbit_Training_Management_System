@@ -17,7 +17,7 @@ import {
   UserPlus,
   FileCheck,
   FileSpreadsheet,
-  MessagesSquare,
+  MessagesSquare as MessageSquare, // Renamed to match the used name
   Mail,
   LogOut
 } from "lucide-react";
@@ -171,6 +171,34 @@ export function MobileNav() {
       title: "Follow-ups",
       href: "/crm/follow-ups",
       icon: <Calendar className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
+      title: "Emails",
+      href: "/crm/emails",
+      icon: <Mail className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
+      title: "Meetings",
+      href: "/crm/meetings",
+      icon: <MessageSquare className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
+      title: "Corporate Leads",
+      href: "/crm/corporate-leads",
+      icon: <FileText className="h-5 w-5" />,
+      roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
+      title: "Posts",
+      href: "/crm/posts",
+      icon: <FileText className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
       section: "crm"
     },
