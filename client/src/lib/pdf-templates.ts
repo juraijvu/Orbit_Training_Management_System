@@ -389,8 +389,12 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
     <!-- Company Profile (Last Page) -->
     <div class="mb-10">
       <h2 class="text-2xl font-bold mb-4">Company Profile</h2>
-      <div class="prose max-w-none">
-        ${data.companyProfile}
+      <div class="flex flex-col items-center justify-center p-4">
+        <p class="mb-4 text-center">See attached PDF for the complete Orbit Institute company profile.</p>
+        <p class="text-sm text-gray-600">
+          Our company profile showcases our history, achievements, and commitment to providing 
+          high-quality training and development programs customized to meet client needs.
+        </p>
       </div>
     </div>
   ` : '';
