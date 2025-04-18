@@ -400,7 +400,6 @@ const ProposalDetailPage: FC = () => {
                   <TabsTrigger value="coverPage">Cover Page</TabsTrigger>
                   <TabsTrigger value="content">Content</TabsTrigger>
                   <TabsTrigger value="pricing">Pricing</TabsTrigger>
-                  <TabsTrigger value="profiles">Profiles</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="coverPage" className="border rounded-lg p-6">
@@ -524,6 +523,119 @@ const ProposalDetailPage: FC = () => {
                         No course selected for this proposal.
                       </div>
                     )}
+                    
+                    <Separator className="my-6" />
+                    
+                    {/* Trainer Profile Section */}
+                    {trainer && (
+                      <div className="mb-8">
+                        <h2 className="text-xl font-semibold mb-4">Trainer Profile</h2>
+                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                          <div className="flex items-start">
+                            <div className="flex-grow">
+                              <h3 className="font-bold text-lg mb-1">{trainer.fullName}</h3>
+                              <p className="text-sm text-gray-600 mb-3">{trainer.specialization}</p>
+                              <div className="space-y-1 text-sm">
+                                <p><Mail className="inline h-4 w-4 mr-1" /> {trainer.email}</p>
+                                <p><Phone className="inline h-4 w-4 mr-1" /> {trainer.phone}</p>
+                              </div>
+                              {trainer.profilePdf && (
+                                <div className="mt-4">
+                                  <p className="text-sm text-gray-700 mb-1">Profile Document:</p>
+                                  <a 
+                                    href={trainer.profilePdf} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline flex items-center"
+                                  >
+                                    <Download className="h-4 w-4 mr-1" />
+                                    Download Trainer Profile
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <Separator className="my-6" />
+                    
+                    {/* Company Profile Section */}
+                    <div className="mt-8">
+                      <h2 className="text-xl font-semibold mb-4">Company Profile</h2>
+                      {proposal.companyProfile ? (
+                        <div className="p-4 border rounded-md bg-gray-50 flex flex-col items-center justify-center">
+                          <FileText className="h-12 w-12 text-gray-400 mb-3" />
+                          <p className="mb-4 text-center">Company Profile PDF attached to this proposal as the last page</p>
+                          <div className="flex gap-4">
+                            <a 
+                              href={proposal.companyProfile} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center text-primary hover:underline"
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              View Company Profile PDF
+                            </a>
+                            
+                            {/* Replace option - only show for draft proposals */}
+                            {proposal.status === 'draft' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={handleFileInputClick}
+                                disabled={isUploading}
+                              >
+                                {isUploading ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Uploading...
+                                  </>
+                                ) : (
+                                  <>Replace PDF</>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        // No company profile uploaded yet
+                        <div className="p-6 border rounded-md bg-gray-50 flex flex-col items-center justify-center">
+                          <FileText className="h-12 w-12 text-gray-400 mb-3" />
+                          <p className="mb-4 text-center">No company profile has been uploaded</p>
+                          <p className="text-sm text-gray-500 mb-4 text-center">
+                            The company profile will appear as the last page of your proposal PDF
+                          </p>
+                          
+                          {proposal.status === 'draft' && (
+                            <Button 
+                              onClick={handleFileInputClick}
+                              disabled={isUploading}
+                            >
+                              {isUploading ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>Upload Company Profile</>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Hidden file input */}
+                      <input 
+                        ref={fileInputRef} 
+                        type="file" 
+                        accept="application/pdf" 
+                        onChange={handleFileChange} 
+                        hidden 
+                      />
+                    </div>
+                    {/* End Company Profile Section */}
                   </div>
                 </TabsContent>
                 
@@ -582,112 +694,7 @@ const ProposalDetailPage: FC = () => {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="profiles">
-                  <div className="border rounded-lg p-6">
-                    {trainer && (
-                        <div className="mb-8">
-                          <h2 className="text-xl font-semibold mb-4">Trainer Profile</h2>
-                          <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                            <div className="flex items-start">
-                              <div className="flex-grow">
-                                <h3 className="font-bold text-lg mb-1">{trainer.fullName}</h3>
-                                <p className="text-sm text-gray-600 mb-3">{trainer.specialization}</p>
-                                <div className="space-y-1 text-sm">
-                                  <p><Mail className="inline h-4 w-4 mr-1" /> {trainer.email}</p>
-                                  <p><Phone className="inline h-4 w-4 mr-1" /> {trainer.phone}</p>
-                                </div>
-                                {trainer.profilePdf && (
-                                  <div className="mt-4">
-                                    <p className="text-sm text-gray-700 mb-1">Profile Document:</p>
-                                    <a 
-                                      href={trainer.profilePdf} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:underline flex items-center"
-                                    >
-                                      <Download className="h-4 w-4 mr-1" />
-                                      Download Trainer Profile
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div>
-                        <h2 className="text-xl font-semibold mb-4">Company Profile</h2>
-                        {proposal.companyProfile ? (
-                          <div className="p-4 border rounded-md bg-gray-50 flex flex-col items-center justify-center">
-                            <FileText className="h-12 w-12 text-gray-400 mb-3" />
-                            <p className="mb-4 text-center">Company Profile PDF attached to this proposal</p>
-                            <div className="flex gap-4">
-                              <a 
-                                href={proposal.companyProfile} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center text-primary hover:underline"
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                View Company Profile PDF
-                              </a>
-                              
-                              {/* Replace option - only show for draft proposals */}
-                              {proposal.status === 'draft' && (
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={handleFileInputClick}
-                                  disabled={isUploading}
-                                >
-                                  {isUploading ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                      Uploading...
-                                    </>
-                                  ) : (
-                                    <>Replace PDF</>
-                                  )}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          // No company profile uploaded yet
-                          <div className="p-6 border rounded-md bg-gray-50 flex flex-col items-center justify-center">
-                            <FileText className="h-12 w-12 text-gray-400 mb-3" />
-                            <p className="mb-4 text-center">No company profile has been uploaded</p>
-                            
-                            {proposal.status === 'draft' && (
-                              <Button 
-                                onClick={handleFileInputClick}
-                                disabled={isUploading}
-                              >
-                                {isUploading ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Uploading...
-                                  </>
-                                ) : (
-                                  <>Upload Company Profile</>
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                        
-                        {/* Hidden file input */}
-                        <input 
-                          ref={fileInputRef} 
-                          type="file" 
-                          accept="application/pdf" 
-                          onChange={handleFileChange} 
-                          hidden 
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
+                {/* Trainer Profile section moved to Content tab */}
               </Tabs>
             </CardContent>
           </Card>
