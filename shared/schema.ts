@@ -510,12 +510,36 @@ export type CannedResponse = typeof cannedResponses.$inferSelect;
 // Titan Email settings
 export const titanEmailSettings = pgTable("titan_email_settings", {
   id: serial("id").primaryKey(),
-  apiKey: text("api_key"),
-  apiSecret: text("api_secret"),
+  // Email account information
+  accountName: text("account_name"),
   senderName: text("sender_name").notNull(),
   senderEmail: text("sender_email").notNull(),
+  emailPassword: text("email_password"),
   replyToEmail: text("reply_to_email"),
+  
+  // Incoming server settings (IMAP)
+  imapServer: text("imap_server"),
+  imapPort: integer("imap_port"),
+  imapSecurity: text("imap_security"), // none, ssl, tls
+  imapUsername: text("imap_username"),
+  imapPassword: text("imap_password"),
+  
+  // Outgoing server settings (SMTP)
+  smtpServer: text("smtp_server"),
+  smtpPort: integer("smtp_port"),
+  smtpSecurity: text("smtp_security"), // none, ssl, tls
+  smtpUsername: text("smtp_username"),
+  smtpPassword: text("smtp_password"),
+  smtpAuthRequired: boolean("smtp_auth_required").default(true),
+  
+  // API settings (if using Titan API)
+  apiKey: text("api_key"),
+  apiSecret: text("api_secret"),
+  
+  // Advanced settings
+  connectionTimeout: integer("connection_timeout").default(30),
   enabled: boolean("enabled").default(false),
+  useApi: boolean("use_api").default(true), // true = use API, false = use SMTP/IMAP
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
