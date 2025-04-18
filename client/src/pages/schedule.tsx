@@ -143,6 +143,9 @@ const SchedulePage: FC = () => {
       courseId: undefined,
       trainerId: undefined,
       studentIds: '',
+      sessionType: SessionType.BATCH,
+      duration: 90, // default 90 minutes
+      occurrenceDays: '',
       startTime: '',
       endTime: '',
       status: ScheduleStatus.CONFIRMED,
@@ -151,6 +154,7 @@ const SchedulePage: FC = () => {
       selectedStartTime: '09:00',
       selectedEndTime: '10:30',
       selectedStudents: [],
+      selectedOccurrenceDays: [],
     },
   });
   
@@ -196,13 +200,20 @@ const SchedulePage: FC = () => {
       const combinedEndTime = new Date(selectedDate);
       combinedEndTime.setHours(endTime.getHours(), endTime.getMinutes());
       
+      // Calculate endTime based on startTime and duration
+      const durationMs = data.duration * 60 * 1000; // convert minutes to milliseconds
+      const calculatedEndTime = new Date(combinedStartTime.getTime() + durationMs);
+      
       const schedule = {
         title: data.title,
         courseId: data.courseId,
         trainerId: data.trainerId,
         studentIds: data.selectedStudents.join(','),
+        sessionType: data.sessionType,
+        duration: data.duration,
+        occurrenceDays: data.selectedOccurrenceDays.join(','),
         startTime: combinedStartTime.toISOString(),
-        endTime: combinedEndTime.toISOString(),
+        endTime: calculatedEndTime.toISOString(), // Use calculated end time based on duration
         status: data.status,
         createdBy: data.createdBy,
       };
@@ -285,9 +296,49 @@ const SchedulePage: FC = () => {
   // Watch for changes in form values
   const watchedCourseId = form.watch('courseId');
   const watchedTrainerId = form.watch('trainerId');
+  const watchedSessionType = form.watch('sessionType');
+  const watchedDuration = form.watch('duration');
   const watchedSelectedDate = form.watch('selectedDate');
   const watchedStartTime = form.watch('selectedStartTime');
   const watchedEndTime = form.watch('selectedEndTime');
+  
+  // Calculate default duration based on session type
+  const calculateDefaultDuration = (sessionType: string): number => {
+    switch (sessionType) {
+      case SessionType.BATCH:
+        return 90; // 1.5 hours for batch sessions
+      case SessionType.ONE_TO_ONE:
+        return 60; // 1 hour for one-to-one sessions
+      case SessionType.PRIVATE:
+        return 120; // 2 hours for private sessions
+      case SessionType.CORPORATE:
+        return 180; // 3 hours for corporate sessions
+      default:
+        return 90; // Default to 1.5 hours
+    }
+  };
+  
+  // Update duration when session type changes
+  useEffect(() => {
+    if (watchedSessionType) {
+      const defaultDuration = calculateDefaultDuration(watchedSessionType);
+      form.setValue('duration', defaultDuration);
+    }
+  }, [watchedSessionType, form]);
+  
+  // Update end time when start time or duration changes
+  useEffect(() => {
+    if (watchedStartTime && watchedDuration) {
+      try {
+        const startTime = parse(watchedStartTime, 'HH:mm', new Date());
+        const endTime = new Date(startTime.getTime() + watchedDuration * 60 * 1000);
+        const endTimeString = format(endTime, 'HH:mm');
+        form.setValue('selectedEndTime', endTimeString);
+      } catch (error) {
+        console.error('Error calculating end time:', error);
+      }
+    }
+  }, [watchedStartTime, watchedDuration, form]);
   
   // Filter trainers based on selected course
   const availableTrainers = trainers?.filter(trainer => {
@@ -422,6 +473,9 @@ const SchedulePage: FC = () => {
       courseId: undefined,
       trainerId: undefined,
       studentIds: '',
+      sessionType: SessionType.BATCH,
+      duration: 90, // default 90 minutes
+      occurrenceDays: '',
       startTime: '',
       endTime: '',
       status: ScheduleStatus.CONFIRMED,
@@ -430,6 +484,7 @@ const SchedulePage: FC = () => {
       selectedStartTime: '09:00',
       selectedEndTime: '10:30',
       selectedStudents: [],
+      selectedOccurrenceDays: [],
     });
     setIsDialogOpen(true);
   };
@@ -617,6 +672,16 @@ const SchedulePage: FC = () => {
                                   <Users className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
                                   <span className="truncate">{getStudentNames(schedule.studentIds)}</span>
                                 </div>
+                                <div className="flex items-center">
+                                  <CalendarDays className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                                  <span>{schedule.sessionType} ({schedule.duration} mins)</span>
+                                </div>
+                                {schedule.occurrenceDays && (
+                                  <div className="flex items-center">
+                                    <Repeat className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                                    <span>Occurs on: {schedule.occurrenceDays.split(',').map(day => day.substring(0, 3)).join(', ')}</span>
+                                  </div>
+                                )}
                               </div>
                               
                               {schedule.status !== ScheduleStatus.CANCELLED && (
@@ -757,6 +822,55 @@ const SchedulePage: FC = () => {
                 />
               </div>
               
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="sessionType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Session Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select session type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={SessionType.BATCH}>Batch</SelectItem>
+                          <SelectItem value={SessionType.ONE_TO_ONE}>One-to-One</SelectItem>
+                          <SelectItem value={SessionType.PRIVATE}>Private</SelectItem>
+                          <SelectItem value={SessionType.CORPORATE}>Corporate</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duration (minutes)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={30}
+                          step={30}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Duration in minutes (multiples of 30)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
               {watchedTrainerId && !isTrainerAvailable() && (
                 <div className="rounded-md bg-yellow-50 p-3">
                   <div className="flex">
@@ -853,19 +967,68 @@ const SchedulePage: FC = () => {
                   name="selectedEndTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time</FormLabel>
+                      <FormLabel>End Time (Auto-calculated)</FormLabel>
                       <FormControl>
                         <Input 
                           type="time" 
                           {...field} 
+                          readOnly
+                          className="bg-gray-50"
                         />
                       </FormControl>
+                      <FormDescription>
+                        Based on start time and duration
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
               
+              <FormField
+                control={form.control}
+                name="selectedOccurrenceDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Occurrence Days</FormLabel>
+                    <FormDescription>
+                      Select the days of the week when this schedule occurs (up to 4 days except for corporate sessions)
+                    </FormDescription>
+                    <div className="flex flex-wrap gap-2">
+                      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => {
+                        const isSelected = field.value?.includes(day);
+                        const isCorporate = form.getValues('sessionType') === SessionType.CORPORATE;
+                        const maxDaysReached = field.value?.length >= 4 && !isCorporate;
+                        const disabled = !isSelected && maxDaysReached && !isCorporate;
+                        
+                        return (
+                          <Button
+                            key={day}
+                            type="button"
+                            variant={isSelected ? "default" : "outline"}
+                            className={`px-3 py-2 h-auto ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => {
+                              if (disabled) return;
+                              
+                              const updatedDays = isSelected
+                                ? field.value.filter((d: string) => d !== day)
+                                : [...field.value, day];
+                              
+                              field.onChange(updatedDays);
+                              form.setValue('occurrenceDays', updatedDays.join(','));
+                            }}
+                            disabled={disabled}
+                          >
+                            {day.substring(0, 3)}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="selectedStudents"
