@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -42,6 +42,8 @@ const ProposalDetailPage: FC = () => {
   const [activeTab, setActiveTab] = useState<string>('preview');
   const [showSendDialog, setShowSendDialog] = useState<boolean>(false);
   const [recipientEmail, setRecipientEmail] = useState<string>('');
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Fetch proposal details
   const { 
@@ -118,6 +120,40 @@ const ProposalDetailPage: FC = () => {
     onError: (error) => {
       toast({
         title: 'Send Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Upload company profile mutation
+  const uploadCompanyProfileMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const res = await fetch(`/api/proposals/${id}/upload-company-profile`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to upload company profile');
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/proposals', id] });
+      toast({
+        title: 'Company Profile Uploaded',
+        description: 'The company profile has been uploaded successfully.',
+      });
+      setIsUploading(false);
+    },
+    onError: (error) => {
+      setIsUploading(false);
+      toast({
+        title: 'Upload Failed',
         description: error.message,
         variant: 'destructive',
       });
@@ -232,6 +268,45 @@ const ProposalDetailPage: FC = () => {
     sendProposalMutation.mutate(recipientEmail);
   };
   
+  // Handle file input click
+  const handleFileInputClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check if file is a PDF
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: 'Invalid File Type',
+        description: 'Please select a PDF file for the company profile.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast({
+        title: 'File Too Large',
+        description: 'Company profile must be less than 10MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Create form data and upload
+    const formData = new FormData();
+    formData.append('companyProfileFile', file);
+    
+    setIsUploading(true);
+    uploadCompanyProfileMutation.mutate(formData);
+  };
+  
   // Render loading state
   if (isLoading) {
     return (
@@ -325,9 +400,7 @@ const ProposalDetailPage: FC = () => {
                   <TabsTrigger value="coverPage">Cover Page</TabsTrigger>
                   <TabsTrigger value="content">Content</TabsTrigger>
                   <TabsTrigger value="pricing">Pricing</TabsTrigger>
-                  {(trainer || proposal.companyProfile) && (
-                    <TabsTrigger value="profiles">Profiles</TabsTrigger>
-                  )}
+                  <TabsTrigger value="profiles">Profiles</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="coverPage" className="border rounded-lg p-6">
@@ -509,10 +582,9 @@ const ProposalDetailPage: FC = () => {
                   </div>
                 </TabsContent>
                 
-                {(trainer || proposal.companyProfile) && (
-                  <TabsContent value="profiles">
-                    <div className="border rounded-lg p-6">
-                      {trainer && (
+                <TabsContent value="profiles">
+                  <div className="border rounded-lg p-6">
+                    {trainer && (
                         <div className="mb-8">
                           <h2 className="text-xl font-semibold mb-4">Trainer Profile</h2>
                           <div className="bg-gray-50 p-4 rounded-lg mb-4">
@@ -544,27 +616,78 @@ const ProposalDetailPage: FC = () => {
                         </div>
                       )}
                       
-                      {proposal.companyProfile && (
-                        <div>
-                          <h2 className="text-xl font-semibold mb-4">Company Profile</h2>
+                      <div>
+                        <h2 className="text-xl font-semibold mb-4">Company Profile</h2>
+                        {proposal.companyProfile ? (
                           <div className="p-4 border rounded-md bg-gray-50 flex flex-col items-center justify-center">
                             <FileText className="h-12 w-12 text-gray-400 mb-3" />
                             <p className="mb-4 text-center">Company Profile PDF attached to this proposal</p>
-                            <a 
-                              href={proposal.companyProfile} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center text-primary hover:underline"
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              View Company Profile PDF
-                            </a>
+                            <div className="flex gap-4">
+                              <a 
+                                href={proposal.companyProfile} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center text-primary hover:underline"
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                View Company Profile PDF
+                              </a>
+                              
+                              {/* Replace option - only show for draft proposals */}
+                              {proposal.status === 'draft' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={handleFileInputClick}
+                                  disabled={isUploading}
+                                >
+                                  {isUploading ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Uploading...
+                                    </>
+                                  ) : (
+                                    <>Replace PDF</>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        ) : (
+                          // No company profile uploaded yet
+                          <div className="p-6 border rounded-md bg-gray-50 flex flex-col items-center justify-center">
+                            <FileText className="h-12 w-12 text-gray-400 mb-3" />
+                            <p className="mb-4 text-center">No company profile has been uploaded</p>
+                            
+                            {proposal.status === 'draft' && (
+                              <Button 
+                                onClick={handleFileInputClick}
+                                disabled={isUploading}
+                              >
+                                {isUploading ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Uploading...
+                                  </>
+                                ) : (
+                                  <>Upload Company Profile</>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Hidden file input */}
+                        <input 
+                          ref={fileInputRef} 
+                          type="file" 
+                          accept="application/pdf" 
+                          onChange={handleFileChange} 
+                          hidden 
+                        />
+                      </div>
                     </div>
                   </TabsContent>
-                )}
               </Tabs>
             </CardContent>
           </Card>
