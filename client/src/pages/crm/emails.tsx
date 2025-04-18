@@ -399,7 +399,7 @@ export default function EmailsPage() {
 
       {/* Compose Email Dialog */}
       <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Compose New Email</DialogTitle>
             <DialogDescription>
@@ -611,7 +611,7 @@ export default function EmailsPage() {
 
       {/* View Email Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Email Details</DialogTitle>
           </DialogHeader>
@@ -672,27 +672,34 @@ export default function EmailsPage() {
                   <div className="col-span-3">
                     <div className="border rounded-md p-3">
                       <ul className="space-y-2">
-                        {selectedEmail.attachments.map((attachment: any, index: number) => (
-                          <li key={index} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-primary" />
-                              <span className="truncate max-w-[200px]">{attachment.filename}</span>
-                              {attachment.size && (
-                                <span className="text-xs text-muted-foreground">
-                                  ({Math.round(attachment.size / 1024)} KB)
-                                </span>
-                              )}
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => window.open(`/uploads/emails/${attachment.path}`, '_blank')}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </li>
-                        ))}
+                        {selectedEmail.attachments.map((attachment: any, index: number) => {
+                          // Handle both string paths and object format
+                          const isObject = typeof attachment === 'object';
+                          const filename = isObject ? attachment.filename : `Attachment ${index + 1}`;
+                          const path = isObject ? attachment.path : attachment;
+                          
+                          return (
+                            <li key={index} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-primary" />
+                                <span className="truncate max-w-[200px]">{filename}</span>
+                                {isObject && attachment.size && (
+                                  <span className="text-xs text-muted-foreground">
+                                    ({Math.round(attachment.size / 1024)} KB)
+                                  </span>
+                                )}
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.open(`/uploads/emails/${path}`, '_blank')}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   </div>

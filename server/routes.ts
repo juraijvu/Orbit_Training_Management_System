@@ -2199,14 +2199,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get file attachments from the request
       const files = req.files as Express.Multer.File[];
-      const attachments = files.map(file => ({
-        filename: file.originalname,
-        path: file.filename,
-        mimetype: file.mimetype,
-        size: file.size
-      }));
       
-      // Create email history record
+      // Store attachment metadata in a safer serializable format
+      // We only save the path as a string in the database as per schema
+      const attachmentPaths = files.map(file => file.filename);
+      
+      // Create email history record with the path strings
       const emailData = {
         recipientEmail,
         subject,
@@ -2215,15 +2213,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "sent",
         createdBy: req.user?.id,
         templateId: templateId ? parseInt(templateId) : null,
-        attachments: attachments
+        attachments: attachmentPaths
       };
       
       const newEmail = await storage.createEmailHistory(emailData);
       
+      // For the response, include the full attachment details
+      const responseEmail = {
+        ...newEmail,
+        attachments: files.map(file => ({
+          filename: file.originalname,
+          path: file.filename,
+          mimetype: file.mimetype,
+          size: file.size
+        }))
+      };
+      
       // Here we would integrate with the Titan Email API to actually send the email
       // This would require API key verification and using the Titan Email API client
       
-      res.status(201).json(newEmail);
+      res.status(201).json(responseEmail);
     } catch (error) {
       console.error("Failed to send email with attachments:", error);
       res.status(500).json({ message: "Failed to send email with attachments" });
