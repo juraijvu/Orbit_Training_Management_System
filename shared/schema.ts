@@ -178,7 +178,9 @@ export const proposals = pgTable("proposals", {
   finalAmount: numeric("final_amount").notNull(),
   coverPage: text("cover_page"), // URL or content
   content: text("content"), // Stored as JSON
-  companyProfile: text("company_profile"), // Last page content - company profile
+  companyProfile: text("company_profile"), // Company profile PDF URL or path
+  companyProfileFilename: text("company_profile_filename"), // Original filename of the company profile
+  companyProfileMimeType: text("company_profile_mime_type"), // MIME type of the company profile file
   status: text("status").notNull().default("draft"), // draft, sent, accepted, rejected
   createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
