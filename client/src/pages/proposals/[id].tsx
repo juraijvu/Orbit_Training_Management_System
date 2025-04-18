@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { generateProposalPdf } from '@/lib/pdf-templates';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
+import { PDFDocument } from 'pdf-lib';
 import { 
   ArrowLeft, 
   Loader2, 
@@ -239,10 +240,13 @@ const ProposalDetailPage: FC = () => {
         });
       });
       
-      // Now, if there's a company profile, add it as the last page
+      // Get the binary data from the jsPDF document
+      const mainPdfBytes = pdf.output('arraybuffer');
+      
+      // Now, if there's a company profile, merge it as the last page using pdf-lib
       if (proposal.companyProfile) {
         try {
-          // Add a message page indicating the company profile
+          // Add a transition page indicating company profile
           pdf.addPage();
           pdf.setFontSize(18);
           pdf.setFont("helvetica", "bold");
@@ -250,40 +254,57 @@ const ProposalDetailPage: FC = () => {
           
           pdf.setFontSize(12);
           pdf.setFont("helvetica", "normal");
-          pdf.text("The company profile is attached as the last page of this proposal.", 105, 40, { align: "center" });
+          pdf.text("The company profile document follows on the next pages.", 105, 40, { align: "center" });
           pdf.text("It provides a comprehensive overview of our organization,", 105, 50, { align: "center" });
           pdf.text("our history, values, and commitment to excellence.", 105, 60, { align: "center" });
           
-          // Fetch the company profile PDF as a blob
+          // Get the updated binary data with the transition page
+          const mainPdfBytesWithTransition = pdf.output('arraybuffer');
+          
+          // Fetch the company profile PDF
           const response = await fetch(proposal.companyProfile);
-          const profilePdfBlob = await response.blob();
+          const profilePdfArrayBuffer = await response.arrayBuffer();
           
-          // Convert blob to base64
-          const reader = new FileReader();
-          const profilePdfBase64 = await new Promise<string>((resolve) => {
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(profilePdfBlob);
+          // Load both PDFs using pdf-lib
+          const mergedPdf = await PDFDocument.create();
+          const mainPdfDoc = await PDFDocument.load(mainPdfBytesWithTransition);
+          const profilePdfDoc = await PDFDocument.load(profilePdfArrayBuffer);
+          
+          // Copy all pages from main PDF
+          const mainPdfPages = await mergedPdf.copyPages(mainPdfDoc, mainPdfDoc.getPageIndices());
+          for (const page of mainPdfPages) {
+            mergedPdf.addPage(page);
+          }
+          
+          // Copy all pages from profile PDF
+          const profilePdfPages = await mergedPdf.copyPages(profilePdfDoc, profilePdfDoc.getPageIndices());
+          for (const page of profilePdfPages) {
+            mergedPdf.addPage(page);
+          }
+          
+          // Save the merged PDF
+          const mergedPdfBytes = await mergedPdf.save();
+          const mergedPdfBlob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+          saveAs(mergedPdfBlob, `Proposal_${proposal.proposalNumber}_${proposal.companyName}.pdf`);
+          
+          toast({
+            title: 'PDF Generated',
+            description: 'Your proposal PDF has been generated successfully with company profile attached.',
           });
           
-          // Import the company profile PDF (starts on the next page)
-          const profilePdfDoc = await pdf.loadFile(profilePdfBase64.split(',')[1], {
-            putOnlyUsedFonts: true,
-            autoPaging: 'text'
-          });
-          
-          // The profile document is now merged as the last pages
+          return; // Exit early since we've already saved the PDF
         } catch (err) {
-          console.error("Error attaching company profile PDF:", err);
-          // Continue with saving even if profile attachment fails
+          console.error("Error merging company profile PDF:", err);
+          // Continue with saving the main PDF if merging fails
         }
       }
       
-      // Save the complete PDF
+      // If no company profile or if merging failed, save just the main PDF
       pdf.save(`Proposal_${proposal.proposalNumber}_${proposal.companyName}.pdf`);
           
       toast({
         title: 'PDF Generated',
-        description: 'Your proposal PDF has been generated successfully with company profile attached as the last page.',
+        description: 'Your proposal PDF has been generated successfully.',
       });
     } catch (error) {
       console.error('PDF generation error:', error);
