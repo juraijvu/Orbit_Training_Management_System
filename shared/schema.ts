@@ -172,11 +172,13 @@ export const proposals = pgTable("proposals", {
   email: text("email").notNull(),
   phone: text("phone").notNull(),
   courseIds: text("course_ids").notNull(), // Stored as comma-separated course IDs
+  trainerId: integer("trainer_id"), // Reference to the trainer who will conduct the training
   totalAmount: numeric("total_amount").notNull(),
   discount: numeric("discount").default("0"),
   finalAmount: numeric("final_amount").notNull(),
   coverPage: text("cover_page"), // URL or content
   content: text("content"), // Stored as JSON
+  companyProfile: text("company_profile"), // Last page content - company profile
   status: text("status").notNull().default("draft"), // draft, sent, accepted, rejected
   createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
