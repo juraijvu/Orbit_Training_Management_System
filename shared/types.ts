@@ -151,4 +151,13 @@ export interface ProposalPdfData {
   date: string;
   logo?: string;
   applyWhiteFilter?: boolean;
+  trainer?: {
+    id: number;
+    fullName: string;
+    specialization: string;
+    email: string;
+    phone: string;
+    profilePdf?: string;
+  };
+  companyProfile?: string;
 }

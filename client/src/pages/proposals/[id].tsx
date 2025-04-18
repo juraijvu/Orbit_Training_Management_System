@@ -6,6 +6,9 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/app-layout';
 import { Button } from '@/components/ui/button';
+import { generateProposalPdf } from '@/lib/pdf-templates';
+import { saveAs } from 'file-saver';
+import { jsPDF } from 'jspdf';
 import { 
   ArrowLeft, 
   Loader2, 

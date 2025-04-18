@@ -336,6 +336,65 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
     </div>
   ` : '';
 
+  // Trainer profile page, to be inserted before the company profile page
+  const trainerProfileHtml = data.trainer ? `
+    <!-- Page Break -->
+    <div style="page-break-after: always;"></div>
+    
+    <!-- Trainer Profile -->
+    <div class="mb-10">
+      <h2 class="text-2xl font-bold mb-4">Meet Your Trainer</h2>
+      <div class="flex flex-col space-y-4">
+        <div>
+          <h3 class="text-xl font-semibold mb-2">${data.trainer.fullName}</h3>
+          <p class="text-lg italic mb-4">${data.trainer.specialization}</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <p class="text-gray-600">Email:</p>
+            <p class="font-semibold">${data.trainer.email}</p>
+          </div>
+          <div>
+            <p class="text-gray-600">Phone:</p>
+            <p class="font-semibold">${data.trainer.phone}</p>
+          </div>
+        </div>
+        
+        ${data.trainer.profilePdf ? `
+          <div class="mt-4">
+            <p class="text-gray-600 mb-2">A detailed trainer profile is available upon request.</p>
+            <p class="text-gray-600">The trainer profile includes complete education background, professional certifications, work experience, and areas of expertise.</p>
+          </div>
+        ` : `
+          <div class="mt-4">
+            <p class="text-gray-600">This trainer specializes in delivering high-quality training in the following areas:</p>
+            <ul class="list-disc pl-5 mt-2">
+              <li>Professional training and development</li>
+              <li>Technical skills enhancement</li>
+              <li>Hands-on practical workshops</li>
+              <li>Customized learning experiences</li>
+            </ul>
+          </div>
+        `}
+      </div>
+    </div>
+  ` : '';
+
+  // Company profile page (last page)
+  const companyProfileHtml = data.companyProfile ? `
+    <!-- Page Break -->
+    <div style="page-break-after: always;"></div>
+    
+    <!-- Company Profile (Last Page) -->
+    <div class="mb-10">
+      <h2 class="text-2xl font-bold mb-4">Company Profile</h2>
+      <div class="prose max-w-none">
+        ${data.companyProfile}
+      </div>
+    </div>
+  ` : '';
+
   return `
     <div class="print-a4">
       <!-- Cover Page -->
@@ -353,7 +412,9 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
         <div class="mt-8 text-center">
           <h2 class="text-xl mb-4">Presented By</h2>
           <h3 class="text-lg font-bold">${data.presenterName || 'Training Consultant'}</h3>
-          <p>${data.presenterDetails || ''}</p>
+          <p>${data.presenterTitle || ''}</p>
+          ${data.presenterEmail ? `<p>Email: ${data.presenterEmail}</p>` : ''}
+          ${data.presenterPhone ? `<p>Phone: ${data.presenterPhone}</p>` : ''}
           <h1 class="text-2xl font-bold mt-4">Orbit Institute</h1>
           <p>Dubai, United Arab Emirates</p>
           <p>Phone: +971 50 123 4567 | Email: info@orbitinstitute.ae</p>
@@ -382,6 +443,9 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
       <!-- The rest of the proposal content will be dynamically generated from proposal entries -->
       <!-- This template only provides the company introduction and about us section -->
       
+      <!-- Add trainer profile before the conclusion -->
+      ${trainerProfileHtml}
+      
       <!-- Page Break -->
       <div style="page-break-after: always;"></div>
       
@@ -400,6 +464,9 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
           <p>Authorized Signatory</p>
         </div>
       </div>
+      
+      <!-- Company profile as the last page -->
+      ${companyProfileHtml}
     </div>
   `;
 };
