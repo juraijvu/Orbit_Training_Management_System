@@ -214,7 +214,7 @@ export function MobileNav() {
     {
       title: "WhatsApp Chats",
       href: "/whatsapp-chats",
-      icon: <MessagesSquare className="h-5 w-5" />,
+      icon: <MessageSquare className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
       section: "main"
     },
