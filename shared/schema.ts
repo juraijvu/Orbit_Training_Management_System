@@ -607,39 +607,7 @@ export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
 export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
 export type EmailHistory = typeof emailHistory.$inferSelect;
 
-// CRM Meetings
-export const crmMeetings = pgTable("crm_meetings", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description"),
-  meetingDate: timestamp("meeting_date").notNull(),
-  duration: integer("duration").notNull(), // in minutes
-  location: text("location"), // can be physical or virtual
-  meetingLink: text("meeting_link"), // for virtual meetings
-  status: text("status").notNull().default("scheduled"), // scheduled, completed, cancelled, rescheduled
-  meetingType: text("meeting_type").notNull(), // initial, follow-up, presentation, demo, etc.
-  clientName: text("client_name").notNull(),
-  clientEmail: text("client_email"),
-  clientPhone: text("client_phone"),
-  attendees: text("attendees").array(), // array of names or user IDs
-  leadId: integer("lead_id"), // optional link to a lead
-  corporateLeadId: integer("corporate_lead_id"), // optional link to a corporate lead
-  notificationSent: boolean("notification_sent").default(false),
-  reminderSent: boolean("reminder_sent").default(false),
-  createdBy: integer("created_by").notNull(),
-  updatedBy: integer("updated_by"),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
 
-export const insertCrmMeetingSchema = createInsertSchema(crmMeetings).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertCrmMeeting = z.infer<typeof insertCrmMeetingSchema>;
-export type CrmMeeting = typeof crmMeetings.$inferSelect;
 
 // Corporate Leads
 export const corporateLeads = pgTable("corporate_leads", {
@@ -740,3 +708,33 @@ export const insertWhatsAppTemplateSchema = createInsertSchema(whatsAppTemplates
 
 export type InsertWhatsAppTemplate = z.infer<typeof insertWhatsAppTemplateSchema>;
 export type WhatsAppTemplate = typeof whatsAppTemplates.$inferSelect;
+
+
+
+// WhatsApp Chat Messages
+export const whatsAppChats = pgTable("whatsapp_chats", {
+  id: serial("id").primaryKey(),
+  phoneNumber: text("phone_number").notNull(),
+  direction: text("direction").notNull(), // incoming, outgoing
+  content: text("content").notNull(),
+  messageType: text("message_type").notNull().default("text"), // text, image, document, location
+  mediaUrl: text("media_url"), // URL to media if message contains media
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  status: text("status").notNull().default("sent"), // sent, delivered, read, failed
+  leadId: integer("lead_id"), // Associated lead if any
+  corporateLeadId: integer("corporate_lead_id"), // Associated corporate lead if any
+  meetingId: integer("meeting_id"), // Associated meeting if any
+  templateId: integer("template_id"), // Template used if it was a template message
+  sentBy: integer("sent_by"), // User who sent the message (for outgoing)
+  sessionId: integer("session_id"), // Reference to chatbot session if automated
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertWhatsAppChatSchema = createInsertSchema(whatsAppChats).omit({
+  id: true,
+  createdAt: true,
+  timestamp: true,
+});
+
+export type InsertWhatsAppChat = z.infer<typeof insertWhatsAppChatSchema>;
+export type WhatsAppChat = typeof whatsAppChats.$inferSelect;

@@ -463,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedInvoice = await storage.updateInvoice(id, req.body);
       
       // Send payment receipt notification when invoice is marked as paid
-      if (req.body.status === 'paid' && existingInvoice.status !== 'paid') {
+      if (req.body.status === 'paid' && existingInvoice.status !== 'paid' && updatedInvoice) {
         try {
           const student = await storage.getStudent(updatedInvoice.studentId);
           if (student) {
@@ -538,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               newSchedule,
               students,
               course.name,
-              trainer.name
+              trainer.fullName
             );
           }
         }
@@ -573,7 +573,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const detailsChanged = req.body.title || req.body.description || timeChanged;
       
       // If details changed, send update notification
-      if (detailsChanged) {
+      if (detailsChanged && updatedSchedule) {
         try {
           // Get associated course
           const course = await storage.getCourse(updatedSchedule.courseId);
@@ -588,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 updatedSchedule,
                 students,
                 course.name,
-                trainer.name
+                trainer.fullName
               );
             }
           }
