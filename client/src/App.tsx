@@ -92,6 +92,30 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <ProtectedRoute path="/crm/meetings" component={() => {
+          const MeetingsPage = React.lazy(() => import("@/pages/crm/meetings"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <MeetingsPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/crm/corporate-leads" component={() => {
+          const CorporateLeadsPage = React.lazy(() => import("@/pages/crm/corporate-leads"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <CorporateLeadsPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/crm/posts" component={() => {
+          const CrmPostsPage = React.lazy(() => import("@/pages/crm/posts"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <CrmPostsPage />
+            </React.Suspense>
+          );
+        }} />
         <ProtectedRoute path="/crm/emails" component={() => {
           const EmailsPage = React.lazy(() => import("@/pages/crm/emails"));
           return (

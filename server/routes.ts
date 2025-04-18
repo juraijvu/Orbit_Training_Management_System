@@ -1229,6 +1229,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete lead" });
     }
   });
+  
+  // ================== CRM - Corporate Leads API ==================
+  // Get all corporate leads
+  app.get('/api/crm/corporate-leads', isAuthenticated, async (req, res) => {
+    try {
+      const leads = await storage.getCorporateLeads();
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch corporate leads" });
+    }
+  });
+
+  // Get corporate leads by consultant
+  app.get('/api/crm/corporate-leads/consultant/:consultantId', isAuthenticated, async (req, res) => {
+    try {
+      const consultantId = parseInt(req.params.consultantId);
+      const leads = await storage.getCorporateLeadsByConsultant(consultantId);
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch corporate leads" });
+    }
+  });
+
+  // Get corporate leads by status
+  app.get('/api/crm/corporate-leads/status/:status', isAuthenticated, async (req, res) => {
+    try {
+      const status = req.params.status;
+      const leads = await storage.getCorporateLeadsByStatus(status);
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch corporate leads" });
+    }
+  });
+
+  // Get corporate leads by priority
+  app.get('/api/crm/corporate-leads/priority/:priority', isAuthenticated, async (req, res) => {
+    try {
+      const priority = req.params.priority;
+      const leads = await storage.getCorporateLeadsByPriority(priority);
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch corporate leads" });
+    }
+  });
+
+  // Get corporate lead by ID
+  app.get('/api/crm/corporate-leads/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const lead = await storage.getCorporateLead(id);
+      if (!lead) {
+        return res.status(404).json({ message: "Corporate lead not found" });
+      }
+      res.json(lead);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch corporate lead" });
+    }
+  });
+
+  // Create corporate lead
+  app.post('/api/crm/corporate-leads', isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertCorporateLeadSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      
+      const newLead = await storage.createCorporateLead(validatedData);
+      res.status(201).json(newLead);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      
+      res.status(500).json({ message: "Failed to create corporate lead" });
+    }
+  });
+
+  // Update corporate lead
+  app.patch('/api/crm/corporate-leads/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingLead = await storage.getCorporateLead(id);
+      if (!existingLead) {
+        return res.status(404).json({ message: "Corporate lead not found" });
+      }
+      
+      const updateData = {
+        ...req.body,
+        updatedBy: req.user!.id
+      };
+      
+      const updatedLead = await storage.updateCorporateLead(id, updateData);
+      res.json(updatedLead);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update corporate lead" });
+    }
+  });
+
+  // Delete corporate lead
+  app.delete('/api/crm/corporate-leads/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingLead = await storage.getCorporateLead(id);
+      if (!existingLead) {
+        return res.status(404).json({ message: "Corporate lead not found" });
+      }
+      
+      const result = await storage.deleteCorporateLead(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete corporate lead" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete corporate lead" });
+    }
+  });
 
   // ================== CRM - Campaigns API ==================
   // Get all campaigns
@@ -1301,6 +1420,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       res.status(500).json({ message: "Failed to delete campaign" });
+    }
+  });
+  
+  // ================== CRM - Meetings API ==================
+  // Get all meetings
+  app.get('/api/crm/meetings', isAuthenticated, async (req, res) => {
+    try {
+      const meetings = await storage.getCrmMeetings();
+      res.json(meetings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch meetings" });
+    }
+  });
+
+  // Get meetings by assigned user
+  app.get('/api/crm/meetings/assigned/:userId', isAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const meetings = await storage.getCrmMeetingsByAssignedTo(userId);
+      res.json(meetings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch meetings" });
+    }
+  });
+
+  // Get meetings for a specific date
+  app.get('/api/crm/meetings/date/:date', isAuthenticated, async (req, res) => {
+    try {
+      const date = new Date(req.params.date);
+      if (isNaN(date.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+      const meetings = await storage.getCrmMeetingsByDate(date);
+      res.json(meetings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch meetings" });
+    }
+  });
+
+  // Get meetings by status
+  app.get('/api/crm/meetings/status/:status', isAuthenticated, async (req, res) => {
+    try {
+      const status = req.params.status;
+      const meetings = await storage.getCrmMeetingsByStatus(status);
+      res.json(meetings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch meetings" });
+    }
+  });
+
+  // Get meetings by lead
+  app.get('/api/crm/meetings/lead/:leadId', isAuthenticated, async (req, res) => {
+    try {
+      const leadId = parseInt(req.params.leadId);
+      const meetings = await storage.getCrmMeetingsByLeadId(leadId);
+      res.json(meetings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch meetings" });
+    }
+  });
+
+  // Get meetings by corporate lead
+  app.get('/api/crm/meetings/corporate/:corporateLeadId', isAuthenticated, async (req, res) => {
+    try {
+      const corporateLeadId = parseInt(req.params.corporateLeadId);
+      const meetings = await storage.getCrmMeetingsByCorporateLeadId(corporateLeadId);
+      res.json(meetings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch meetings" });
+    }
+  });
+
+  // Get meeting by ID
+  app.get('/api/crm/meetings/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const meeting = await storage.getCrmMeeting(id);
+      if (!meeting) {
+        return res.status(404).json({ message: "Meeting not found" });
+      }
+      res.json(meeting);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch meeting" });
+    }
+  });
+
+  // Create meeting
+  app.post('/api/crm/meetings', isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertCrmMeetingSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      
+      const newMeeting = await storage.createCrmMeeting(validatedData);
+      
+      // If WhatsApp notification is enabled, send notification
+      if (req.body.sendNotification) {
+        try {
+          // Find the WhatsApp template
+          const template = req.body.notificationTemplateId 
+            ? await storage.getWhatsAppTemplate(req.body.notificationTemplateId)
+            : null;
+          
+          if (template) {
+            let recipientNumber = '';
+            
+            // Determine recipient phone number
+            if (newMeeting.leadId) {
+              const lead = await storage.getLead(newMeeting.leadId);
+              recipientNumber = lead?.whatsappNumber || '';
+            } else if (newMeeting.corporateLeadId) {
+              const corporateLead = await storage.getCorporateLead(newMeeting.corporateLeadId);
+              recipientNumber = corporateLead?.contactPhone || '';
+            }
+            
+            if (recipientNumber) {
+              // Create WhatsApp chat message for notification
+              await storage.createWhatsAppChat({
+                phoneNumber: recipientNumber,
+                direction: 'outgoing',
+                content: template.content,
+                messageType: 'text',
+                status: 'sent',
+                templateId: template.id,
+                meetingId: newMeeting.id,
+                leadId: newMeeting.leadId,
+                corporateLeadId: newMeeting.corporateLeadId,
+                sentBy: req.user!.id
+              });
+              
+              // Mark notification as sent
+              await storage.markMeetingNotificationSent(newMeeting.id);
+            }
+          }
+        } catch (notificationError) {
+          console.error('Failed to send meeting notification:', notificationError);
+          // Continue with meeting creation even if notification fails
+        }
+      }
+      
+      res.status(201).json(newMeeting);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      
+      res.status(500).json({ message: "Failed to create meeting" });
+    }
+  });
+
+  // Update meeting
+  app.patch('/api/crm/meetings/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingMeeting = await storage.getCrmMeeting(id);
+      if (!existingMeeting) {
+        return res.status(404).json({ message: "Meeting not found" });
+      }
+      
+      // Add updatedBy field
+      const updateData = {
+        ...req.body,
+        updatedBy: req.user!.id
+      };
+      
+      const updatedMeeting = await storage.updateCrmMeeting(id, updateData);
+      res.json(updatedMeeting);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update meeting" });
+    }
+  });
+
+  // Delete meeting
+  app.delete('/api/crm/meetings/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingMeeting = await storage.getCrmMeeting(id);
+      if (!existingMeeting) {
+        return res.status(404).json({ message: "Meeting not found" });
+      }
+      
+      // Check if user is admin or the meeting creator/assignee
+      if (req.user!.role !== 'admin' && req.user!.role !== 'superadmin' && 
+          req.user!.id !== existingMeeting.createdBy && req.user!.id !== existingMeeting.assignedTo) {
+        return res.status(403).json({ message: "You don't have permission to delete this meeting" });
+      }
+      
+      const result = await storage.deleteCrmMeeting(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete meeting" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete meeting" });
     }
   });
 
@@ -1511,6 +1827,339 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       res.status(500).json({ message: "Failed to delete template" });
+    }
+  });
+  
+  // ================== CRM - Today's Posts API ==================
+  // Configure multer for CRM post image uploads
+  const crmPostStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(process.cwd(), 'uploads', 'crm-posts');
+      
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+  });
+  
+  const crmPostUpload = multer({
+    storage: crmPostStorage,
+    fileFilter: (req, file, cb) => {
+      const allowedMimeTypes = [
+        'image/jpeg', 'image/png', 'image/gif', 'image/webp', 
+        'video/mp4', 'video/webm', 'application/pdf',
+        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // Word docs
+        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // Excel
+        'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation' // PowerPoint
+      ];
+      
+      if (!allowedMimeTypes.includes(file.mimetype)) {
+        return cb(new Error('Only images, videos, PDFs, and Office documents are allowed for CRM posts'));
+      }
+      
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 25 * 1024 * 1024 // 25MB limit
+    }
+  });
+  
+  // Get all CRM posts
+  app.get('/api/crm/posts', isAuthenticated, async (req, res) => {
+    try {
+      const posts = await storage.getCrmPosts();
+      
+      // Enrich with creator information
+      const enrichedPosts = await Promise.all(posts.map(async (post) => {
+        const creator = await storage.getUser(post.createdBy);
+        return {
+          ...post,
+          creatorName: creator ? creator.fullName : 'Unknown'
+        };
+      }));
+      
+      res.json(enrichedPosts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch CRM posts" });
+    }
+  });
+
+  // Get CRM posts by category
+  app.get('/api/crm/posts/category/:category', isAuthenticated, async (req, res) => {
+    try {
+      const category = req.params.category;
+      const posts = await storage.getCrmPostsByCategory(category);
+      
+      // Enrich with creator information
+      const enrichedPosts = await Promise.all(posts.map(async (post) => {
+        const creator = await storage.getUser(post.createdBy);
+        return {
+          ...post,
+          creatorName: creator ? creator.fullName : 'Unknown'
+        };
+      }));
+      
+      res.json(enrichedPosts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch CRM posts" });
+    }
+  });
+
+  // Get CRM posts by creator
+  app.get('/api/crm/posts/creator/:userId', isAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const posts = await storage.getCrmPostsByCreator(userId);
+      
+      // Get creator information once
+      const creator = await storage.getUser(userId);
+      
+      // Enrich all posts with the same creator info
+      const enrichedPosts = posts.map(post => ({
+        ...post,
+        creatorName: creator ? creator.fullName : 'Unknown'
+      }));
+      
+      res.json(enrichedPosts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch CRM posts" });
+    }
+  });
+
+  // Get CRM posts by tags
+  app.get('/api/crm/posts/tags', isAuthenticated, async (req, res) => {
+    try {
+      const tags = req.query.tags as string;
+      if (!tags) {
+        return res.status(400).json({ message: "Tags parameter is required" });
+      }
+      
+      const tagArray = tags.split(',').map(tag => tag.trim());
+      const posts = await storage.getCrmPostsByTags(tagArray);
+      
+      // Enrich with creator information
+      const enrichedPosts = await Promise.all(posts.map(async (post) => {
+        const creator = await storage.getUser(post.createdBy);
+        return {
+          ...post,
+          creatorName: creator ? creator.fullName : 'Unknown'
+        };
+      }));
+      
+      res.json(enrichedPosts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch CRM posts" });
+    }
+  });
+
+  // Get CRM post by ID
+  app.get('/api/crm/posts/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getCrmPost(id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Track view
+      await storage.incrementCrmPostViewCount(id);
+      
+      // Get creator information
+      const creator = await storage.getUser(post.createdBy);
+      
+      res.json({
+        ...post,
+        creatorName: creator ? creator.fullName : 'Unknown'
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch post" });
+    }
+  });
+
+  // Create CRM post with file upload
+  app.post('/api/crm/posts', isAuthenticated, crmPostUpload.single('file'), async (req, res) => {
+    try {
+      // Handle file upload
+      const filePath = req.file ? `/uploads/crm-posts/${req.file.filename}` : null;
+      
+      // Parse tags if present
+      let tags: string[] = [];
+      if (req.body.tags) {
+        tags = req.body.tags.split(',').map((tag: string) => tag.trim());
+      }
+      
+      // Create post with file path
+      const postData = {
+        ...req.body,
+        filePath,
+        tags,
+        createdBy: req.user!.id
+      };
+      
+      const validatedData = insertCrmPostSchema.parse(postData);
+      const newPost = await storage.createCrmPost(validatedData);
+      
+      res.status(201).json(newPost);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      
+      res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  // Update CRM post
+  app.patch('/api/crm/posts/:id', isAuthenticated, crmPostUpload.single('file'), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingPost = await storage.getCrmPost(id);
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if user is admin/superadmin or post creator
+      if (req.user!.role !== 'admin' && req.user!.role !== 'superadmin' && 
+          req.user!.id !== existingPost.createdBy) {
+        return res.status(403).json({ message: "You don't have permission to update this post" });
+      }
+      
+      // Handle file upload
+      let filePath = existingPost.filePath;
+      if (req.file) {
+        filePath = `/uploads/crm-posts/${req.file.filename}`;
+        
+        // Delete old file if it exists
+        if (existingPost.filePath) {
+          const oldFilePath = path.join(process.cwd(), existingPost.filePath.replace(/^\//, ''));
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+          }
+        }
+      }
+      
+      // Parse tags if present
+      let tags = existingPost.tags || [];
+      if (req.body.tags) {
+        tags = req.body.tags.split(',').map((tag: string) => tag.trim());
+      }
+      
+      // Update post
+      const updateData = {
+        ...req.body,
+        filePath,
+        tags,
+        updatedBy: req.user!.id
+      };
+      
+      const updatedPost = await storage.updateCrmPost(id, updateData);
+      res.json(updatedPost);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+
+  // Delete CRM post
+  app.delete('/api/crm/posts/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingPost = await storage.getCrmPost(id);
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if user is admin/superadmin or post creator
+      if (req.user!.role !== 'admin' && req.user!.role !== 'superadmin' && 
+          req.user!.id !== existingPost.createdBy) {
+        return res.status(403).json({ message: "You don't have permission to delete this post" });
+      }
+      
+      // Delete file if it exists
+      if (existingPost.filePath) {
+        const filePath = path.join(process.cwd(), existingPost.filePath.replace(/^\//, ''));
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      
+      const result = await storage.deleteCrmPost(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete post" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  // Download CRM post file
+  app.get('/api/crm/posts/:id/download', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getCrmPost(id);
+      if (!post || !post.filePath) {
+        return res.status(404).json({ message: "Post file not found" });
+      }
+      
+      // Track download
+      await storage.incrementCrmPostDownloadCount(id);
+      
+      // Get file path
+      const filePath = path.join(process.cwd(), post.filePath.replace(/^\//, ''));
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      // Send file for download
+      res.download(filePath);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to download file" });
+    }
+  });
+
+  // Share CRM post (track share count)
+  app.post('/api/crm/posts/:id/share', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getCrmPost(id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Track share
+      const updatedPost = await storage.incrementCrmPostShareCount(id);
+      res.json(updatedPost);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to track share" });
+    }
+  });
+
+  // Approve CRM post (admin only)
+  app.post('/api/crm/posts/:id/approve', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getCrmPost(id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Approve post
+      const updatedPost = await storage.approveCrmPost(id, req.user!.id);
+      res.json(updatedPost);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve post" });
     }
   });
 
