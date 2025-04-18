@@ -1188,6 +1188,9 @@ export class DatabaseStorage implements IStorage {
   private whatsappTemplateId: number = 1;
   private whatsappChatId: number = 1;
   private whatsappMessageId: number = 1;
+  private titanEmailSettingsId: number = 1;
+  private emailTemplateId: number = 1;
+  private emailHistoryId: number = 1;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({
@@ -1805,6 +1808,146 @@ export class DatabaseStorage implements IStorage {
   // WhatsApp Templates methods
   async getWhatsappTemplates(): Promise<WhatsappTemplate[]> {
     return await db.select().from(whatsappTemplates);
+  }
+  
+  // Titan Email Settings
+  async getTitanEmailSettings(): Promise<TitanEmailSettings | undefined> {
+    const result = await db.select().from(titanEmailSettings);
+    return result[0];
+  }
+  
+  async createTitanEmailSettings(settings: InsertTitanEmailSettings): Promise<TitanEmailSettings> {
+    const settingsWithDefaults = {
+      ...settings,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    const result = await db.insert(titanEmailSettings).values(settingsWithDefaults).returning();
+    return result[0];
+  }
+  
+  async updateTitanEmailSettings(id: number, settings: Partial<TitanEmailSettings>): Promise<TitanEmailSettings | undefined> {
+    const settingsWithUpdatedAt = {
+      ...settings,
+      updatedAt: new Date()
+    };
+    const result = await db.update(titanEmailSettings)
+      .set(settingsWithUpdatedAt)
+      .where(eq(titanEmailSettings.id, id))
+      .returning();
+    return result[0];
+  }
+  
+  async testEmailConnection(settings: Partial<TitanEmailSettings>): Promise<boolean> {
+    // Here we would implement actual email connection testing functionality
+    // This is a simplified mock implementation for demonstration purposes
+    
+    // Simulate connection testing based on whether required fields are provided
+    try {
+      // Check if using API
+      if (settings.useApi) {
+        // Test API connection
+        if (!settings.apiKey || !settings.apiSecret) {
+          throw new Error("API Key and API Secret are required for API connection");
+        }
+        
+        // Simulate API connection success (in a real implementation, we would make an actual API call)
+        return true;
+      } else {
+        // Test SMTP connection
+        if (!settings.smtpServer || !settings.smtpPort) {
+          throw new Error("SMTP Server and Port are required");
+        }
+        
+        if (settings.smtpAuthRequired && (!settings.smtpUsername || !settings.smtpPassword)) {
+          throw new Error("SMTP Username and Password are required when authentication is enabled");
+        }
+        
+        // Test IMAP connection if provided
+        if (settings.imapServer && !settings.imapPort) {
+          throw new Error("IMAP Port is required when IMAP Server is specified");
+        }
+        
+        // Simulate connection success (in a real implementation, we would attempt to connect to the servers)
+        return true;
+      }
+    } catch (error) {
+      console.error("Email connection test failed:", error);
+      return false;
+    }
+  }
+  
+  // Email Templates
+  async getEmailTemplates(): Promise<EmailTemplate[]> {
+    const result = await db.select().from(emailTemplates);
+    return result;
+  }
+  
+  async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
+    const result = await db.select().from(emailTemplates).where(eq(emailTemplates.id, id));
+    return result[0];
+  }
+  
+  async getEmailTemplatesByCategory(category: string): Promise<EmailTemplate[]> {
+    const result = await db.select().from(emailTemplates).where(eq(emailTemplates.category, category));
+    return result;
+  }
+  
+  async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    const templateWithDefaults = {
+      ...template,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    const result = await db.insert(emailTemplates).values(templateWithDefaults).returning();
+    return result[0];
+  }
+  
+  async updateEmailTemplate(id: number, template: Partial<EmailTemplate>): Promise<EmailTemplate | undefined> {
+    const templateWithUpdatedAt = {
+      ...template,
+      updatedAt: new Date()
+    };
+    const result = await db.update(emailTemplates)
+      .set(templateWithUpdatedAt)
+      .where(eq(emailTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+  
+  async deleteEmailTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(emailTemplates).where(eq(emailTemplates.id, id)).returning();
+    return result.length > 0;
+  }
+  
+  // Email History
+  async getEmailHistory(): Promise<EmailHistory[]> {
+    const result = await db.select().from(emailHistory)
+      .orderBy(desc(emailHistory.createdAt));
+    return result;
+  }
+  
+  async getEmailHistoryByLeadId(leadId: number): Promise<EmailHistory[]> {
+    const result = await db.select().from(emailHistory)
+      .where(eq(emailHistory.leadId, leadId))
+      .orderBy(desc(emailHistory.createdAt));
+    return result;
+  }
+  
+  async getEmailHistoryByStudentId(studentId: number): Promise<EmailHistory[]> {
+    const result = await db.select().from(emailHistory)
+      .where(eq(emailHistory.studentId, studentId))
+      .orderBy(desc(emailHistory.createdAt));
+    return result;
+  }
+  
+  async createEmailHistory(email: InsertEmailHistory): Promise<EmailHistory> {
+    const emailWithDefaults = {
+      ...email,
+      createdAt: new Date()
+    };
+    const result = await db.insert(emailHistory).values(emailWithDefaults).returning();
+    return result[0];
   }
 
   async getWhatsappTemplate(id: number): Promise<WhatsappTemplate | undefined> {

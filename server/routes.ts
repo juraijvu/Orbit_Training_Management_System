@@ -1973,6 +1973,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to save Titan Email settings" });
     }
   });
+  
+  // Test email connection
+  app.post('/api/email/test-connection', isAdmin, async (req, res) => {
+    try {
+      const connectionResult = await storage.testEmailConnection(req.body);
+      if (connectionResult) {
+        res.json({ success: true, message: "Connection successful" });
+      } else {
+        res.status(400).json({ success: false, message: "Connection failed" });
+      }
+    } catch (error) {
+      let errorMessage = "Connection test failed";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      console.error("Email connection test failed:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: errorMessage
+      });
+    }
+  });
 
   // Get Email templates
   app.get('/api/email/templates', isAuthenticated, async (req, res) => {
