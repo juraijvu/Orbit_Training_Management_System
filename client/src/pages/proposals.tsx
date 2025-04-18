@@ -87,6 +87,7 @@ const proposalFormSchema = insertProposalSchema.extend({
   
   // Company profile (last page)
   companyProfile: z.string().optional(),
+  companyProfileFile: z.instanceof(File).optional(),
   
   // Cover page customization
   coverBackgroundColor: z.string().default("#000000"),
@@ -108,6 +109,7 @@ const ProposalsPage: FC = () => {
   const [showWhiteFilter, setShowWhiteFilter] = useState<boolean>(true);
   const [selectedCourses, setSelectedCourses] = useState<any[]>([]);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const companyProfileFileRef = useRef<HTMLInputElement>(null);
   
   // Fetch proposals
   const { data: proposals, isLoading } = useQuery({
