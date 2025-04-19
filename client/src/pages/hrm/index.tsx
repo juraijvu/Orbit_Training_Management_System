@@ -17,7 +17,8 @@ import {
   ListChecks,
   Heart,
   DollarSign,
-  Plane
+  Plane,
+  Award
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 

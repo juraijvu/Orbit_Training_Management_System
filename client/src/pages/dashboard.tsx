@@ -256,7 +256,7 @@ const Dashboard: FC = () => {
       {(user?.role === 'admin' || user?.role === 'superadmin') && (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-800 mb-6">Admin Tools</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-md">Course Management</CardTitle>
@@ -291,6 +291,24 @@ const Dashboard: FC = () => {
                 <Link href="/trainer-revenue">
                   <Button variant="outline" size="sm" className="w-full">
                     Trainer Reports
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md">HR Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500">
+                  Employee management, payroll, and HR operations
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Link href="/hrm">
+                  <Button variant="outline" size="sm" className="w-full">
+                    HR Dashboard
                   </Button>
                 </Link>
               </CardFooter>

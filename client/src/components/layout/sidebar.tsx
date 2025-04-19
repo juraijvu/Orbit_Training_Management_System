@@ -23,6 +23,9 @@ import {
   MessagesSquare as MessageSquare,
   MessageCircle,
   MessagesSquare,
+  UserCircle,
+  DollarSign,
+  Plane,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +120,36 @@ function Sidebar({ className }: SidebarNavProps) {
       href: "/certificate-templates",
       icon: <Award className="h-5 w-5" />,
       roles: ["superadmin"],
+      section: "main"
+    },
+    
+    // HR Management
+    {
+      title: "HR Dashboard",
+      href: "/hrm",
+      icon: <UserCircle className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
+    {
+      title: "Employees",
+      href: "/hrm/employees",
+      icon: <Users className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
+    {
+      title: "Payroll",
+      href: "/hrm/payroll",
+      icon: <DollarSign className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
+    {
+      title: "Visa Management",
+      href: "/visa-management",
+      icon: <Plane className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
       section: "main"
     },
     

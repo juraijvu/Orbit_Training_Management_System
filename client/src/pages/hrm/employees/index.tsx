@@ -220,7 +220,7 @@ const EmployeeManagement: FC = () => {
 
   // Get unique departments for filter
   const departments = employees ? 
-    [...new Set(employees.map(employee => employee.department))] : [];
+    Array.from(new Set(employees.map(employee => employee.department))) : [];
 
   // Format date function
   const formatDate = (dateString: string) => {

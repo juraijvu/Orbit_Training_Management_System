@@ -302,7 +302,7 @@ const PayrollManagement: FC = () => {
 
   // Get departments for filter
   const departments = payrollRecords ? 
-    [...new Set(payrollRecords.map(record => record.department))] : [];
+    Array.from(new Set(payrollRecords.map(record => record.department))) : [];
 
   // Paginate the results
   const paginatedRecords = filteredRecords?.slice(
