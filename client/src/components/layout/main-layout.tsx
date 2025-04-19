@@ -3,6 +3,7 @@ import Sidebar from "@/components/layout/sidebar";
 import MobileNav from "@/components/layout/mobile-nav";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { user, isLoading } = useAuth();
+  const [location] = useLocation();
 
   if (isLoading) {
     return (
@@ -25,6 +27,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      {/* Desktop Sidebar - hidden on mobile */}
       <div className="hidden md:flex md:flex-col md:w-64 md:border-r bg-white">
         <Sidebar />
       </div>
@@ -32,6 +35,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <main className="flex-1 relative overflow-y-auto focus:outline-none pb-16">
           {children}
         </main>
+        {/* Mobile Navigation - only shown on mobile */}
         <MobileNav />
       </div>
     </div>

@@ -17,7 +17,7 @@ import {
   UserPlus,
   FileCheck,
   FileSpreadsheet,
-  MessagesSquare as MessageSquare, // Renamed to match the used name
+  MessagesSquare as MessageSquare,
   Mail,
   LogOut
 } from "lucide-react";
