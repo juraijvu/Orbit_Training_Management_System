@@ -597,7 +597,7 @@ const StaffManagement: FC<StaffManagementProps> = ({ showAddDialog = false }) =>
                 Add Staff
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Staff Member</DialogTitle>
                 <DialogDescription>
@@ -1078,7 +1078,7 @@ const StaffManagement: FC<StaffManagementProps> = ({ showAddDialog = false }) =>
 
       {/* View Staff Details Dialog */}
       <Dialog open={isViewDetailsOpen && selectedStaff !== null} onOpenChange={setIsViewDetailsOpen}>
-        <DialogContent className="sm:max-w-[650px]">
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Staff Details</DialogTitle>
             <DialogDescription>
@@ -1280,7 +1280,7 @@ const StaffManagement: FC<StaffManagementProps> = ({ showAddDialog = false }) =>
 
       {/* Upload Document Dialog */}
       <Dialog open={isUploadDocumentOpen && selectedStaff !== null} onOpenChange={setIsUploadDocumentOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
             <DialogDescription>
