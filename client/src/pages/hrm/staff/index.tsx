@@ -96,6 +96,18 @@ const StaffManagement: FC = () => {
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
   const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
   const [isUploadDocumentOpen, setIsUploadDocumentOpen] = useState(false);
+  const [newStaffData, setNewStaffData] = useState({
+    name: '',
+    position: '',
+    department: '',
+    email: '',
+    phone: '',
+    joiningDate: '',
+    employmentType: '',
+    status: 'Active',
+    workLocation: '',
+    address: ''
+  });
 
   // Mock data
   const { data: staffMembers, isLoading } = useQuery<StaffMember[]>({
