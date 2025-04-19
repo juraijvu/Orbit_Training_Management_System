@@ -124,6 +124,32 @@ function Router() {
             </React.Suspense>
           );
         }} />
+
+        {/* New Admin Features */}
+        <ProtectedRoute path="/trainer-revenue" component={() => {
+          const TrainerRevenuePage = React.lazy(() => import("@/pages/trainer-revenue"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <TrainerRevenuePage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/expenses" component={() => {
+          const ExpensesPage = React.lazy(() => import("@/pages/expenses"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ExpensesPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/visa-management" component={() => {
+          const VisaManagementPage = React.lazy(() => import("@/pages/visa-management"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <VisaManagementPage />
+            </React.Suspense>
+          );
+        }} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
