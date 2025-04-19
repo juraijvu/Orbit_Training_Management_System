@@ -217,17 +217,19 @@ const HRMDashboard: FC = () => {
           </Card>
         </Link>
 
-        <Card className="hover:bg-accent/50 transition-colors cursor-not-allowed h-full opacity-70">
-          <CardHeader className="pb-2">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
-              <Clock className="h-6 w-6 text-slate-600" />
-            </div>
-            <CardTitle className="text-md">Attendance</CardTitle>
-            <CardDescription>
-              Coming Soon
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <Link href="/hrm/attendance">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
+            <CardHeader className="pb-2">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+                <Clock className="h-6 w-6 text-slate-600" />
+              </div>
+              <CardTitle className="text-md">Attendance</CardTitle>
+              <CardDescription>
+                Track attendance records
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -453,7 +455,7 @@ const HRMDashboard: FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Quick Actions</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <Link href="/hrm/employees/new">
               <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
                 <Users className="h-5 w-5 text-primary" />
@@ -464,6 +466,12 @@ const HRMDashboard: FC = () => {
               <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
                 <DollarSign className="h-5 w-5 text-blue-600" />
                 <span>Run Payroll</span>
+              </Button>
+            </Link>
+            <Link href="/hrm/attendance/new">
+              <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
+                <Clock className="h-5 w-5 text-slate-600" />
+                <span>Mark Attendance</span>
               </Button>
             </Link>
             <Link href="/hrm/reports">

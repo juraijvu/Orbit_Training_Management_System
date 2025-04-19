@@ -24,7 +24,8 @@ import {
   Building,  // For HRM
   DollarSign, // For HRM/Payroll
   FileEdit, // For Interviews
-  Plane // For Visa Management
+  Plane, // For Visa Management
+  Clock // For Attendance
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -209,6 +210,13 @@ export function MobileNav() {
       roles: ["admin", "superadmin", "counselor"],
       section: "crm"
     },
+    {
+      title: "Expenses",
+      href: "/crm/expenses",
+      icon: <DollarSign className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "crm"
+    },
     
     // External Integrations
     {
@@ -282,6 +290,13 @@ export function MobileNav() {
       title: "Visa Management",
       href: "/visa-management",
       icon: <Plane className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
+    },
+    {
+      title: "Attendance",
+      href: "/hrm/attendance",
+      icon: <Clock className="h-5 w-5" />,
       roles: ["admin", "superadmin"],
       section: "hrm"
     },
