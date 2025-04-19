@@ -460,7 +460,7 @@ const HRMDashboard: FC = () => {
                 <span>New Employee</span>
               </Button>
             </Link>
-            <Link href="/hrm/payroll/run">
+            <Link href="/hrm/payroll/new">
               <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
                 <DollarSign className="h-5 w-5 text-blue-600" />
                 <span>Run Payroll</span>
