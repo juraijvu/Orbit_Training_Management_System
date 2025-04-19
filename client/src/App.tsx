@@ -53,6 +53,30 @@ function Router() {
         }} />
         <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
         <ProtectedRoute path="/settings" component={Settings} />
+        <ProtectedRoute path="/settings/crm" component={() => {
+          const CRMSettingsPage = React.lazy(() => import("@/pages/settings/crm"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <CRMSettingsPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/settings/crm/payment-gateway" component={() => {
+          const PaymentGatewaySettingsPage = React.lazy(() => import("@/pages/settings/crm/payment-gateway"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PaymentGatewaySettingsPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/settings/hrm" component={() => {
+          const HRMSettingsPage = React.lazy(() => import("@/pages/settings/hrm"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <HRMSettingsPage />
+            </React.Suspense>
+          );
+        }} />
         {/* External Integrations */}
         <ProtectedRoute path="/whatsapp-settings" component={WhatsappSettings} />
         <ProtectedRoute path="/whatsapp-chats" component={WhatsappChats} />
@@ -137,6 +161,14 @@ function Router() {
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
               <EmailsPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/crm/payment-link-generator" component={() => {
+          const PaymentLinkGeneratorPage = React.lazy(() => import("@/pages/crm/payment-link-generator"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PaymentLinkGeneratorPage />
             </React.Suspense>
           );
         }} />
