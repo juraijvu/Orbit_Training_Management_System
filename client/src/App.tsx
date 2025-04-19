@@ -116,6 +116,22 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <ProtectedRoute path="/crm/expenses" component={() => {
+          const ExpensesManagement = React.lazy(() => import("@/pages/crm/expenses"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ExpensesManagement />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/crm/expenses/new" component={() => {
+          const ExpensesManagement = React.lazy(() => import("@/pages/crm/expenses"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ExpensesManagement showAddDialog={true} />
+            </React.Suspense>
+          );
+        }} />
         <ProtectedRoute path="/crm/emails" component={() => {
           const EmailsPage = React.lazy(() => import("@/pages/crm/emails"));
           return (
@@ -229,6 +245,22 @@ function Router() {
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
               <HRReports />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/attendance" component={() => {
+          const AttendanceManagement = React.lazy(() => import("@/pages/hrm/attendance"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AttendanceManagement />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/attendance/new" component={() => {
+          const AttendanceManagement = React.lazy(() => import("@/pages/hrm/attendance"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AttendanceManagement showAddDialog={true} />
             </React.Suspense>
           );
         }} />
