@@ -42,9 +42,9 @@ function Sidebar({ className }: SidebarNavProps) {
   
   // Set section based on the current location
   useEffect(() => {
-    if (location?.startsWith("/crm")) {
+    if (location?.startsWith("/crm") || location?.startsWith("/settings/crm")) {
       setActiveSection("crm");
-    } else if (location?.startsWith("/hrm") || location?.startsWith("/visa-management")) {
+    } else if (location?.startsWith("/hrm") || location?.startsWith("/visa-management") || location?.startsWith("/settings/hrm")) {
       setActiveSection("hrm");
     } else {
       setActiveSection("main");
@@ -289,6 +289,27 @@ function Sidebar({ className }: SidebarNavProps) {
       icon: <Settings className="h-5 w-5" />,
       roles: ["admin", "superadmin"],
       section: "main"
+    },
+    {
+      title: "CRM Settings",
+      href: "/settings/crm",
+      icon: <Settings className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "crm"
+    },
+    {
+      title: "Payment Gateways",
+      href: "/settings/crm/payment-gateway",
+      icon: <CreditCard className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "crm"
+    },
+    {
+      title: "HRM Settings",
+      href: "/settings/hrm",
+      icon: <Settings className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
     },
   ];
 
