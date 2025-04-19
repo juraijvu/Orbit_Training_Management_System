@@ -42,6 +42,8 @@ function Sidebar({ className }: SidebarNavProps) {
   useEffect(() => {
     if (location?.startsWith("/crm")) {
       setActiveSection("crm");
+    } else if (location?.startsWith("/hrm") || location?.startsWith("/visa-management")) {
+      setActiveSection("hrm");
     } else {
       setActiveSection("main");
     }
@@ -123,34 +125,34 @@ function Sidebar({ className }: SidebarNavProps) {
       section: "main"
     },
     
-    // HR Management
+    // HR Management Section
     {
       title: "HR Dashboard",
       href: "/hrm",
       icon: <UserCircle className="h-5 w-5" />,
       roles: ["admin", "superadmin"],
-      section: "main"
+      section: "hrm"
     },
     {
       title: "Employees",
       href: "/hrm/employees",
       icon: <Users className="h-5 w-5" />,
       roles: ["admin", "superadmin"],
-      section: "main"
+      section: "hrm"
     },
     {
       title: "Payroll",
       href: "/hrm/payroll",
       icon: <DollarSign className="h-5 w-5" />,
       roles: ["admin", "superadmin"],
-      section: "main"
+      section: "hrm"
     },
     {
       title: "Visa Management",
       href: "/visa-management",
       icon: <Plane className="h-5 w-5" />,
       roles: ["admin", "superadmin"],
-      section: "main"
+      section: "hrm"
     },
     
     // Business Development
@@ -274,9 +276,11 @@ function Sidebar({ className }: SidebarNavProps) {
   // Group nav items by section
   const mainNavItems = filteredNavItems.filter(item => item.section === 'main');
   const crmNavItems = filteredNavItems.filter(item => item.section === 'crm');
+  const hrmNavItems = filteredNavItems.filter(item => item.section === 'hrm');
   
-  // Check if user has access to CRM section
+  // Check if user has access to CRM and HRM sections
   const hasCrmAccess = crmNavItems.length > 0;
+  const hasHrmAccess = hrmNavItems.length > 0;
 
   return (
     <div className={cn("pb-12 h-full flex flex-col", className)}>
@@ -290,7 +294,7 @@ function Sidebar({ className }: SidebarNavProps) {
           </div>
           
           {/* Section tabs */}
-          {hasCrmAccess && (
+          {(hasCrmAccess || hasHrmAccess) && (
             <div className="mb-4 px-4">
               <div className="flex space-x-2 border-b">
                 <Button 
@@ -305,18 +309,34 @@ function Sidebar({ className }: SidebarNavProps) {
                 >
                   Institute
                 </Button>
-                <Button 
-                  variant="link" 
-                  className={cn(
-                    "px-2 py-1 h-auto rounded-none font-medium",
-                    activeSection === "crm" 
-                      ? "text-primary border-b-2 border-primary" 
-                      : "text-muted-foreground"
-                  )}
-                  onClick={() => setActiveSection("crm")}
-                >
-                  CRM
-                </Button>
+                {hasCrmAccess && (
+                  <Button 
+                    variant="link" 
+                    className={cn(
+                      "px-2 py-1 h-auto rounded-none font-medium",
+                      activeSection === "crm" 
+                        ? "text-primary border-b-2 border-primary" 
+                        : "text-muted-foreground"
+                    )}
+                    onClick={() => setActiveSection("crm")}
+                  >
+                    CRM
+                  </Button>
+                )}
+                {hasHrmAccess && (
+                  <Button 
+                    variant="link" 
+                    className={cn(
+                      "px-2 py-1 h-auto rounded-none font-medium",
+                      activeSection === "hrm" 
+                        ? "text-primary border-b-2 border-primary" 
+                        : "text-muted-foreground"
+                    )}
+                    onClick={() => setActiveSection("hrm")}
+                  >
+                    HRM
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -337,8 +357,22 @@ function Sidebar({ className }: SidebarNavProps) {
                     </Button>
                   </Link>
                 ))
-              ) : (
+              ) : activeSection === "crm" ? (
                 crmNavItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <Button
+                      variant={location === item.href ? "secondary" : "ghost"}
+                      className={cn("w-full justify-start", {
+                        "bg-primary/10": location === item.href,
+                      })}
+                    >
+                      {item.icon}
+                      <span className="ml-2">{item.title}</span>
+                    </Button>
+                  </Link>
+                ))
+              ) : (
+                hrmNavItems.map((item) => (
                   <Link key={item.href} href={item.href}>
                     <Button
                       variant={location === item.href ? "secondary" : "ghost"}
