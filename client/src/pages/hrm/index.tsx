@@ -12,7 +12,9 @@ import {
   DollarSign,
   Plane,
   Award,
-  ListChecks
+  ListChecks,
+  Briefcase,
+  FileEdit
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -144,7 +146,7 @@ const HRMDashboard: FC = () => {
       </div>
 
       {/* HR Quick Access Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <Link href="/hrm/employees">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
             <CardHeader className="pb-2">
@@ -153,7 +155,21 @@ const HRMDashboard: FC = () => {
               </div>
               <CardTitle className="text-md">Employees</CardTitle>
               <CardDescription>
-                Employee directory and management
+                Employee directory
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+        
+        <Link href="/hrm/staff">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
+            <CardHeader className="pb-2">
+              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-2">
+                <Briefcase className="h-6 w-6 text-amber-600" />
+              </div>
+              <CardTitle className="text-md">Staff Management</CardTitle>
+              <CardDescription>
+                Staff profiles and documents
               </CardDescription>
             </CardHeader>
           </Card>
@@ -167,7 +183,7 @@ const HRMDashboard: FC = () => {
               </div>
               <CardTitle className="text-md">Payroll</CardTitle>
               <CardDescription>
-                Salary management and processing
+                Salary processing
               </CardDescription>
             </CardHeader>
           </Card>
@@ -181,7 +197,21 @@ const HRMDashboard: FC = () => {
               </div>
               <CardTitle className="text-md">Visa Management</CardTitle>
               <CardDescription>
-                Track visa status and expiry dates
+                Visa status tracking
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/hrm/interviews">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
+            <CardHeader className="pb-2">
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
+                <FileEdit className="h-6 w-6 text-green-600" />
+              </div>
+              <CardTitle className="text-md">Interviews</CardTitle>
+              <CardDescription>
+                Candidate interviews
               </CardDescription>
             </CardHeader>
           </Card>
@@ -189,12 +219,12 @@ const HRMDashboard: FC = () => {
 
         <Card className="hover:bg-accent/50 transition-colors cursor-not-allowed h-full opacity-70">
           <CardHeader className="pb-2">
-            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
-              <Clock className="h-6 w-6 text-green-600" />
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+              <Clock className="h-6 w-6 text-slate-600" />
             </div>
             <CardTitle className="text-md">Attendance</CardTitle>
             <CardDescription>
-              Track attendance and time off (Coming Soon)
+              Coming Soon
             </CardDescription>
           </CardHeader>
         </Card>
