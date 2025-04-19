@@ -218,7 +218,7 @@ const EmployeeManagement: FC = () => {
   });
 
   // Derive departments from employees data
-  const departments = employees ? [...new Set(employees.map(e => e.department))].sort() : [];
+  const departments = employees ? Array.from(new Set(employees.map(e => e.department))).sort() : [];
 
   // Filter employees based on search and filters
   const filteredEmployees = employees?.filter(employee => {
@@ -611,10 +611,13 @@ const EmployeeManagement: FC = () => {
             <div>
               <Pagination>
                 <PaginationContent>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                  />
+                  {currentPage === 1 ? (
+                    <PaginationPrevious className="cursor-not-allowed opacity-50" />
+                  ) : (
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    />
+                  )}
                   {[...Array(totalPages)].map((_, i) => (
                     <PaginationItem key={i}>
                       <PaginationLink
@@ -625,10 +628,13 @@ const EmployeeManagement: FC = () => {
                       </PaginationLink>
                     </PaginationItem>
                   ))}
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                  />
+                  {currentPage === totalPages ? (
+                    <PaginationNext className="cursor-not-allowed opacity-50" />
+                  ) : (
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    />
+                  )}
                 </PaginationContent>
               </Pagination>
             </div>
