@@ -375,7 +375,7 @@ const InterviewManagement: FC<InterviewManagementProps> = ({ showAddDialog = fal
                 Schedule Interview
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Schedule New Interview</DialogTitle>
                 <DialogDescription>
@@ -755,7 +755,7 @@ const InterviewManagement: FC<InterviewManagementProps> = ({ showAddDialog = fal
 
       {/* Feedback Dialog */}
       <Dialog open={isFeedbackDialogOpen && selectedInterview !== null} onOpenChange={setIsFeedbackDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Interview Feedback</DialogTitle>
             <DialogDescription>

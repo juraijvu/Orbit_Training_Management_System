@@ -419,7 +419,7 @@ const PayrollManagement: FC<PayrollManagementProps> = ({ showAddDialog = false }
                   Process Payroll
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl">
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Process Payroll</DialogTitle>
                   <DialogDescription>
