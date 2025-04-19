@@ -314,13 +314,13 @@ export function MobileNav() {
   return (
     <>
       {/* Mobile Navigation Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t md:hidden z-50 shadow-lg bg-opacity-95 backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-75 md:hidden z-50 shadow-lg">
         <div className="flex justify-between items-center">
           <Link href="/">
             <Button
               variant="ghost"
               className={cn("flex-1 flex flex-col items-center py-3 rounded-none", 
-                location === "/" ? "text-primary" : "text-gray-500"
+                location === "/" ? "text-primary" : "text-white"
               )}
             >
               <HomeIcon className="h-5 w-5" />
@@ -333,7 +333,7 @@ export function MobileNav() {
               <Button
                 variant="ghost"
                 className={cn("flex-1 flex flex-col items-center py-3 rounded-none", 
-                  location?.startsWith("/crm") ? "text-primary" : "text-gray-500"
+                  location?.startsWith("/crm") ? "text-primary" : "text-white"
                 )}
               >
                 <BarChart className="h-5 w-5" />
@@ -347,7 +347,7 @@ export function MobileNav() {
               <Button
                 variant="ghost"
                 className={cn("flex-1 flex flex-col items-center py-3 rounded-none", 
-                  (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-gray-500"
+                  (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-white"
                 )}
               >
                 <Building className="h-5 w-5" />
@@ -358,7 +358,7 @@ export function MobileNav() {
 
           <Button
             variant="ghost"
-            className="flex-1 flex flex-col items-center py-3 rounded-none text-gray-500 relative"
+            className="flex-1 flex flex-col items-center py-3 rounded-none text-white relative"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? (
@@ -379,7 +379,7 @@ export function MobileNav() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed bottom-16 left-0 right-0 bg-background border-t md:hidden z-40 shadow-lg bg-opacity-95 backdrop-blur-sm"
+            className="fixed bottom-16 left-0 right-0 bg-background md:hidden z-40 shadow-lg border-t"
           >
             <ScrollArea className="max-h-[60vh] overflow-y-auto">
               <div className="px-4 py-4">

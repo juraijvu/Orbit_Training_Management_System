@@ -224,6 +224,14 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <ProtectedRoute path="/hrm/reports" component={() => {
+          const HRReports = React.lazy(() => import("@/pages/hrm/reports"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <HRReports />
+            </React.Suspense>
+          );
+        }} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
