@@ -19,7 +19,12 @@ import {
   FileSpreadsheet,
   MessagesSquare as MessageSquare,
   Mail,
-  LogOut
+  LogOut,
+  Briefcase, // For HRM
+  Building,  // For HRM
+  DollarSign, // For HRM/Payroll
+  FileEdit, // For Interviews
+  Plane // For Visa Management
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -36,6 +41,8 @@ export function MobileNav() {
   useEffect(() => {
     if (location?.startsWith("/crm")) {
       setActiveSection("crm");
+    } else if (location?.startsWith("/hrm") || location === "/visa-management") {
+      setActiveSection("hrm");
     } else {
       setActiveSection("main");
     }
@@ -234,6 +241,50 @@ export function MobileNav() {
       roles: ["admin", "superadmin"],
       section: "main"
     },
+    
+    // HRM Section
+    {
+      title: "HR Dashboard",
+      href: "/hrm",
+      icon: <Building className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
+    },
+    {
+      title: "Employees",
+      href: "/hrm/employees",
+      icon: <Users className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
+    },
+    {
+      title: "Staff Management",
+      href: "/hrm/staff",
+      icon: <Briefcase className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
+    },
+    {
+      title: "Interviews",
+      href: "/hrm/interviews",
+      icon: <FileEdit className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
+    },
+    {
+      title: "Payroll",
+      href: "/hrm/payroll",
+      icon: <DollarSign className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
+    },
+    {
+      title: "Visa Management",
+      href: "/visa-management",
+      icon: <Plane className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
+    },
   ];
 
   const filteredNavItems = navItems.filter((item) =>
@@ -243,9 +294,11 @@ export function MobileNav() {
   // Group nav items by section
   const mainNavItems = filteredNavItems.filter(item => item.section === 'main');
   const crmNavItems = filteredNavItems.filter(item => item.section === 'crm');
+  const hrmNavItems = filteredNavItems.filter(item => item.section === 'hrm');
   
-  // Check if user has access to CRM section
+  // Check if user has access to sections
   const hasCrmAccess = crmNavItems.length > 0;
+  const hasHrmAccess = hrmNavItems.length > 0;
 
   // Determine current page icon for the mobile menu
   const getCurrentIcon = () => {
@@ -261,7 +314,7 @@ export function MobileNav() {
   return (
     <>
       {/* Mobile Navigation Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t md:hidden z-50 shadow-lg bg-opacity-95 backdrop-blur-sm">
         <div className="flex justify-between items-center">
           <Link href="/">
             <Button
@@ -270,7 +323,7 @@ export function MobileNav() {
                 location === "/" ? "text-primary" : "text-gray-500"
               )}
             >
-              <HomeIcon className="h-6 w-6" />
+              <HomeIcon className="h-5 w-5" />
               <span className="text-xs mt-1">Institute</span>
             </Button>
           </Link>
@@ -280,11 +333,25 @@ export function MobileNav() {
               <Button
                 variant="ghost"
                 className={cn("flex-1 flex flex-col items-center py-3 rounded-none", 
-                  location === "/crm/dashboard" ? "text-primary" : "text-gray-500"
+                  location?.startsWith("/crm") ? "text-primary" : "text-gray-500"
                 )}
               >
-                <BarChart className="h-6 w-6" />
+                <BarChart className="h-5 w-5" />
                 <span className="text-xs mt-1">CRM</span>
+              </Button>
+            </Link>
+          )}
+          
+          {hasHrmAccess && (
+            <Link href="/hrm">
+              <Button
+                variant="ghost"
+                className={cn("flex-1 flex flex-col items-center py-3 rounded-none", 
+                  (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-gray-500"
+                )}
+              >
+                <Building className="h-5 w-5" />
+                <span className="text-xs mt-1">HRM</span>
               </Button>
             </Link>
           )}
@@ -295,9 +362,9 @@ export function MobileNav() {
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? (
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             ) : (
-              <Menu className="h-6 w-6" />
+              <Menu className="h-5 w-5" />
             )}
             <span className="text-xs mt-1">Menu</span>
           </Button>
@@ -312,29 +379,30 @@ export function MobileNav() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed bottom-16 left-0 right-0 bg-white border-t md:hidden z-40 shadow-lg"
+            className="fixed bottom-16 left-0 right-0 bg-background border-t md:hidden z-40 shadow-lg bg-opacity-95 backdrop-blur-sm"
           >
             <ScrollArea className="max-h-[60vh] overflow-y-auto">
               <div className="px-4 py-4">
-                {hasCrmAccess && (
-                  <div className="mb-4">
-                    <div className="flex space-x-2 border-b">
+                <div className="mb-4">
+                  <div className="flex space-x-2 border-b overflow-x-auto pb-1">
+                    <Button 
+                      variant="link" 
+                      className={cn(
+                        "px-2 py-1 h-auto rounded-none font-medium whitespace-nowrap",
+                        activeSection === "main" 
+                          ? "text-primary border-b-2 border-primary" 
+                          : "text-muted-foreground"
+                      )}
+                      onClick={() => setActiveSection("main")}
+                    >
+                      Institute
+                    </Button>
+                    
+                    {hasCrmAccess && (
                       <Button 
                         variant="link" 
                         className={cn(
-                          "px-2 py-1 h-auto rounded-none font-medium",
-                          activeSection === "main" 
-                            ? "text-primary border-b-2 border-primary" 
-                            : "text-muted-foreground"
-                        )}
-                        onClick={() => setActiveSection("main")}
-                      >
-                        Institute
-                      </Button>
-                      <Button 
-                        variant="link" 
-                        className={cn(
-                          "px-2 py-1 h-auto rounded-none font-medium",
+                          "px-2 py-1 h-auto rounded-none font-medium whitespace-nowrap",
                           activeSection === "crm" 
                             ? "text-primary border-b-2 border-primary" 
                             : "text-muted-foreground"
@@ -343,9 +411,24 @@ export function MobileNav() {
                       >
                         CRM
                       </Button>
-                    </div>
+                    )}
+                    
+                    {hasHrmAccess && (
+                      <Button 
+                        variant="link" 
+                        className={cn(
+                          "px-2 py-1 h-auto rounded-none font-medium whitespace-nowrap",
+                          activeSection === "hrm" 
+                            ? "text-primary border-b-2 border-primary" 
+                            : "text-muted-foreground"
+                        )}
+                        onClick={() => setActiveSection("hrm")}
+                      >
+                        HRM
+                      </Button>
+                    )}
                   </div>
-                )}
+                </div>
                 
                 <div className="space-y-2">
                   {activeSection === "main" ? (
@@ -362,8 +445,22 @@ export function MobileNav() {
                         </Button>
                       </Link>
                     ))
-                  ) : (
+                  ) : activeSection === "crm" ? (
                     crmNavItems.map((item) => (
+                      <Link key={item.href} href={item.href}>
+                        <Button
+                          variant={location === item.href ? "secondary" : "ghost"}
+                          className={cn("w-full justify-start", {
+                            "bg-primary/10": location === item.href,
+                          })}
+                        >
+                          {item.icon}
+                          <span className="ml-2">{item.title}</span>
+                        </Button>
+                      </Link>
+                    ))
+                  ) : (
+                    hrmNavItems.map((item) => (
                       <Link key={item.href} href={item.href}>
                         <Button
                           variant={location === item.href ? "secondary" : "ghost"}
