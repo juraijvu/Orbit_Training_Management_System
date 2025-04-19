@@ -150,6 +150,32 @@ function Router() {
             </React.Suspense>
           );
         }} />
+
+        {/* HRM System Routes */}
+        <ProtectedRoute path="/hrm" component={() => {
+          const HRMDashboard = React.lazy(() => import("@/pages/hrm"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <HRMDashboard />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/employees" component={() => {
+          const EmployeeManagement = React.lazy(() => import("@/pages/hrm/employees"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <EmployeeManagement />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/payroll" component={() => {
+          const PayrollManagement = React.lazy(() => import("@/pages/hrm/payroll"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PayrollManagement />
+            </React.Suspense>
+          );
+        }} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
