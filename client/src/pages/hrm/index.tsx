@@ -398,7 +398,7 @@ const HRMDashboard: FC = () => {
               <div className="flex items-center justify-between">
                 <CardTitle>Leave Requests</CardTitle>
                 <Button asChild variant="ghost" size="sm">
-                  <Link href="/hrm/leaves">
+                  <Link href="/hrm/employees">
                     Manage Leaves
                   </Link>
                 </Button>
