@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,16 @@ import {
 } from '@/components/ui/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 import { 
   Calendar,
@@ -109,7 +119,11 @@ interface PayrollSummary {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#A28DFF', '#FF6B6B'];
 
-const PayrollManagement: FC = () => {
+interface PayrollManagementProps {
+  showAddDialog?: boolean;
+}
+
+const PayrollManagement: FC<PayrollManagementProps> = ({ showAddDialog = false }) => {
   // State variables for filtering and pagination
   const [selectedMonth, setSelectedMonth] = useState<string>('April 2025');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -117,6 +131,14 @@ const PayrollManagement: FC = () => {
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [viewMode, setViewMode] = useState<'transactions' | 'summary'>('transactions');
+  const [isProcessPayrollOpen, setIsProcessPayrollOpen] = useState(false);
+  
+  // Open dialog when component mounts if showAddDialog is true
+  useEffect(() => {
+    if (showAddDialog) {
+      setIsProcessPayrollOpen(true);
+    }
+  }, [showAddDialog]);
   
   // Fetch payroll records
   const { data: payrollRecords, isLoading: recordsLoading } = useQuery<PayrollRecord[]>({
@@ -390,12 +412,78 @@ const PayrollManagement: FC = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button asChild>
-              <Link href="/hrm/payroll/process">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Process Payroll
-              </Link>
-            </Button>
+            <Dialog open={isProcessPayrollOpen} onOpenChange={setIsProcessPayrollOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Process Payroll
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Process Payroll</DialogTitle>
+                  <DialogDescription>
+                    Create or update payroll records for the selected month.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="payrollMonth">Month</Label>
+                    <Select defaultValue={selectedMonth}>
+                      <SelectTrigger id="payrollMonth">
+                        <SelectValue placeholder="Select month" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {months.map((month) => (
+                          <SelectItem key={month} value={month}>{month}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="paymentDate">Payment Date</Label>
+                    <Input type="date" id="paymentDate" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Department</Label>
+                    <Select defaultValue="all">
+                      <SelectTrigger id="department">
+                        <SelectValue placeholder="All Departments" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Departments</SelectItem>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="paymentMethod">Payment Method</Label>
+                    <Select defaultValue="Bank Transfer">
+                      <SelectTrigger id="paymentMethod">
+                        <SelectValue placeholder="Select payment method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                        <SelectItem value="Cash">Cash</SelectItem>
+                        <SelectItem value="Cheque">Cheque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Input id="notes" placeholder="Additional notes for this payroll" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsProcessPayrollOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Process Payroll</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
