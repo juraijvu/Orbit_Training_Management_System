@@ -1,44 +1,29 @@
-import React, { useState } from 'react';
+import { FC, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import {
   DollarSign,
+  BarChart2,
   FileText,
-  Filter,
-  Search,
   Plus,
-  MoreHorizontal,
-  FileDown,
-  Trash2,
-  PencilLine,
+  Search,
+  Filter,
+  Download,
   Calendar,
-  BarChart,
-  PieChart,
-  Tags
+  ArrowUpDown,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Check,
+  X
 } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,363 +31,274 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { DatePicker } from '@/components/ui/date-picker';
+} from "@/components/ui/dropdown-menu";
+import { Progress } from '@/components/ui/progress';
 
-// Types
 interface Expense {
   id: number;
   date: string;
   category: string;
-  amount: number;
   description: string;
+  amount: number;
   paymentMethod: string;
-  receipt?: string;
-  approvalStatus: 'pending' | 'approved' | 'rejected';
-  addedBy: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedBy: string;
+  receiptUrl?: string;
 }
 
-interface ExpenseCategory {
-  id: number;
-  name: string;
-  description?: string;
-  budget?: number;
+interface ExpenseSummary {
+  totalExpenses: number;
+  monthlyExpenses: number;
+  categorySummary: {
+    category: string;
+    amount: number;
+    percentage: number;
+  }[];
+  recentExpenses: Expense[];
 }
 
-// Status Badge component
-const StatusBadge = ({ status }: { status: Expense['approvalStatus'] }) => {
-  const statusConfig = {
-    pending: { color: 'bg-amber-100 text-amber-800', label: 'Pending' },
-    approved: { color: 'bg-green-100 text-green-800', label: 'Approved' },
-    rejected: { color: 'bg-red-100 text-red-800', label: 'Rejected' },
-  };
+const ExpensesPage: FC = () => {
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [category, setCategory] = useState<string>('all');
+  const [status, setStatus] = useState<string>('all');
 
-  const config = statusConfig[status];
-
-  return (
-    <Badge variant="outline" className={`${config.color} border-0`}>
-      {config.label}
-    </Badge>
-  );
-};
-
-// Add Expense Dialog Component
-const AddExpenseDialog = ({ 
-  isOpen, 
-  setIsOpen 
-}: { 
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-}) => {
-  const { toast } = useToast();
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [category, setCategory] = useState<string>('');
-  const [amount, setAmount] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('');
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Expense Added",
-      description: "The expense has been recorded successfully",
-    });
-    setIsOpen(false);
-  };
-  
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Add New Expense</DialogTitle>
-          <DialogDescription>
-            Record a new company expense. Required fields are marked with an asterisk.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Date *</Label>
-                <DatePicker
-                  date={date}
-                  setDate={setDate}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount (AED) *</Label>
-                <Input 
-                  id="amount" 
-                  type="number" 
-                  placeholder="0.00" 
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <Select value={category} onValueChange={setCategory} required>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="office">Office Supplies</SelectItem>
-                  <SelectItem value="marketing">Marketing & Advertising</SelectItem>
-                  <SelectItem value="rent">Rent & Utilities</SelectItem>
-                  <SelectItem value="equipment">Equipment & Maintenance</SelectItem>
-                  <SelectItem value="travel">Travel & Transportation</SelectItem>
-                  <SelectItem value="meals">Meals & Entertainment</SelectItem>
-                  <SelectItem value="software">Software & Subscriptions</SelectItem>
-                  <SelectItem value="training">Training & Development</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
-              <Textarea 
-                id="description" 
-                placeholder="Detailed description of the expense" 
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="paymentMethod">Payment Method *</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
-                <SelectTrigger id="paymentMethod">
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="creditCard">Credit Card</SelectItem>
-                  <SelectItem value="bankTransfer">Bank Transfer</SelectItem>
-                  <SelectItem value="companyCard">Company Card</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="receipt">Receipt (Optional)</Label>
-              <Input id="receipt" type="file" />
-              <p className="text-xs text-muted-foreground mt-1">
-                Supported formats: JPG, PNG, PDF. Max file size: 5MB
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)} type="button">
-              Cancel
-            </Button>
-            <Button type="submit">
-              Save Expense
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-// Add Category Dialog Component
-const AddCategoryDialog = ({ 
-  isOpen, 
-  setIsOpen 
-}: { 
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-}) => {
-  const { toast } = useToast();
-  const [name, setName] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [budget, setBudget] = useState<string>('');
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Category Added",
-      description: "The expense category has been added successfully",
-    });
-    setIsOpen(false);
-  };
-  
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Add Expense Category</DialogTitle>
-          <DialogDescription>
-            Create a new category for classifying expenses
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Category Name *</Label>
-              <Input 
-                id="name" 
-                placeholder="e.g., Office Supplies" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
-                placeholder="Brief description of this expense category" 
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="budget">
-                Monthly Budget (AED)
-                <span className="text-muted-foreground ml-1 text-sm">(Optional)</span>
-              </Label>
-              <Input 
-                id="budget" 
-                type="number" 
-                placeholder="0.00" 
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)} type="button">
-              Cancel
-            </Button>
-            <Button type="submit">
-              Add Category
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-// Main component
-const ExpensesManagement: React.FC<{ showAddDialog?: boolean }> = ({ showAddDialog = false }) => {
-  const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [dateRange, setDateRange] = useState<string>('current-month');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState<boolean>(showAddDialog);
-  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState<boolean>(false);
-  
-  // Example expense data
-  const expenseData: Expense[] = [
-    { 
-      id: 1, 
-      date: '2025-04-15', 
-      category: 'Office Supplies', 
-      amount: 1250.00, 
-      description: 'Monthly office supplies - paper, pens, notebooks, printer ink', 
-      paymentMethod: 'Company Card',
-      approvalStatus: 'approved',
-      addedBy: 'Aisha Khan'
+  // Fetch expense data
+  const { data: expenseData, isLoading } = useQuery<ExpenseSummary>({
+    queryKey: ['/api/crm/expenses/summary'],
+    queryFn: async () => {
+      // Mock data - replace with actual API call
+      return {
+        totalExpenses: 425650,
+        monthlyExpenses: 68750,
+        categorySummary: [
+          { category: 'Marketing', amount: 152300, percentage: 35.8 },
+          { category: 'Office Supplies', amount: 58200, percentage: 13.7 },
+          { category: 'Rent', amount: 120000, percentage: 28.2 },
+          { category: 'Utilities', amount: 35400, percentage: 8.3 },
+          { category: 'Travel', amount: 25000, percentage: 5.9 },
+          { category: 'Training', amount: 22000, percentage: 5.2 },
+          { category: 'Miscellaneous', amount: 12750, percentage: 3 }
+        ],
+        recentExpenses: [
+          {
+            id: 1,
+            date: '2025-04-15',
+            category: 'Marketing',
+            description: 'Social media advertising campaign',
+            amount: 12500,
+            paymentMethod: 'Credit Card',
+            status: 'approved',
+            submittedBy: 'Mohammed Rahman'
+          },
+          {
+            id: 2,
+            date: '2025-04-14',
+            category: 'Office Supplies',
+            description: 'Printer cartridges and paper',
+            amount: 3200,
+            paymentMethod: 'Cash',
+            status: 'approved',
+            submittedBy: 'Sara Al Jaber'
+          },
+          {
+            id: 3,
+            date: '2025-04-13',
+            category: 'Travel',
+            description: 'Flight tickets for conference',
+            amount: 8500,
+            paymentMethod: 'Corporate Card',
+            status: 'pending',
+            submittedBy: 'Ahmed Al Mansouri'
+          },
+          {
+            id: 4,
+            date: '2025-04-12',
+            category: 'Training',
+            description: 'Train the trainer workshop',
+            amount: 15000,
+            paymentMethod: 'Bank Transfer',
+            status: 'approved',
+            submittedBy: 'Jamal Hassan'
+          },
+          {
+            id: 5,
+            date: '2025-04-10',
+            category: 'Utilities',
+            description: 'Electricity and water bill',
+            amount: 8750,
+            paymentMethod: 'Direct Debit',
+            status: 'approved',
+            submittedBy: 'Sara Al Jaber'
+          },
+          {
+            id: 6,
+            date: '2025-04-08',
+            category: 'Marketing',
+            description: 'Brochure printing',
+            amount: 5800,
+            paymentMethod: 'Credit Card',
+            status: 'rejected',
+            submittedBy: 'Mohammed Rahman',
+            receiptUrl: '/receipts/brochure-printing.pdf'
+          },
+          {
+            id: 7,
+            date: '2025-04-05',
+            category: 'Miscellaneous',
+            description: 'Staff lunch event',
+            amount: 3200,
+            paymentMethod: 'Cash',
+            status: 'approved',
+            submittedBy: 'Fatima Ali'
+          },
+          {
+            id: 8,
+            date: '2025-04-01',
+            category: 'Rent',
+            description: 'Monthly office rent',
+            amount: 30000,
+            paymentMethod: 'Bank Transfer',
+            status: 'approved',
+            submittedBy: 'Ahmed Al Mansouri'
+          }
+        ]
+      };
     },
-    { 
-      id: 2, 
-      date: '2025-04-12', 
-      category: 'Marketing & Advertising', 
-      amount: 4500.00, 
-      description: 'Google Ads campaign for new courses - April', 
-      paymentMethod: 'Credit Card',
-      approvalStatus: 'approved',
-      addedBy: 'Mohammed Rahman'
-    },
-    { 
-      id: 3, 
-      date: '2025-04-10', 
-      category: 'Software & Subscriptions', 
-      amount: 1899.00, 
-      description: 'Annual subscription for Adobe Creative Cloud', 
-      paymentMethod: 'Bank Transfer',
-      approvalStatus: 'approved',
-      addedBy: 'Sara Al Jaber'
-    },
-    { 
-      id: 4, 
-      date: '2025-04-08', 
-      category: 'Travel & Transportation', 
-      amount: 875.50, 
-      description: 'Taxi expenses for corporate client meetings', 
-      paymentMethod: 'Cash',
-      approvalStatus: 'pending',
-      addedBy: 'Fatima Ali'
-    },
-    { 
-      id: 5, 
-      date: '2025-04-05', 
-      category: 'Equipment & Maintenance', 
-      amount: 7899.00, 
-      description: 'New projector for training room B', 
-      paymentMethod: 'Company Card',
-      approvalStatus: 'pending',
-      addedBy: 'Rahul Patel'
-    },
-  ];
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
 
-  // Example category data
-  const categories: ExpenseCategory[] = [
-    { id: 1, name: 'Office Supplies', budget: 2000 },
-    { id: 2, name: 'Marketing & Advertising', budget: 10000 },
-    { id: 3, name: 'Rent & Utilities', budget: 15000 },
-    { id: 4, name: 'Equipment & Maintenance', budget: 5000 },
-    { id: 5, name: 'Travel & Transportation', budget: 3000 },
-    { id: 6, name: 'Meals & Entertainment', budget: 2000 },
-    { id: 7, name: 'Software & Subscriptions', budget: 3500 },
-    { id: 8, name: 'Training & Development', budget: 4000 },
-    { id: 9, name: 'Other', budget: 1000 },
-  ];
-  
-  // Filter expenses
-  const filteredExpenses = expenseData.filter(expense => {
-    const matchesSearch = 
-      expense.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      expense.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      expense.addedBy.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = categoryFilter === 'all' || expense.category.toLowerCase().includes(categoryFilter.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || expense.approvalStatus === statusFilter;
-    
-    // For date range filtering (simplified for this example)
-    let matchesDateRange = true;
-    if (dateRange !== 'all') {
-      // In a real implementation, this would check the actual date range
-      matchesDateRange = true;
-    }
-    
-    return matchesSearch && matchesCategory && matchesStatus && matchesDateRange;
+  // Fetch all expenses
+  const { data: expenses, isLoading: isLoadingExpenses } = useQuery<Expense[]>({
+    queryKey: ['/api/crm/expenses', { startDate, endDate, category, status }],
+    queryFn: async () => {
+      // Mock data - replace with actual API call
+      return [
+        {
+          id: 1,
+          date: '2025-04-15',
+          category: 'Marketing',
+          description: 'Social media advertising campaign',
+          amount: 12500,
+          paymentMethod: 'Credit Card',
+          status: 'approved',
+          submittedBy: 'Mohammed Rahman'
+        },
+        {
+          id: 2,
+          date: '2025-04-14',
+          category: 'Office Supplies',
+          description: 'Printer cartridges and paper',
+          amount: 3200,
+          paymentMethod: 'Cash',
+          status: 'approved',
+          submittedBy: 'Sara Al Jaber'
+        },
+        {
+          id: 3,
+          date: '2025-04-13',
+          category: 'Travel',
+          description: 'Flight tickets for conference',
+          amount: 8500,
+          paymentMethod: 'Corporate Card',
+          status: 'pending',
+          submittedBy: 'Ahmed Al Mansouri'
+        },
+        {
+          id: 4,
+          date: '2025-04-12',
+          category: 'Training',
+          description: 'Train the trainer workshop',
+          amount: 15000,
+          paymentMethod: 'Bank Transfer',
+          status: 'approved',
+          submittedBy: 'Jamal Hassan'
+        },
+        {
+          id: 5,
+          date: '2025-04-10',
+          category: 'Utilities',
+          description: 'Electricity and water bill',
+          amount: 8750,
+          paymentMethod: 'Direct Debit',
+          status: 'approved',
+          submittedBy: 'Sara Al Jaber'
+        },
+        {
+          id: 6,
+          date: '2025-04-08',
+          category: 'Marketing',
+          description: 'Brochure printing',
+          amount: 5800,
+          paymentMethod: 'Credit Card',
+          status: 'rejected',
+          submittedBy: 'Mohammed Rahman',
+          receiptUrl: '/receipts/brochure-printing.pdf'
+        },
+        {
+          id: 7,
+          date: '2025-04-05',
+          category: 'Miscellaneous',
+          description: 'Staff lunch event',
+          amount: 3200,
+          paymentMethod: 'Cash',
+          status: 'approved',
+          submittedBy: 'Fatima Ali'
+        },
+        {
+          id: 8,
+          date: '2025-04-01',
+          category: 'Rent',
+          description: 'Monthly office rent',
+          amount: 30000,
+          paymentMethod: 'Bank Transfer',
+          status: 'approved',
+          submittedBy: 'Ahmed Al Mansouri'
+        },
+        {
+          id: 9,
+          date: '2025-03-28',
+          category: 'Marketing',
+          description: 'Digital billboard advertisement',
+          amount: 18500,
+          paymentMethod: 'Credit Card',
+          status: 'approved',
+          submittedBy: 'Mohammed Rahman'
+        },
+        {
+          id: 10,
+          date: '2025-03-25',
+          category: 'Office Supplies',
+          description: 'Furniture for meeting room',
+          amount: 12000,
+          paymentMethod: 'Corporate Card',
+          status: 'approved',
+          submittedBy: 'Sara Al Jaber'
+        },
+        {
+          id: 11,
+          date: '2025-03-20',
+          category: 'Training',
+          description: 'Online course subscriptions',
+          amount: 5500,
+          paymentMethod: 'Credit Card',
+          status: 'approved',
+          submittedBy: 'Jamal Hassan'
+        },
+        {
+          id: 12,
+          date: '2025-03-15',
+          category: 'Utilities',
+          description: 'Internet and phone services',
+          amount: 4200,
+          paymentMethod: 'Direct Debit',
+          status: 'approved',
+          submittedBy: 'Sara Al Jaber'
+        }
+      ];
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 
   // Format date for display
@@ -413,398 +309,351 @@ const ExpensesManagement: React.FC<{ showAddDialog?: boolean }> = ({ showAddDial
 
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-AE', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('en-AE', {
+      style: 'currency',
       currency: 'AED',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
-  // Calculate expense statistics
-  const totalExpenses = expenseData.reduce((sum, expense) => sum + expense.amount, 0);
-  const pendingExpenses = expenseData
-    .filter(expense => expense.approvalStatus === 'pending')
-    .reduce((sum, expense) => sum + expense.amount, 0);
-  
-  // Get top spending categories
-  const categorySpending = categories.map(category => {
-    const total = expenseData
-      .filter(expense => expense.category === category.name)
-      .reduce((sum, expense) => sum + expense.amount, 0);
+  // Filter records based on search query
+  const filteredExpenses = expenses?.filter(expense => {
+    const matchesSearch = 
+      expense.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      expense.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      expense.submittedBy.toLowerCase().includes(searchQuery.toLowerCase());
     
-    return {
-      name: category.name,
-      total,
-      budget: category.budget || 0,
-      percentage: category.budget ? (total / category.budget) * 100 : 0
-    };
-  }).sort((a, b) => b.total - a.total);
+    const matchesCategory = category === 'all' || expense.category === category;
+    const matchesStatus = status === 'all' || expense.status === status;
+    
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Company Expenses</h1>
           <p className="text-muted-foreground">
-            Manage and track all company expenses
+            Track and manage all company expenses
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/crm/dashboard">
-              <span className="mr-2">Back to Dashboard</span>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/crm/expenses/reports">
+              <BarChart2 className="mr-2 h-4 w-4" />
+              Reports
             </Link>
           </Button>
-          <Button variant="outline" onClick={() => setIsAddCategoryOpen(true)}>
-            <Tags className="mr-2 h-4 w-4" />
-            Add Category
-          </Button>
-          <Button onClick={() => setIsAddExpenseOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Expense
+          <Button asChild>
+            <Link href="/crm/expenses/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Expense
+            </Link>
           </Button>
         </div>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Expense Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
-          <CardHeader className="py-3">
-            <CardDescription>Total Expenses (April 2025)</CardDescription>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">{formatCurrency(totalExpenses)}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Total Expenses</CardTitle>
+            <CardDescription>All time expenses</CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <DollarSign className="h-5 w-5 text-primary mr-2" />
+              <p className="text-2xl font-bold">
+                {isLoading ? "..." : formatCurrency(expenseData?.totalExpenses || 0)}
+              </p>
+            </div>
+          </CardContent>
         </Card>
+        
         <Card>
-          <CardHeader className="py-3">
-            <CardDescription>Pending Approval</CardDescription>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl text-amber-600">{formatCurrency(pendingExpenses)}</CardTitle>
-              <FileText className="h-4 w-4 text-amber-600" />
-            </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Monthly Expenses</CardTitle>
+            <CardDescription>Current month spending</CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <Calendar className="h-5 w-5 text-blue-600 mr-2" />
+              <p className="text-2xl font-bold text-blue-600">
+                {isLoading ? "..." : formatCurrency(expenseData?.monthlyExpenses || 0)}
+              </p>
+            </div>
+          </CardContent>
         </Card>
+        
         <Card>
-          <CardHeader className="py-3">
-            <CardDescription>Largest Expense Category</CardDescription>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">{categorySpending[0]?.name || 'N/A'}</CardTitle>
-              <PieChart className="h-4 w-4 text-indigo-600" />
-            </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Pending Approvals</CardTitle>
+            <CardDescription>Expenses awaiting approval</CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <FileText className="h-5 w-5 text-amber-600 mr-2" />
+              <p className="text-2xl font-bold text-amber-600">
+                {isLoading ? "..." : expenses?.filter(e => e.status === 'pending').length || 0}
+              </p>
+            </div>
+          </CardContent>
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="expenses" className="mb-6">
-        <TabsList>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
-          <TabsTrigger value="categories">Categories & Budgets</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+      <Tabs defaultValue="list" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="list">Expense List</TabsTrigger>
+          <TabsTrigger value="categories">Category Breakdown</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="expenses">
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row gap-4 md:justify-between">
-                <div className="flex flex-1 gap-2">
-                  <div className="relative flex-1">
+        
+        <TabsContent value="list">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>All Expenses</CardTitle>
+              <CardDescription>View and manage expense records</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Filter Controls */}
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="flex-1">
+                  <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      type="search"
                       placeholder="Search expenses..."
+                      className="pl-8"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-8"
                     />
                   </div>
-                  <Button variant="outline" size="icon">
-                    <Filter className="h-4 w-4" />
-                  </Button>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Select 
-                    value={dateRange} 
-                    onValueChange={setDateRange}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Date Range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="current-month">Current Month</SelectItem>
-                      <SelectItem value="previous-month">Previous Month</SelectItem>
-                      <SelectItem value="quarter">This Quarter</SelectItem>
-                      <SelectItem value="year">This Year</SelectItem>
-                      <SelectItem value="all">All Time</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select 
-                    value={categoryFilter} 
-                    onValueChange={setCategoryFilter}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="All Categories" />
+                <div className="grid grid-cols-2 md:flex gap-2">
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="w-full md:w-[160px]">
+                      <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map(category => (
-                        <SelectItem key={category.id} value={category.name.toLowerCase()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Office Supplies">Office Supplies</SelectItem>
+                      <SelectItem value="Rent">Rent</SelectItem>
+                      <SelectItem value="Utilities">Utilities</SelectItem>
+                      <SelectItem value="Travel">Travel</SelectItem>
+                      <SelectItem value="Training">Training</SelectItem>
+                      <SelectItem value="Miscellaneous">Miscellaneous</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select 
-                    value={statusFilter} 
-                    onValueChange={setStatusFilter}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="All Statuses" />
+                  
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger className="w-full md:w-[140px]">
+                      <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="approved">Approved</SelectItem>
                       <SelectItem value="rejected">Rejected</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Expenses Table */}
-          <Card>
-            <CardHeader className="py-4">
-              <div className="flex justify-between items-center">
-                <CardTitle>Expense Records</CardTitle>
-                <Button variant="outline" size="sm">
-                  <FileDown className="mr-2 h-4 w-4" />
-                  Export
+                <Button variant="outline" className="flex gap-2 whitespace-nowrap">
+                  <Download className="h-4 w-4" />
+                  <span>Export</span>
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Payment Method</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Added By</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredExpenses.length > 0 ? (
-                    filteredExpenses.map((expense) => (
-                      <TableRow key={expense.id}>
-                        <TableCell>{formatDate(expense.date)}</TableCell>
-                        <TableCell>{expense.category}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{expense.description}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(expense.amount)}</TableCell>
-                        <TableCell>{expense.paymentMethod}</TableCell>
-                        <TableCell>
-                          <StatusBadge status={expense.approvalStatus} />
-                        </TableCell>
-                        <TableCell>{expense.addedBy}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>
-                                <PencilLine className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <FileText className="mr-2 h-4 w-4" />
-                                View Receipt
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={8} className="h-24 text-center">
-                        No expense records found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+
+              {/* Date Range Filters */}
+              <div className="flex flex-col md:flex-row gap-4 mb-6 items-end">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Start Date</p>
+                  <DatePicker date={startDate} setDate={setStartDate} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">End Date</p>
+                  <DatePicker date={endDate} setDate={setEndDate} />
+                </div>
+                <Button className="mt-auto" variant="outline">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Apply Filters
+                </Button>
+              </div>
+
+              {/* Expenses Table */}
+              {isLoadingExpenses ? (
+                <div className="text-center p-6">Loading expense data...</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b text-left">
+                        <th className="py-3 px-2 font-medium text-muted-foreground">Date</th>
+                        <th className="py-3 px-2 font-medium text-muted-foreground">Description</th>
+                        <th className="py-3 px-2 font-medium text-muted-foreground">Category</th>
+                        <th className="py-3 px-2 font-medium text-muted-foreground">Amount</th>
+                        <th className="py-3 px-2 font-medium text-muted-foreground">Payment Method</th>
+                        <th className="py-3 px-2 font-medium text-muted-foreground">Status</th>
+                        <th className="py-3 px-2 font-medium text-muted-foreground">Submitted By</th>
+                        <th className="py-3 px-2 font-medium text-muted-foreground text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredExpenses?.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="py-6 text-center text-muted-foreground">
+                            No expense records found for the selected filters
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredExpenses?.map(expense => (
+                          <tr key={expense.id} className="border-b last:border-0 hover:bg-muted/50">
+                            <td className="py-3 px-2">{formatDate(expense.date)}</td>
+                            <td className="py-3 px-2 font-medium">{expense.description}</td>
+                            <td className="py-3 px-2">{expense.category}</td>
+                            <td className="py-3 px-2 font-medium">{formatCurrency(expense.amount)}</td>
+                            <td className="py-3 px-2">{expense.paymentMethod}</td>
+                            <td className="py-3 px-2">
+                              <Badge variant={
+                                expense.status === 'approved' ? 'default' :
+                                expense.status === 'pending' ? 'outline' : 'destructive'
+                              }>
+                                {expense.status.charAt(0).toUpperCase() + expense.status.slice(1)}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-2">{expense.submittedBy}</td>
+                            <td className="py-3 px-2 text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/crm/expenses/${expense.id}`}>
+                                      View Details
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/crm/expenses/edit/${expense.id}`}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  {expense.status === 'pending' && (
+                                    <>
+                                      <DropdownMenuItem className="text-green-600">
+                                        <Check className="h-4 w-4 mr-2" />
+                                        Approve
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-red-600">
+                                        <X className="h-4 w-4 mr-2" />
+                                        Reject
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="text-red-600">
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
-
+        
         <TabsContent value="categories">
-          {/* Categories & Budgets */}
           <Card>
-            <CardHeader className="py-4">
-              <div className="flex justify-between items-center">
-                <CardTitle>Expense Categories & Budgets</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => setIsAddCategoryOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Category
-                </Button>
-              </div>
+            <CardHeader className="pb-2">
+              <CardTitle>Expense Categories</CardTitle>
+              <CardDescription>Breakdown of expenses by category</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Category Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Monthly Budget</TableHead>
-                    <TableHead>Current Spending</TableHead>
-                    <TableHead>Utilization</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {categories.map((category) => {
-                    const spending = categorySpending.find(cs => cs.name === category.name);
-                    return (
-                      <TableRow key={category.id}>
-                        <TableCell className="font-medium">{category.name}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{category.description || '-'}</TableCell>
-                        <TableCell>{category.budget ? formatCurrency(category.budget) : 'No budget set'}</TableCell>
-                        <TableCell>{formatCurrency(spending?.total || 0)}</TableCell>
-                        <TableCell>
-                          {category.budget ? (
-                            <div className="flex items-center">
-                              <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
-                                <div 
-                                  className={`h-2.5 rounded-full ${
-                                    (spending?.percentage || 0) > 90 
-                                      ? 'bg-red-600' 
-                                      : (spending?.percentage || 0) > 70 
-                                      ? 'bg-amber-600' 
-                                      : 'bg-green-600'
-                                  }`} 
-                                  style={{ width: `${Math.min(spending?.percentage || 0, 100)}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-sm">{Math.round(spending?.percentage || 0)}%</span>
+              {isLoading ? (
+                <div className="text-center p-6">Loading category data...</div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-base font-medium mb-4">Expense Distribution</h3>
+                      <div className="space-y-4">
+                        {expenseData?.categorySummary.map((category) => (
+                          <div key={category.category} className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>{category.category}</span>
+                              <span className="font-medium">{formatCurrency(category.amount)}</span>
                             </div>
-                          ) : (
-                            'N/A'
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>
-                                <PencilLine className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <BarChart className="mr-2 h-4 w-4" />
-                                View Spending
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                            <div className="flex items-center gap-2">
+                              <Progress value={category.percentage} className="h-2" />
+                              <span className="text-xs text-muted-foreground">{category.percentage.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-base font-medium mb-4">Top Expense Categories</h3>
+                      <div className="relative aspect-square">
+                        <div className="absolute inset-0 flex items-center justify-center flex-col">
+                          <p className="text-sm text-muted-foreground">Total Expenses</p>
+                          <p className="text-2xl font-bold">{formatCurrency(expenseData?.totalExpenses || 0)}</p>
+                        </div>
+                        <div className="text-center p-12 border border-dashed rounded-full w-full h-full flex items-center justify-center text-muted-foreground">
+                          Pie chart visualization (placeholder)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-base font-medium mb-4">Recent Expenses by Category</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {expenseData?.recentExpenses.slice(0, 6).map((expense) => (
+                        <Card key={expense.id} className="bg-muted/30">
+                          <CardContent className="p-4 space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium">{expense.category}</h4>
+                                <p className="text-sm text-muted-foreground">{formatDate(expense.date)}</p>
+                              </div>
+                              <Badge variant={
+                                expense.status === 'approved' ? 'default' :
+                                expense.status === 'pending' ? 'outline' : 'destructive'
+                              }>
+                                {expense.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm">{expense.description}</p>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-muted-foreground">{expense.submittedBy}</span>
+                              <span className="font-medium">{formatCurrency(expense.amount)}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="reports">
-          {/* Reports */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Expense Summary</CardTitle>
-                <CardDescription>Total expenses by month for the current year</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <BarChart className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <p className="mb-2">Monthly expense trend charts will appear here</p>
-                  <p className="text-sm">Showing data for January - December 2025</p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Expense Distribution</CardTitle>
-                <CardDescription>Breakdown of expenses by category</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <PieChart className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <p className="mb-2">Category distribution chart will appear here</p>
-                  <p className="text-sm">Showing current month's data</p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Budget vs. Actual Spending</CardTitle>
-                <CardDescription>Comparison of budgeted amounts against actual spending</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <BarChart className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <p className="mb-2">Budget comparison charts will appear here</p>
-                  <p className="text-sm">Showing data for all categories with budgets</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
-
-      {/* Dialogs */}
-      <AddExpenseDialog 
-        isOpen={isAddExpenseOpen} 
-        setIsOpen={setIsAddExpenseOpen}
-      />
-      
-      <AddCategoryDialog
-        isOpen={isAddCategoryOpen}
-        setIsOpen={setIsAddCategoryOpen}
-      />
     </div>
   );
 };
 
-export default ExpensesManagement;
+export default ExpensesPage;

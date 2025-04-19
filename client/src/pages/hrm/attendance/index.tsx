@@ -27,7 +27,7 @@ interface AttendanceRecord {
   employeeName: string;
   department: string;
   date: string;
-  checkIn: string;
+  checkIn: string | null;
   checkOut: string | null;
   status: 'present' | 'absent' | 'late' | 'half-day';
   notes?: string;
@@ -330,7 +330,7 @@ const HRMAttendance: FC = () => {
                             <td className="py-3 px-2">
                               <Badge variant={
                                 record.status === 'present' ? 'default' :
-                                record.status === 'late' ? 'warning' :
+                                record.status === 'late' ? 'outline' :
                                 record.status === 'half-day' ? 'secondary' : 'destructive'
                               }>
                                 {record.status === 'half-day' ? 'Half Day' : 
