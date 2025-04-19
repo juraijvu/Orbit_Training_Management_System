@@ -1,6 +1,5 @@
 import { FC, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MainLayout } from '@/components/layout/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -443,7 +442,6 @@ const VisaManagementPage: FC = () => {
   const statusCounts = getStatusCounts();
 
   return (
-    <MainLayout>
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -1156,7 +1154,6 @@ const VisaManagementPage: FC = () => {
           </Dialog>
         )}
       </div>
-    </MainLayout>
   );
 };
 
