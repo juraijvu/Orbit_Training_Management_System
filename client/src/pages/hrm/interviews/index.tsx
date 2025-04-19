@@ -90,6 +90,19 @@ const InterviewManagement: FC = () => {
   const [isAddInterviewOpen, setIsAddInterviewOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [newInterviewData, setNewInterviewData] = useState({
+    candidateName: '',
+    position: '',
+    email: '',
+    phone: '',
+    interviewDate: '',
+    interviewTime: '',
+    interviewType: 'In-person',
+    interviewer: '',
+    status: 'Scheduled',
+    resume: '',
+    notes: ''
+  });
 
   // Mock data
   const { data: interviews, isLoading } = useQuery<Interview[]>({
@@ -266,6 +279,46 @@ const InterviewManagement: FC = () => {
     }
   };
 
+  // Add new interview handling
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setNewInterviewData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSelectChange = (field: string, value: string) => {
+    setNewInterviewData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleAddInterview = () => {
+    // Here we would normally send this data to the backend
+    console.log('Scheduling new interview:', newInterviewData);
+    
+    // In a real application, you would add API call here
+    // For now, just close the dialog
+    setIsAddInterviewOpen(false);
+    
+    // Reset form data
+    setNewInterviewData({
+      candidateName: '',
+      position: '',
+      email: '',
+      phone: '',
+      interviewDate: '',
+      interviewTime: '',
+      interviewType: 'In-person',
+      interviewer: '',
+      status: 'Scheduled',
+      resume: '',
+      notes: ''
+    });
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
@@ -320,78 +373,130 @@ const InterviewManagement: FC = () => {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="candidateName">Candidate Name</Label>
-                  <Input id="candidateName" placeholder="Full name" />
+                  <Label htmlFor="candidateName">Candidate Name*</Label>
+                  <Input 
+                    id="candidateName" 
+                    placeholder="Full name" 
+                    value={newInterviewData.candidateName}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="email@example.com" />
+                    <Label htmlFor="email">Email*</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="email@example.com" 
+                      value={newInterviewData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" placeholder="+971 5X XXX XXXX" />
+                    <Label htmlFor="phone">Phone*</Label>
+                    <Input 
+                      id="phone" 
+                      placeholder="+971 5X XXX XXXX" 
+                      value={newInterviewData.phone}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="position">Position</Label>
-                  <Select>
-                    <SelectTrigger>
+                  <Label htmlFor="position">Position*</Label>
+                  <Select 
+                    value={newInterviewData.position}
+                    onValueChange={(value) => handleSelectChange('position', value)}
+                  >
+                    <SelectTrigger id="position">
                       <SelectValue placeholder="Select position" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="trainer">Senior Trainer</SelectItem>
-                      <SelectItem value="marketing">Marketing Specialist</SelectItem>
-                      <SelectItem value="it">IT Support Specialist</SelectItem>
-                      <SelectItem value="admin">Administrative Assistant</SelectItem>
-                      <SelectItem value="finance">Finance Manager</SelectItem>
-                      <SelectItem value="advisor">Course Advisor</SelectItem>
+                      <SelectItem value="Senior Trainer">Senior Trainer</SelectItem>
+                      <SelectItem value="Marketing Specialist">Marketing Specialist</SelectItem>
+                      <SelectItem value="IT Support Specialist">IT Support Specialist</SelectItem>
+                      <SelectItem value="Administrative Assistant">Administrative Assistant</SelectItem>
+                      <SelectItem value="Finance Manager">Finance Manager</SelectItem>
+                      <SelectItem value="Course Advisor">Course Advisor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Input id="date" type="date" />
+                    <Label htmlFor="interviewDate">Date*</Label>
+                    <Input 
+                      id="interviewDate" 
+                      type="date" 
+                      value={newInterviewData.interviewDate}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="time">Time</Label>
-                    <Input id="time" type="time" />
+                    <Label htmlFor="interviewTime">Time*</Label>
+                    <Input 
+                      id="interviewTime" 
+                      type="time" 
+                      value={newInterviewData.interviewTime}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (minutes)</Label>
-                    <Input id="duration" type="number" defaultValue="60" />
+                    <Label htmlFor="duration">Duration (minutes)*</Label>
+                    <Input 
+                      id="duration" 
+                      type="number" 
+                      defaultValue="60" 
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="type">Interview Type</Label>
-                    <Select>
-                      <SelectTrigger>
+                    <Label htmlFor="interviewType">Interview Type*</Label>
+                    <Select
+                      value={newInterviewData.interviewType}
+                      onValueChange={(value) => handleSelectChange('interviewType', value)}
+                    >
+                      <SelectTrigger id="interviewType">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="inperson">In Person</SelectItem>
-                        <SelectItem value="phone">Phone</SelectItem>
-                        <SelectItem value="video">Video Call</SelectItem>
+                        <SelectItem value="In-person">In Person</SelectItem>
+                        <SelectItem value="Phone">Phone</SelectItem>
+                        <SelectItem value="Video Call">Video Call</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="interviewers">Interviewers</Label>
-                  <Input id="interviewers" placeholder="Select interviewers" />
+                  <Label htmlFor="interviewer">Interviewers*</Label>
+                  <Input 
+                    id="interviewer" 
+                    placeholder="Select interviewers" 
+                    value={newInterviewData.interviewer}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input id="location" placeholder="Interview location" />
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea 
+                    id="notes" 
+                    placeholder="Additional notes" 
+                    value={newInterviewData.notes}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddInterviewOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => setIsAddInterviewOpen(false)}>
+                <Button onClick={handleAddInterview}>
                   Schedule
                 </Button>
               </DialogFooter>
