@@ -141,18 +141,18 @@ function Router() {
           );
         }} />
         <ProtectedRoute path="/crm/expenses" component={() => {
-          const ExpensesManagement = React.lazy(() => import("@/pages/crm/expenses"));
+          const ExpensesPage = React.lazy(() => import("@/pages/crm/expenses"));
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
-              <ExpensesManagement />
+              <ExpensesPage />
             </React.Suspense>
           );
         }} />
         <ProtectedRoute path="/crm/expenses/new" component={() => {
-          const ExpensesManagement = React.lazy(() => import("@/pages/crm/expenses"));
+          const NewExpensePage = React.lazy(() => import("@/pages/crm/expenses/new"));
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
-              <ExpensesManagement showAddDialog={true} />
+              <NewExpensePage />
             </React.Suspense>
           );
         }} />
@@ -289,10 +289,10 @@ function Router() {
           );
         }} />
         <ProtectedRoute path="/hrm/attendance/new" component={() => {
-          const AttendanceManagement = React.lazy(() => import("@/pages/hrm/attendance"));
+          const RecordAttendance = React.lazy(() => import("@/pages/hrm/attendance/new"));
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
-              <AttendanceManagement showAddDialog={true} />
+              <RecordAttendance />
             </React.Suspense>
           );
         }} />

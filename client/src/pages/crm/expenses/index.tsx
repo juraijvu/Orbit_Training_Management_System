@@ -57,7 +57,11 @@ interface ExpenseSummary {
   recentExpenses: Expense[];
 }
 
-const ExpensesPage: FC = () => {
+interface ExpensesPageProps {
+  showAddDialog?: boolean;
+}
+
+const ExpensesPage: FC<ExpensesPageProps> = ({ showAddDialog = false }) => {
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [searchQuery, setSearchQuery] = useState('');
