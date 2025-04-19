@@ -2,6 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { Activity } from '@shared/types';
+import { Link } from 'wouter';
 import AppLayout from '@/components/layout/app-layout';
 import StatCard from '@/components/dashboard/stats-card';
 import RecentActivities from '@/components/dashboard/recent-activities';
@@ -255,7 +256,7 @@ const Dashboard: FC = () => {
       {(user?.role === 'admin' || user?.role === 'superadmin') && (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-800 mb-6">Admin Tools</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-md">Course Management</CardTitle>
@@ -264,9 +265,11 @@ const Dashboard: FC = () => {
                 <p className="text-sm text-gray-500">Manage course content, pricing, and availability</p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" size="sm" className="w-full">
-                  Manage Courses
-                </Button>
+                <Link href="/course-management">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Manage Courses
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
             
@@ -285,9 +288,11 @@ const Dashboard: FC = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" size="sm" className="w-full">
-                  Trainer Reports
-                </Button>
+                <Link href="/trainer-revenue">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Trainer Reports
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
             
@@ -304,9 +309,66 @@ const Dashboard: FC = () => {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" size="sm" className="w-full">
-                  Generate Reports
-                </Button>
+                <Link href="/reports">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Generate Reports
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+          </div>
+          
+          <h3 className="text-md font-semibold text-gray-800 mb-4">Institute Operations</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md">Company Expenses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500">Track and manage all institute expenses</p>
+              </CardContent>
+              <CardFooter>
+                <Link href="/expenses">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Manage Expenses
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md">Visa Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500">
+                  Track employee visa status, renewals, and expirations
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Link href="/visa-management">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Visa Dashboard
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md">Facility Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500">
+                  Manage institute facilities, classrooms, and equipment
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Link href="/facilities">
+                  <Button variant="outline" size="sm" className="w-full">
+                    Manage Facilities
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           </div>
