@@ -33,7 +33,11 @@ interface AttendanceRecord {
   notes?: string;
 }
 
-const HRMAttendance: FC = () => {
+interface HRMAttendanceProps {
+  showAddDialog?: boolean;
+}
+
+const HRMAttendance: FC<HRMAttendanceProps> = ({ showAddDialog = false }) => {
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [searchQuery, setSearchQuery] = useState('');

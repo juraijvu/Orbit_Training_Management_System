@@ -26,6 +26,8 @@ import {
   UserCircle,
   DollarSign,
   Plane,
+  CreditCard,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -141,6 +143,13 @@ function Sidebar({ className }: SidebarNavProps) {
       section: "hrm"
     },
     {
+      title: "Attendance",
+      href: "/hrm/attendance",
+      icon: <Clock className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
+    },
+    {
       title: "Payroll",
       href: "/hrm/payroll",
       icon: <DollarSign className="h-5 w-5" />,
@@ -233,6 +242,20 @@ function Sidebar({ className }: SidebarNavProps) {
       href: "/crm/posts",
       icon: <FileText className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
+      section: "crm"
+    },
+    {
+      title: "Expenses",
+      href: "/crm/expenses",
+      icon: <DollarSign className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "crm"
+    },
+    {
+      title: "Payment Links",
+      href: "/crm/payment-link-generator",
+      icon: <CreditCard className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
       section: "crm"
     },
     
