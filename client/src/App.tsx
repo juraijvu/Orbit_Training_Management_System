@@ -151,7 +151,7 @@ function Router() {
           );
         }} />
 
-        {/* HRM System Routes */}
+        {/* HRM Module Routes */}
         <ProtectedRoute path="/hrm" component={() => {
           const HRMDashboard = React.lazy(() => import("@/pages/hrm"));
           return (
@@ -173,6 +173,22 @@ function Router() {
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
               <PayrollManagement />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/staff" component={() => {
+          const StaffManagement = React.lazy(() => import("@/pages/hrm/staff"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <StaffManagement />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/interviews" component={() => {
+          const InterviewManagement = React.lazy(() => import("@/pages/hrm/interviews"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <InterviewManagement />
             </React.Suspense>
           );
         }} />

@@ -782,12 +782,13 @@ const StaffManagement: FC = () => {
               <div className="flex justify-between items-center">
                 <div className="text-sm text-muted-foreground">Avg. Performance</div>
                 <div className="font-medium">
-                  {isLoading ? '-' : (
-                    staffMembers
-                      ?.filter(s => s.performanceRating !== undefined)
+                  {isLoading ? '-' : staffMembers && staffMembers.length > 0 ? (
+                    (staffMembers
+                      .filter(s => s.performanceRating !== undefined)
                       .reduce((sum, s) => sum + (s.performanceRating || 0), 0) /
-                    staffMembers?.filter(s => s.performanceRating !== undefined).length
-                  ).toFixed(1)}
+                    (staffMembers.filter(s => s.performanceRating !== undefined).length || 1))
+                      .toFixed(1)
+                  ) : '-'}
                 </div>
               </div>
             </div>
