@@ -26,6 +26,7 @@ import EmailSettings from "@/pages/email-settings";
 import ChatbotFlows from "@/pages/chatbot-flows";
 import CannedResponses from "@/pages/canned-responses";
 import { MainLayout } from "@/components/layout/main-layout";
+import type { FC } from 'react';
 
 function Router() {
   return (

@@ -1,5 +1,4 @@
 import { FC, useState } from 'react';
-import { MainLayout } from '@/components/layout/main-layout';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -354,7 +353,6 @@ const PayrollManagement: FC = () => {
   };
 
   return (
-    <MainLayout>
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -797,7 +795,6 @@ const PayrollManagement: FC = () => {
           </>
         )}
       </div>
-    </MainLayout>
   );
 };
 
