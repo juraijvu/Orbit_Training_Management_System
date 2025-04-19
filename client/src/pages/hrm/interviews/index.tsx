@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -87,7 +87,7 @@ interface Interview {
   score?: number;
 }
 
-const InterviewManagement: FC = () => {
+const InterviewManagement: FC<InterviewManagementProps> = ({ showAddDialog = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [positionFilter, setPositionFilter] = useState('all');
@@ -216,6 +216,13 @@ const InterviewManagement: FC = () => {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Open dialog when component mounts if showAddDialog is true
+  useEffect(() => {
+    if (showAddDialog) {
+      setIsAddInterviewOpen(true);
+    }
+  }, [showAddDialog]);
 
   // Derive positions from interviews data
   const positions = interviews ? Array.from(new Set(interviews.map(i => i.position))) : [];

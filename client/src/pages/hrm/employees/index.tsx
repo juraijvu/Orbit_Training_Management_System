@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,16 @@ import {
   TabsTrigger 
 } from '@/components/ui/tabs';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
   Users,
   UserPlus,
   Search,
@@ -78,7 +88,11 @@ interface Employee {
   leavingDate?: string;
 }
 
-const EmployeeManagement: FC = () => {
+interface EmployeeManagementProps {
+  showAddDialog?: boolean;
+}
+
+const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewType, setViewType] = useState<'list' | 'card'>('list');
   const [searchQuery, setSearchQuery] = useState('');
@@ -217,6 +231,16 @@ const EmployeeManagement: FC = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Set up state for employee form dialogs
+  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
+  
+  // Open dialog when component mounts if showAddDialog is true
+  useEffect(() => {
+    if (showAddDialog) {
+      setIsAddEmployeeOpen(true);
+    }
+  }, [showAddDialog]);
+  
   // Derive departments from employees data
   const departments = employees ? Array.from(new Set(employees.map(e => e.department))).sort() : [];
 
@@ -301,12 +325,94 @@ const EmployeeManagement: FC = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button asChild>
-            <Link href="/hrm/employees/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Employee
-            </Link>
-          </Button>
+          <Dialog open={isAddEmployeeOpen} onOpenChange={setIsAddEmployeeOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Employee
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Add New Employee</DialogTitle>
+                <DialogDescription>
+                  Enter employee details to add a new staff member to the system.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name*</Label>
+                  <Input id="name" placeholder="Full name" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="employeeId">Employee ID*</Label>
+                  <Input id="employeeId" placeholder="EMP-XXX" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email*</Label>
+                  <Input id="email" type="email" placeholder="email@example.com" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone*</Label>
+                  <Input id="phone" placeholder="+971 5X XXX XXXX" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department*</Label>
+                  <Select>
+                    <SelectTrigger id="department">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Training">Training</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Administration">Administration</SelectItem>
+                      <SelectItem value="IT">IT</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="position">Position*</Label>
+                  <Input id="position" placeholder="Job title" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="joiningDate">Joining Date*</Label>
+                  <Input id="joiningDate" type="date" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status*</Label>
+                  <Select defaultValue="Active">
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="On Leave">On Leave</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="visaExpiry">Visa Expiry Date</Label>
+                  <Input id="visaExpiry" type="date" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leavingDate">Leaving Date (if applicable)</Label>
+                  <Input id="leavingDate" type="date" />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddEmployeeOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => setIsAddEmployeeOpen(false)}>
+                  Add Employee
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
