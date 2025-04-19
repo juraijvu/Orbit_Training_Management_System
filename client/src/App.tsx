@@ -168,11 +168,27 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <ProtectedRoute path="/hrm/employees/new" component={() => {
+          const EmployeeManagement = React.lazy(() => import("@/pages/hrm/employees"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <EmployeeManagement showAddDialog={true} />
+            </React.Suspense>
+          );
+        }} />
         <ProtectedRoute path="/hrm/payroll" component={() => {
           const PayrollManagement = React.lazy(() => import("@/pages/hrm/payroll"));
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
               <PayrollManagement />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/payroll/new" component={() => {
+          const PayrollManagement = React.lazy(() => import("@/pages/hrm/payroll"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PayrollManagement showAddDialog={true} />
             </React.Suspense>
           );
         }} />
@@ -184,11 +200,27 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <ProtectedRoute path="/hrm/staff/new" component={() => {
+          const StaffManagement = React.lazy(() => import("@/pages/hrm/staff"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <StaffManagement showAddDialog={true} />
+            </React.Suspense>
+          );
+        }} />
         <ProtectedRoute path="/hrm/interviews" component={() => {
           const InterviewManagement = React.lazy(() => import("@/pages/hrm/interviews"));
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
               <InterviewManagement />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/interviews/new" component={() => {
+          const InterviewManagement = React.lazy(() => import("@/pages/hrm/interviews"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <InterviewManagement showAddDialog={true} />
             </React.Suspense>
           );
         }} />

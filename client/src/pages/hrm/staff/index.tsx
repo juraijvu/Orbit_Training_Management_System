@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,10 @@ import { Calendar as CalendarIcon, Search, Filter, UserPlus, Calendar, Clock, Do
 import { format, parseISO, differenceInMonths, differenceInDays, addMonths } from 'date-fns';
 
 // Types
+interface StaffManagementProps {
+  showAddDialog?: boolean;
+}
+
 interface StaffMember {
   id: number;
   name: string;
@@ -87,7 +91,7 @@ interface StaffMember {
   notes?: string;
 }
 
-const StaffManagement: FC = () => {
+const StaffManagement: FC<StaffManagementProps> = ({ showAddDialog = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -370,6 +374,13 @@ const StaffManagement: FC = () => {
   const departments = staffMembers 
     ? Array.from(new Set(staffMembers.map(staff => staff.department))) 
     : [];
+
+  // Open dialog when component mounts if showAddDialog is true
+  useEffect(() => {
+    if (showAddDialog) {
+      setIsAddStaffOpen(true);
+    }
+  }, [showAddDialog]);
 
   // Filter staff members based on search and filters
   const filteredStaff = staffMembers?.filter(staff => {

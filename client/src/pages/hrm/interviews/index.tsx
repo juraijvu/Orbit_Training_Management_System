@@ -66,6 +66,10 @@ interface Candidate {
   feedback?: string;
 }
 
+interface InterviewManagementProps {
+  showAddDialog?: boolean;
+}
+
 interface Interview {
   id: number;
   candidateId: number;
