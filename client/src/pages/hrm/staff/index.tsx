@@ -500,6 +500,37 @@ const StaffManagement: FC = () => {
     setSelectedStaff(staff);
     setIsUploadDocumentOpen(true);
   };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setNewStaffData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleAddStaff = () => {
+    // Here we would normally send this data to the backend
+    console.log('Adding new staff member:', newStaffData);
+    
+    // In a real application, you would add API call here
+    // For now, just close the dialog
+    setIsAddStaffOpen(false);
+    
+    // Reset form data
+    setNewStaffData({
+      name: '',
+      position: '',
+      department: '',
+      email: '',
+      phone: '',
+      joiningDate: '',
+      employmentType: '',
+      status: 'Active',
+      workLocation: '',
+      address: ''
+    });
+  };
 
   const statusCounts = getStaffCountByStatus();
   const departmentCounts = getStaffCountByDepartment();
@@ -565,27 +596,42 @@ const StaffManagement: FC = () => {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name*</Label>
-                  <Input id="name" placeholder="Full name" />
+                  <Input 
+                    id="name" 
+                    placeholder="Full name" 
+                    value={newStaffData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="position">Position*</Label>
-                    <Input id="position" placeholder="Job title" />
+                    <Input 
+                      id="position" 
+                      placeholder="Job title" 
+                      value={newStaffData.position}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="department">Department*</Label>
-                    <Select>
-                      <SelectTrigger>
+                    <Select
+                      value={newStaffData.department}
+                      onValueChange={(value) => setNewStaffData(prev => ({ ...prev, department: value }))}
+                    >
+                      <SelectTrigger id="department">
                         <SelectValue placeholder="Select department" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="training">Training</SelectItem>
-                        <SelectItem value="operations">Operations</SelectItem>
-                        <SelectItem value="hr">Human Resources</SelectItem>
-                        <SelectItem value="it">IT</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
-                        <SelectItem value="admin">Administration</SelectItem>
+                        <SelectItem value="Training">Training</SelectItem>
+                        <SelectItem value="Operations">Operations</SelectItem>
+                        <SelectItem value="Human Resources">Human Resources</SelectItem>
+                        <SelectItem value="IT">IT</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        <SelectItem value="Finance">Finance</SelectItem>
+                        <SelectItem value="Administration">Administration</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -593,29 +639,51 @@ const StaffManagement: FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email*</Label>
-                    <Input id="email" type="email" placeholder="email@orbitinstitute.ae" />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="email@orbitinstitute.ae" 
+                      value={newStaffData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone*</Label>
-                    <Input id="phone" placeholder="+971 5X XXX XXXX" />
+                    <Input 
+                      id="phone" 
+                      placeholder="+971 5X XXX XXXX" 
+                      value={newStaffData.phone}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="joiningDate">Joining Date*</Label>
-                    <Input id="joiningDate" type="date" />
+                    <Input 
+                      id="joiningDate" 
+                      type="date" 
+                      value={newStaffData.joiningDate}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="employmentType">Employment Type*</Label>
-                    <Select>
-                      <SelectTrigger>
+                    <Select
+                      value={newStaffData.employmentType}
+                      onValueChange={(value) => setNewStaffData(prev => ({ ...prev, employmentType: value }))}
+                    >
+                      <SelectTrigger id="employmentType">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="fulltime">Full-time</SelectItem>
-                        <SelectItem value="parttime">Part-time</SelectItem>
-                        <SelectItem value="contract">Contract</SelectItem>
-                        <SelectItem value="probation">Probation</SelectItem>
+                        <SelectItem value="Full-time">Full-time</SelectItem>
+                        <SelectItem value="Part-time">Part-time</SelectItem>
+                        <SelectItem value="Contract">Contract</SelectItem>
+                        <SelectItem value="Probation">Probation</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -623,40 +691,46 @@ const StaffManagement: FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="status">Status*</Label>
-                    <Select>
-                      <SelectTrigger>
+                    <Select
+                      value={newStaffData.status}
+                      onValueChange={(value) => setNewStaffData(prev => ({ ...prev, status: value }))}
+                    >
+                      <SelectTrigger id="status">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="onleave">On Leave</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="On Leave">On Leave</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="workLocation">Work Location*</Label>
-                    <Input id="workLocation" placeholder="Office location" />
+                    <Input 
+                      id="workLocation" 
+                      placeholder="Office location" 
+                      value={newStaffData.workLocation}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="manager">Manager</Label>
-                  <Input id="manager" placeholder="Manager's name" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="skills">Skills (comma separated)</Label>
-                  <Input id="skills" placeholder="Skills, competencies" />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
-                  <Textarea id="address" placeholder="Full address" />
+                  <Textarea 
+                    id="address" 
+                    placeholder="Full address" 
+                    value={newStaffData.address}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddStaffOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => setIsAddStaffOpen(false)}>
+                <Button onClick={handleAddStaff}>
                   Add Staff
                 </Button>
               </DialogFooter>
