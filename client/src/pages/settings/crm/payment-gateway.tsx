@@ -93,7 +93,11 @@ interface PaymentGatewayConfig {
 
 const PaymentGatewaySettingsPage: FC = () => {
   const [activeTab, setActiveTab] = useState('stripe');
-  const [showSecrets, setShowSecrets] = useState({
+  const [showSecrets, setShowSecrets] = useState<{
+    stripe: boolean;
+    tabby: boolean;
+    tamara: boolean;
+  }>({
     stripe: false,
     tabby: false,
     tamara: false
@@ -231,16 +235,21 @@ const PaymentGatewaySettingsPage: FC = () => {
       // Replace with actual API call
       return await apiRequest('POST', '/api/payment/generate-link', data);
     },
-    onSuccess: (data) => {
+    onSuccess: (response) => {
       toast({
         title: "Payment link generated",
         description: "Payment link has been created successfully.",
       });
-      // Copy to clipboard
-      navigator.clipboard.writeText(data.paymentUrl);
-      toast({
-        title: "Link copied to clipboard",
-        description: "The payment link has been copied to your clipboard.",
+      // Parse the response and extract the payment URL
+      response.json().then(data => {
+        if (data && data.paymentUrl) {
+          // Copy to clipboard
+          navigator.clipboard.writeText(data.paymentUrl);
+          toast({
+            title: "Link copied to clipboard",
+            description: "The payment link has been copied to your clipboard.",
+          });
+        }
       });
     },
     onError: (error: any) => {
@@ -287,12 +296,12 @@ const PaymentGatewaySettingsPage: FC = () => {
   };
 
   // Handle testing connection
-  const handleTestConnection = (gateway: string) => {
+  const handleTestConnection = (gateway: 'stripe' | 'tabby' | 'tamara') => {
     testConnectionMutation.mutate(gateway);
   };
 
   // Handle toggle secret visibility
-  const toggleShowSecrets = (gateway: string) => {
+  const toggleShowSecrets = (gateway: 'stripe' | 'tabby' | 'tamara') => {
     setShowSecrets(prev => ({
       ...prev,
       [gateway]: !prev[gateway]
@@ -300,7 +309,7 @@ const PaymentGatewaySettingsPage: FC = () => {
   };
 
   // Handle generating sample payment link
-  const handleGeneratePaymentLink = (gateway: string) => {
+  const handleGeneratePaymentLink = (gateway: 'stripe' | 'tabby' | 'tamara') => {
     generatePaymentLinkMutation.mutate({
       gateway,
       amount: 1000, // AED 1000
