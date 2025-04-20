@@ -521,10 +521,33 @@ const QuotationsPage: FC = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="courseId"
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Course Items</h3>
+                
+                {fields.map((field, index) => (
+                  <div 
+                    key={field.id} 
+                    className="p-4 bg-gray-50 rounded-md border border-gray-200"
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-sm font-medium">Item #{index + 1}</h4>
+                      {index > 0 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => remove(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.courseId`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Course</FormLabel>
