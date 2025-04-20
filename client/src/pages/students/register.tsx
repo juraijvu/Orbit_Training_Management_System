@@ -184,20 +184,33 @@ export default function RegisterStudent() {
           // Set price based on class type
           switch (selectedClassType) {
             case "online":
-              coursePrice = parseFloat(course.onlineRate || course.fee);
+              coursePrice = parseFloat(course.onlineRate || course.fee || '0');
               break;
             case "offline":
-              coursePrice = parseFloat(course.offlineRate || course.fee);
+              coursePrice = parseFloat(course.offlineRate || course.fee || '0');
               break;
             case "private":
-              coursePrice = parseFloat(course.privateRate || course.fee);
+              coursePrice = parseFloat(course.privateRate || course.fee || '0');
               break;
             case "batch":
-              coursePrice = parseFloat(course.batchRate || course.fee);
+              coursePrice = parseFloat(course.batchRate || course.fee || '0');
               break;
             default:
-              coursePrice = parseFloat(course.fee);
+              coursePrice = parseFloat(course.fee || '0');
           }
+          
+          // Log for debugging
+          console.log('Course price calculation:', {
+            courseId: courseEntry.courseId,
+            courseName: course.name,
+            classType: selectedClassType,
+            baseFee: course.fee,
+            onlineRate: course.onlineRate,
+            offlineRate: course.offlineRate,
+            privateRate: course.privateRate,
+            batchRate: course.batchRate,
+            calculatedPrice: coursePrice
+          });
           
           // Update price in form data
           form.setValue(`courses.${index}.price`, coursePrice);
@@ -506,9 +519,11 @@ export default function RegisterStudent() {
                         <FormItem>
                           <FormLabel>Price (AED)</FormLabel>
                           <FormControl>
-                            <Input type="number" {...field} readOnly
-                              value={field.value}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              value={field.value || 0}
+                              readOnly
                             />
                           </FormControl>
                           <FormMessage />

@@ -167,8 +167,11 @@ export default function StudentsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => navigate(`/students/view/${student.id}`)}>
+                              <FileText className="h-4 w-4 mr-2" /> View Details
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => navigate(`/students/print/${student.id}`)}>
-                              <FileText className="h-4 w-4 mr-2" /> View Registration
+                              <FileText className="h-4 w-4 mr-2" /> Print Registration
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => navigate(`/students/edit/${student.id}`)}>
                               <Edit className="h-4 w-4 mr-2" /> Edit
