@@ -354,27 +354,27 @@ const QuotationsPage: FC = () => {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-              <Table>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <Table className="min-w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Quotation #</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Contact Person</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Amount (₹)</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="whitespace-nowrap">Quotation #</TableHead>
+                    <TableHead className="whitespace-nowrap">Company</TableHead>
+                    <TableHead className="whitespace-nowrap hidden sm:table-cell">Contact Person</TableHead>
+                    <TableHead className="whitespace-nowrap hidden md:table-cell">Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Amount (₹)</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredQuotations?.map((quotation) => (
                     <TableRow key={quotation.id}>
-                      <TableCell>{quotation.quotationNumber}</TableCell>
-                      <TableCell>{quotation.companyName}</TableCell>
-                      <TableCell>{quotation.contactPerson}</TableCell>
-                      <TableCell>{format(new Date(quotation.createdAt), 'dd/MM/yyyy')}</TableCell>
-                      <TableCell>₹{quotation.finalAmount.toLocaleString()}</TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">{quotation.quotationNumber}</TableCell>
+                      <TableCell className="whitespace-nowrap">{quotation.companyName}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{quotation.contactPerson}</TableCell>
+                      <TableCell className="hidden md:table-cell whitespace-nowrap">{format(new Date(quotation.createdAt), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell className="whitespace-nowrap">₹{quotation.finalAmount.toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge 
                           className={quotation.status === QuotationStatus.ACCEPTED ? 'bg-green-100 text-green-800' :
@@ -385,7 +385,7 @@ const QuotationsPage: FC = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-1 sm:space-x-2">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -425,7 +425,7 @@ const QuotationsPage: FC = () => {
         
         {/* Create Quotation Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Quotation</DialogTitle>
               <DialogDescription>
@@ -434,7 +434,7 @@ const QuotationsPage: FC = () => {
             </DialogHeader>
             
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto pr-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -793,7 +793,7 @@ const QuotationsPage: FC = () => {
         
         {/* View Quotation Dialog */}
         <Dialog open={!!viewQuotation} onOpenChange={() => setViewQuotation(null)}>
-          <DialogContent className="sm:max-w-3xl">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Quotation Details</DialogTitle>
               <DialogDescription>
@@ -802,8 +802,8 @@ const QuotationsPage: FC = () => {
             </DialogHeader>
             
             {viewQuotation && (
-              <div className="py-4">
-                <div className="border rounded-lg p-6">
+              <div className="py-4 overflow-y-auto">
+                <div className="border rounded-lg p-4 sm:p-6">
                   <div className="text-center mb-8">
                     <h2 className="text-2xl font-bold">Orbit Institute</h2>
                     <p className="text-gray-600">123, Education Hub, Tech City, UAE</p>
