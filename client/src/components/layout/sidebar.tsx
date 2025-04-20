@@ -65,16 +65,16 @@ function Sidebar({ className }: SidebarNavProps) {
     
     // Student Management
     {
-      title: "Student Registration",
-      href: "/student-registration",
-      icon: <UserPlus className="h-5 w-5" />,
+      title: "Students",
+      href: "/students",
+      icon: <Users className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
       section: "main"
     },
     {
-      title: "Student List",
-      href: "/student-list",
-      icon: <Users className="h-5 w-5" />,
+      title: "Register Student",
+      href: "/students/register",
+      icon: <UserPlus className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
       section: "main"
     },

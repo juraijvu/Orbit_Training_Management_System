@@ -307,6 +307,32 @@ function Router() {
           );
         }} />
         
+        {/* Students Module */}
+        <ProtectedRoute path="/students" component={() => {
+          const StudentsPage = React.lazy(() => import("@/pages/students"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <StudentsPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/students/register" component={() => {
+          const RegisterStudentPage = React.lazy(() => import("@/pages/students/register"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <RegisterStudentPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/students/print/:id" component={() => {
+          const PrintRegistrationPage = React.lazy(() => import("@/pages/students/print"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PrintRegistrationPage />
+            </React.Suspense>
+          );
+        }} />
+        
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
