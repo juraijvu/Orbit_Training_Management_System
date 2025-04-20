@@ -18,6 +18,7 @@ import {
   Settings,
   LogOut,
   BarChart,
+  Building,
   PhoneCall,
   Mail,
   MessagesSquare as MessageSquare,
@@ -124,6 +125,22 @@ function Sidebar({ className }: SidebarNavProps) {
       href: "/certificate-templates",
       icon: <Award className="h-5 w-5" />,
       roles: ["superadmin"],
+      section: "main"
+    },
+    
+    // Administration & Reports
+    {
+      title: "Reports",
+      href: "/reports",
+      icon: <BarChart className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
+    {
+      title: "Facilities",
+      href: "/facilities",
+      icon: <Building className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
       section: "main"
     },
     

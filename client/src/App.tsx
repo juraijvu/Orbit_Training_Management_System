@@ -307,6 +307,25 @@ function Router() {
           );
         }} />
         
+        {/* Reports and Facilities */}
+        <ProtectedRoute path="/reports" component={() => {
+          const ReportsPage = React.lazy(() => import("@/pages/reports"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ReportsPage />
+            </React.Suspense>
+          );
+        }} />
+        
+        <ProtectedRoute path="/facilities" component={() => {
+          const FacilitiesPage = React.lazy(() => import("@/pages/facilities"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <FacilitiesPage />
+            </React.Suspense>
+          );
+        }} />
+        
         {/* Students Module */}
         <ProtectedRoute path="/students" component={() => {
           const StudentsPage = React.lazy(() => import("@/pages/students"));
