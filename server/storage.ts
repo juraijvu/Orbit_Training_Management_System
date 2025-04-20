@@ -68,6 +68,12 @@ export interface IStorage {
   createStudent(student: InsertStudent): Promise<Student>;
   updateStudent(id: number, student: Partial<Student>): Promise<Student | undefined>;
   
+  // Registration Courses
+  getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]>;
+  getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined>;
+  createRegistrationCourse(course: InsertRegistrationCourse): Promise<RegistrationCourse>;
+  deleteRegistrationCourse(id: number): Promise<boolean>;
+  
   // Courses
   getCourses(): Promise<Course[]>;
   getCourse(id: number): Promise<Course | undefined>;
@@ -330,6 +336,7 @@ export class MemStorage implements IStorage {
   private crmMeetingsMap: Map<number, CrmMeeting>;
   private corporateLeadsMap: Map<number, CorporateLead>;
   private crmPostsMap: Map<number, CrmPost>;
+  private registrationCoursesMap: Map<number, RegistrationCourse>;
   private whatsAppTemplatesMap: Map<number, WhatsAppTemplate>;
   private whatsAppChatsMap: Map<number, WhatsAppChat>;
   
@@ -365,6 +372,7 @@ export class MemStorage implements IStorage {
   private crmPostId: number = 1;
   private whatsAppTemplateId: number = 1;
   private whatsAppChatId: number = 1;
+  private registrationCourseId: number = 1;
   
   sessionStore: any;
 
