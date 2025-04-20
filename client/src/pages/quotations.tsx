@@ -47,6 +47,7 @@ import {
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { 
   FileText, 
   Printer, 
@@ -425,16 +426,16 @@ const QuotationsPage: FC = () => {
         
         {/* Create Quotation Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Quotation</DialogTitle>
               <DialogDescription>
-                Create a quotation for corporate training
+                Fill in the details to create a new quotation
               </DialogDescription>
             </DialogHeader>
             
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto pr-1">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 overflow-y-auto pr-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -495,165 +496,177 @@ const QuotationsPage: FC = () => {
                   />
                 </div>
                 
-                <div className="space-y-4 max-h-[400px] overflow-y-auto border border-gray-100 rounded-md p-4">
-                  <h3 className="text-lg font-medium sticky top-0 bg-white pt-1 pb-3">Course Items</h3>
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Course Modules</h3>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-500 mb-3">Create modules and sub-items for your quotation. These will be used in proposals.</p>
+                  </div>
                   
-                  {fields.map((field, index) => (
-                    <div 
-                      key={field.id} 
-                      className="p-3 sm:p-4 bg-gray-50 rounded-md border border-gray-200 mb-4"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="text-xs sm:text-sm font-medium">Item #{index + 1}</h4>
-                        {index > 0 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => remove(index)}
-                            className="h-7 w-7 sm:h-8 sm:w-8 p-0"
-                          >
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-1 gap-3">
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.courseId`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Course</FormLabel>
-                              <Select 
-                                onValueChange={(value) => {
-                                  field.onChange(Number(value));
-                                  calculateTotals();
-                                }}
-                                value={field.value === 0 ? "" : field.value.toString()}
-                                disabled={isPending}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select course" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {courses?.filter(course => course.active).map((course) => (
-                                    <SelectItem key={course.id} value={course.id.toString()}>
-                                      {course.name} - ₹{course.fee.toLocaleString()}/person
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
+                  <div className="space-y-4 max-h-[350px] overflow-y-auto border rounded-md p-3 bg-gray-50">
+                    {fields.map((field, index) => (
+                      <div 
+                        key={field.id} 
+                        className="p-3 bg-white rounded-md border border-gray-200 mb-3"
+                      >
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="text-sm font-medium">Course #{index + 1}</h4>
+                          {index > 0 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => remove(index)}
+                              className="h-7 w-7 p-0 text-red-500"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           )}
-                        />
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.duration`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Duration</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    {...field}
-                                    placeholder="e.g., 3 days, 2 weeks"
-                                    disabled={isPending}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.numberOfPersons`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Persons</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    min="1" 
-                                    {...field}
-                                    onChange={(e) => {
-                                      const val = parseInt(e.target.value);
-                                      field.onChange(val || 1);
-                                      calculateTotals();
-                                    }}
-                                    disabled={isPending}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
                         </div>
-                      
-                        <div className="grid grid-cols-2 gap-3">
+                        
+                        <div className="grid grid-cols-1 gap-4">
                           <FormField
                             control={form.control}
-                            name={`items.${index}.rate`}
+                            name={`items.${index}.courseId`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Rate per Person (₹)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    {...field}
-                                    disabled={true}
-                                    className="bg-gray-100"
-                                  />
-                                </FormControl>
+                                <FormLabel>Course Name</FormLabel>
+                                <Select 
+                                  onValueChange={(value) => {
+                                    field.onChange(Number(value));
+                                    calculateTotals();
+                                  }}
+                                  value={field.value === 0 ? "" : field.value.toString()}
+                                  disabled={isPending}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select course" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {courses?.filter(course => course.active).map((course) => (
+                                      <SelectItem key={course.id} value={course.id.toString()}>
+                                        {course.name} - ₹{course.fee.toLocaleString()}/person
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                           
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.total`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Total (₹)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    {...field}
-                                    disabled={true}
-                                    className="bg-gray-100"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.duration`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Duration</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      {...field}
+                                      placeholder="e.g., 3 days, 2 weeks"
+                                      disabled={isPending}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.numberOfPersons`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Number of Persons</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      min="1" 
+                                      {...field}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        field.onChange(val || 1);
+                                        calculateTotals();
+                                      }}
+                                      disabled={isPending}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.rate`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Rate Fee (₹)</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      {...field}
+                                      disabled={true}
+                                      className="bg-gray-50"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`items.${index}.total`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Total (₹)</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      {...field}
+                                      disabled={true}
+                                      className="bg-gray-50"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => append({
-                      courseId: 0,
-                      duration: '',
-                      numberOfPersons: 1,
-                      rate: 0,
-                      total: 0
-                    })}
-                    className="w-full sticky bottom-0 bg-white mt-2"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Another Course
-                  </Button>
+                  <div className="flex items-center mt-3">
+                    <h4 className="text-sm font-medium">Add New Module</h4>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => append({
+                        courseId: 0,
+                        duration: '',
+                        numberOfPersons: 1,
+                        rate: 0,
+                        total: 0
+                      })}
+                      className="ml-auto"
+                    >
+                      <Plus className="h-5 w-5 text-green-600" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center text-xs text-gray-500 mt-2">
+                    <p>Active Status</p>
+                    <Switch className="ml-auto" defaultChecked />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -774,6 +787,7 @@ const QuotationsPage: FC = () => {
                   <Button
                     type="submit"
                     disabled={isPending}
+                    className="bg-green-600 hover:bg-green-700"
                   >
                     {isPending ? (
                       <>
@@ -783,7 +797,7 @@ const QuotationsPage: FC = () => {
                     ) : (
                       <>
                         <Check className="mr-2 h-4 w-4" />
-                        Create Quotation
+                        Create Course
                       </>
                     )}
                   </Button>
