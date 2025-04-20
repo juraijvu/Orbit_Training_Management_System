@@ -1053,7 +1053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get quotation by ID
+  // Get quotation by ID with its items
   app.get('/api/quotations/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1061,17 +1061,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!quotation) {
         return res.status(404).json({ message: "Quotation not found" });
       }
-      res.json(quotation);
+      
+      // Get quotation items
+      const items = await storage.getQuotationItems(id);
+      
+      // Return quotation with items
+      res.json({
+        ...quotation,
+        items
+      });
     } catch (error) {
+      console.error("Failed to fetch quotation:", error);
       res.status(500).json({ message: "Failed to fetch quotation" });
     }
   });
 
-  // Create quotation
+  // Create quotation with items
   app.post('/api/quotations', isAuthenticated, async (req, res) => {
     try {
+      const { quotation, items } = req.body;
+      
+      // Validate quotation data
       const quotationData = insertQuotationSchema.parse({
-        ...req.body,
+        ...quotation,
         createdBy: req.user!.id
       });
       
@@ -1079,13 +1091,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quotations = await storage.getQuotations();
       const quotationNumber = generateId('QUOT', quotations.length + 1);
       
+      // Create quotation
       const newQuotation = await storage.createQuotation({ ...quotationData, quotationNumber });
-      res.status(201).json(newQuotation);
+      
+      // Create quotation items
+      if (Array.isArray(items) && items.length > 0) {
+        for (const item of items) {
+          const itemData = insertQuotationItemSchema.parse({
+            ...item,
+            quotationId: newQuotation.id
+          });
+          await storage.createQuotationItem(itemData);
+        }
+      }
+      
+      // Get complete quotation with items
+      const createdQuotation = await storage.getQuotation(newQuotation.id);
+      const quotationItems = await storage.getQuotationItems(newQuotation.id);
+      
+      res.status(201).json({
+        ...createdQuotation,
+        items: quotationItems
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
+      console.error("Failed to create quotation:", error);
       res.status(500).json({ message: "Failed to create quotation" });
     }
   });
@@ -1094,18 +1127,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/quotations/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const { quotation, items } = req.body;
+      
+      // Check if quotation exists
       const existingQuotation = await storage.getQuotation(id);
       if (!existingQuotation) {
         return res.status(404).json({ message: "Quotation not found" });
       }
       
-      const updatedQuotation = await storage.updateQuotation(id, req.body);
-      res.json(updatedQuotation);
+      // Update quotation
+      const updatedQuotation = await storage.updateQuotation(id, quotation);
+      
+      // Update quotation items if provided
+      if (Array.isArray(items)) {
+        // Get existing items
+        const existingItems = await storage.getQuotationItems(id);
+        
+        // Delete items that aren't in the new list
+        const newItemIds = items.filter(item => item.id).map(item => item.id);
+        for (const existingItem of existingItems) {
+          if (!newItemIds.includes(existingItem.id)) {
+            await storage.deleteQuotationItem(existingItem.id);
+          }
+        }
+        
+        // Update or create items
+        for (const item of items) {
+          if (item.id) {
+            // Update existing item
+            await storage.updateQuotationItem(item.id, item);
+          } else {
+            // Create new item
+            const itemData = insertQuotationItemSchema.parse({
+              ...item,
+              quotationId: id
+            });
+            await storage.createQuotationItem(itemData);
+          }
+        }
+      }
+      
+      // Get updated quotation with items
+      const finalQuotation = await storage.getQuotation(id);
+      const quotationItems = await storage.getQuotationItems(id);
+      
+      res.json({
+        ...finalQuotation,
+        items: quotationItems
+      });
     } catch (error) {
+      console.error("Failed to update quotation:", error);
       res.status(500).json({ message: "Failed to update quotation" });
     }
   });
 
+  // Get quotation items for a specific quotation
+  app.get('/api/quotations/:id/items', isAuthenticated, async (req, res) => {
+    try {
+      const quotationId = parseInt(req.params.id);
+      const quotation = await storage.getQuotation(quotationId);
+      if (!quotation) {
+        return res.status(404).json({ message: "Quotation not found" });
+      }
+      
+      const items = await storage.getQuotationItems(quotationId);
+      res.json(items);
+    } catch (error) {
+      console.error("Failed to fetch quotation items:", error);
+      res.status(500).json({ message: "Failed to fetch quotation items" });
+    }
+  });
+  
+  // Create a new item for a specific quotation
+  app.post('/api/quotations/:id/items', isAuthenticated, async (req, res) => {
+    try {
+      const quotationId = parseInt(req.params.id);
+      const quotation = await storage.getQuotation(quotationId);
+      if (!quotation) {
+        return res.status(404).json({ message: "Quotation not found" });
+      }
+      
+      const itemData = insertQuotationItemSchema.parse({
+        ...req.body,
+        quotationId
+      });
+      
+      const newItem = await storage.createQuotationItem(itemData);
+      res.status(201).json(newItem);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Failed to create quotation item:", error);
+      res.status(500).json({ message: "Failed to create quotation item" });
+    }
+  });
+  
+  // Update a specific quotation item
+  app.patch('/api/quotation-items/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.getQuotationItem(id);
+      if (!item) {
+        return res.status(404).json({ message: "Quotation item not found" });
+      }
+      
+      const updatedItem = await storage.updateQuotationItem(id, req.body);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Failed to update quotation item:", error);
+      res.status(500).json({ message: "Failed to update quotation item" });
+    }
+  });
+  
+  // Delete a specific quotation item
+  app.delete('/api/quotation-items/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.getQuotationItem(id);
+      if (!item) {
+        return res.status(404).json({ message: "Quotation item not found" });
+      }
+      
+      await storage.deleteQuotationItem(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Failed to delete quotation item:", error);
+      res.status(500).json({ message: "Failed to delete quotation item" });
+    }
+  });
+  
   // ================== Proposals API ==================
   // Get all proposals
   app.get('/api/proposals', isAuthenticated, async (req, res) => {
