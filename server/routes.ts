@@ -223,6 +223,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update student" });
     }
   });
+  
+  // ================== Registration API ==================
+  // Create new registration with courses
+  app.post('/api/registrations', isAuthenticated, async (req, res) => {
+    try {
+      const { studentData, courses } = req.body;
+      
+      // Generate registration number
+      const students = await storage.getStudents();
+      const regNumber = generateId('REG', students.length + 1);
+      
+      // Create student record
+      const student = await storage.createStudent({
+        ...studentData,
+        registrationNumber: regNumber,
+        createdBy: req.user?.id
+      });
+      
+      // Create registration courses
+      const registrationCourses = [];
+      for (const course of courses) {
+        const registrationCourse = await storage.createRegistrationCourse({
+          studentId: student.id,
+          courseId: course.courseId,
+          price: course.price,
+          discount: course.discount || 0
+        });
+        registrationCourses.push(registrationCourse);
+      }
+      
+      res.status(201).json({ 
+        student, 
+        registrationCourses,
+        message: "Registration created successfully"
+      });
+    } catch (error) {
+      console.error("Error creating registration:", error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create registration" });
+    }
+  });
+  
+  // Get registration courses for a student
+  app.get('/api/registrations/:studentId/courses', isAuthenticated, async (req, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const registrationCourses = await storage.getRegistrationCourses(studentId);
+      
+      // Get course details for each registration
+      const coursesWithDetails = await Promise.all(
+        registrationCourses.map(async (rc) => {
+          const course = await storage.getCourse(rc.courseId);
+          return {
+            ...rc,
+            course
+          };
+        })
+      );
+      
+      res.json(coursesWithDetails);
+    } catch (error) {
+      console.error("Error fetching registration courses:", error);
+      res.status(500).json({ message: "Failed to fetch registration courses" });
+    }
+  });
+  
+  // Get printable registration details
+  app.get('/api/registrations/:studentId/print', isAuthenticated, async (req, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const student = await storage.getStudent(studentId);
+      
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      const registrationCourses = await storage.getRegistrationCourses(studentId);
+      
+      // Get course details for each registration
+      const coursesWithDetails = await Promise.all(
+        registrationCourses.map(async (rc) => {
+          const course = await storage.getCourse(rc.courseId);
+          return {
+            ...rc,
+            course
+          };
+        })
+      );
+      
+      res.json({
+        student,
+        registrationCourses: coursesWithDetails
+      });
+    } catch (error) {
+      console.error("Error fetching registration details:", error);
+      res.status(500).json({ message: "Failed to fetch registration details" });
+    }
+  });
+  
+  // Delete registration course
+  app.delete('/api/registrations/courses/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteRegistrationCourse(id);
+      if (!success) {
+        return res.status(404).json({ message: "Registration course not found" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting registration course:", error);
+      res.status(500).json({ message: "Failed to delete registration course" });
+    }
+  });
 
   // ================== Courses API ==================
   // Get all courses

@@ -2432,6 +2432,36 @@ export class DatabaseStorage implements IStorage {
     const result = await db.insert(emailHistory).values(emailWithDefaults).returning();
     return result[0];
   }
+  
+  // Registration Courses methods
+  async getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]> {
+    const result = await db.select().from(registrationCourses)
+      .where(eq(registrationCourses.studentId, studentId))
+      .orderBy(desc(registrationCourses.createdAt));
+    return result;
+  }
+  
+  async getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined> {
+    const result = await db.select().from(registrationCourses)
+      .where(eq(registrationCourses.id, id));
+    return result[0];
+  }
+  
+  async createRegistrationCourse(course: InsertRegistrationCourse): Promise<RegistrationCourse> {
+    const courseWithDefaults = {
+      ...course,
+      createdAt: new Date()
+    };
+    const result = await db.insert(registrationCourses).values(courseWithDefaults).returning();
+    return result[0];
+  }
+  
+  async deleteRegistrationCourse(id: number): Promise<boolean> {
+    const result = await db.delete(registrationCourses)
+      .where(eq(registrationCourses.id, id))
+      .returning();
+    return result.length > 0;
+  }
 
   async getWhatsappTemplate(id: number): Promise<WhatsappTemplate | undefined> {
     const result = await db.select().from(whatsappTemplates).where(eq(whatsappTemplates.id, id));
