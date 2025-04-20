@@ -441,14 +441,25 @@ function Sidebar({ className }: SidebarNavProps) {
             <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
-          onClick={() => logoutMutation.mutate()}
-        >
-          <LogOut className="h-5 w-5 mr-2" />
-          Logout
-        </Button>
+        <div className="space-y-1">
+          <Link href={`/profile/${user.id}`}>
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+            >
+              <UserCircle className="h-5 w-5 mr-2" />
+              View Profile
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+            onClick={() => logoutMutation.mutate()}
+          >
+            <LogOut className="h-5 w-5 mr-2" />
+            Logout
+          </Button>
+        </div>
       </div>
     </div>
   );
