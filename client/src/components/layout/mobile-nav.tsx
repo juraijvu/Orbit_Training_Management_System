@@ -330,7 +330,7 @@ export function MobileNav() {
     <>
       {/* Mobile Navigation Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-80 md:hidden z-50 shadow-lg">
-        <div className="flex justify-between items-center py-1">
+        <div className="flex justify-between items-center py-3">
           <Link href="/">
             <Button
               variant="ghost"
@@ -338,7 +338,7 @@ export function MobileNav() {
                 location === "/" ? "text-primary" : "text-white"
               )}
             >
-              <HomeIcon className="h-6 w-6 mb-1" />
+              <HomeIcon className="h-7 w-7 mb-1" />
               <span className="text-xs">Institute</span>
             </Button>
           </Link>
@@ -351,7 +351,7 @@ export function MobileNav() {
                   location?.startsWith("/crm") ? "text-primary" : "text-white"
                 )}
               >
-                <BarChart className="h-6 w-6 mb-1" />
+                <BarChart className="h-7 w-7 mb-1" />
                 <span className="text-xs">CRM</span>
               </Button>
             </Link>
@@ -365,7 +365,7 @@ export function MobileNav() {
                   (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-white"
                 )}
               >
-                <Building className="h-6 w-6 mb-1" />
+                <Building className="h-7 w-7 mb-1" />
                 <span className="text-xs">HRM</span>
               </Button>
             </Link>
@@ -377,9 +377,9 @@ export function MobileNav() {
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? (
-              <X className="h-8 w-8 mb-1" />
+              <X className="h-10 w-10 mb-1" />
             ) : (
-              <Menu className="h-8 w-8 mb-1" />
+              <Menu className="h-10 w-10 mb-1" />
             )}
             <span className="text-xs">Menu</span>
           </Button>
@@ -394,7 +394,7 @@ export function MobileNav() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed bottom-16 left-0 right-0 bg-background md:hidden z-40 shadow-lg border-t"
+            className="fixed bottom-20 left-0 right-0 bg-background md:hidden z-40 shadow-lg border-t"
           >
             <ScrollArea className="max-h-[60vh] overflow-y-auto">
               <div className="px-4 py-4">
@@ -514,7 +514,7 @@ export function MobileNav() {
       </AnimatePresence>
 
       {/* Extra space at the bottom to prevent content from being hidden behind the mobile nav */}
-      <div className="md:hidden h-16"></div>
+      <div className="md:hidden h-20"></div>
     </>
   );
 }
