@@ -24,6 +24,8 @@ import {
   crmPosts, CrmPost, InsertCrmPost,
   whatsAppTemplates, WhatsAppTemplate, InsertWhatsAppTemplate,
   whatsAppChats, WhatsAppChat, InsertWhatsAppChat,
+  // Registration courses
+  registrationCourses, RegistrationCourse, InsertRegistrationCourse,
   // Chatbot related imports
   chatbotFlows, ChatbotFlow, InsertChatbotFlow,
   chatbotNodes, ChatbotNode, InsertChatbotNode,
@@ -243,6 +245,12 @@ export interface IStorage {
   getEmailHistoryByLeadId(leadId: number): Promise<EmailHistory[]>;
   getEmailHistoryByStudentId(studentId: number): Promise<EmailHistory[]>;
   createEmailHistory(email: InsertEmailHistory): Promise<EmailHistory>;
+  
+  // Registration Courses
+  getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]>;
+  getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined>;
+  createRegistrationCourse(course: InsertRegistrationCourse): Promise<RegistrationCourse>;
+  deleteRegistrationCourse(id: number): Promise<boolean>;
   
   // Chatbot Flows
   getChatbotFlows(): Promise<ChatbotFlow[]>;

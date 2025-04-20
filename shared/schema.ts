@@ -26,24 +26,29 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const students = pgTable("students", {
   id: serial("id").primaryKey(),
   studentId: text("student_id").notNull().unique(), // e.g., STU-2023-001
-  fullName: text("full_name").notNull(),
-  fatherName: text("father_name").notNull(),
+  registrationNumber: text("registration_number"),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
   email: text("email").notNull(),
-  phone: text("phone").notNull(),
-  dob: date("dob").notNull(),
-  gender: text("gender").notNull(),
-  address: text("address").notNull(),
-  courseId: integer("course_id").notNull(),
-  batch: text("batch").notNull(),
+  phoneNo: text("phone_no").notNull(),
+  alternativeNo: text("alternative_no"),
+  dateOfBirth: date("date_of_birth").notNull(),
+  passportNo: text("passport_no"),
+  uidNo: text("uid_no"),
+  emiratesIdNo: text("emirates_id_no"),
+  nationality: text("nationality"),
+  education: text("education"),
+  gender: text("gender"),
+  address: text("address"),
+  country: text("country"),
+  companyOrUniversityName: text("company_or_university_name"),
+  classType: text("class_type"), // online, offline, private, batch
   registrationDate: timestamp("registration_date").notNull().defaultNow(),
-  courseFee: numeric("course_fee").notNull(),
-  discount: numeric("discount").default("0"),
-  totalFee: numeric("total_fee").notNull(),
-  initialPayment: numeric("initial_payment").notNull(),
-  balanceDue: numeric("balance_due").notNull(),
-  paymentMode: text("payment_mode").notNull(),
-  paymentStatus: text("payment_status").notNull(), // paid, partial, pending
+  balanceDue: numeric("balance_due"),
+  paymentMode: text("payment_mode"),
+  paymentStatus: text("payment_status"), // paid, partial, pending
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdBy: integer("created_by"),
 });
 
 export const insertStudentSchema = createInsertSchema(students).omit({
@@ -57,7 +62,11 @@ export const courses = pgTable("courses", {
   name: text("name").notNull().unique(),
   description: text("description").notNull(),
   duration: text("duration").notNull(),
-  fee: numeric("fee").notNull(),
+  fee: numeric("fee").notNull(), // Standard fee
+  onlineRate: numeric("online_rate"), // Fee for online courses
+  offlineRate: numeric("offline_rate"), // Fee for offline courses
+  privateRate: numeric("private_rate"), // Fee for private sessions
+  batchRate: numeric("batch_rate"), // Fee for batch sessions
   content: text("content"), // Stored as a JSON string
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -221,6 +230,24 @@ export type Quotation = typeof quotations.$inferSelect;
 
 export type InsertProposal = z.infer<typeof insertProposalSchema>;
 export type Proposal = typeof proposals.$inferSelect;
+
+// Registration Courses Table for tracking courses in a registration
+export const registrationCourses = pgTable("registration_courses", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull(),
+  courseId: integer("course_id").notNull(),
+  price: numeric("price").notNull(),
+  discount: numeric("discount").default("0"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertRegistrationCourseSchema = createInsertSchema(registrationCourses).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertRegistrationCourse = z.infer<typeof insertRegistrationCourseSchema>;
+export type RegistrationCourse = typeof registrationCourses.$inferSelect;
 
 // CRM Tables
 export const leads = pgTable("leads", {
