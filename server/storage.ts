@@ -2007,6 +2007,35 @@ export class DatabaseStorage implements IStorage {
     const result = await db.update(quotations).set(quotation).where(eq(quotations.id, id)).returning();
     return result[0];
   }
+  
+  // Quotation Items methods
+  async getQuotationItems(quotationId: number): Promise<QuotationItem[]> {
+    return await db.select().from(quotationItems).where(eq(quotationItems.quotationId, quotationId));
+  }
+  
+  async getQuotationItem(id: number): Promise<QuotationItem | undefined> {
+    const result = await db.select().from(quotationItems).where(eq(quotationItems.id, id));
+    return result[0];
+  }
+  
+  async createQuotationItem(item: InsertQuotationItem): Promise<QuotationItem> {
+    const itemWithDefaults = {
+      ...item,
+      createdAt: new Date()
+    };
+    const result = await db.insert(quotationItems).values(itemWithDefaults).returning();
+    return result[0];
+  }
+  
+  async updateQuotationItem(id: number, item: Partial<QuotationItem>): Promise<QuotationItem | undefined> {
+    const result = await db.update(quotationItems).set(item).where(eq(quotationItems.id, id)).returning();
+    return result[0];
+  }
+  
+  async deleteQuotationItem(id: number): Promise<boolean> {
+    const result = await db.delete(quotationItems).where(eq(quotationItems.id, id));
+    return result.rowCount > 0;
+  }
 
   // Proposals methods
   async getProposals(): Promise<Proposal[]> {
