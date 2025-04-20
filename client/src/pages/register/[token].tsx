@@ -113,18 +113,12 @@ export default function PublicRegistration() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Registration Successful",
-        description: "Your registration has been submitted successfully.",
-        variant: "default",
-      });
-      
       // If payment URL is provided, redirect to it
       if (data.paymentUrl) {
         window.location.href = data.paymentUrl;
       } else {
         // Otherwise, redirect to success page
-        navigate("/register/success");
+        window.location.href = "/register/success";
       }
     },
     onError: (error: Error) => {
