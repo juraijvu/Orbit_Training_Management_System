@@ -1812,6 +1812,11 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
   
+  async getStudentByRegisterLink(token: string): Promise<Student | undefined> {
+    const result = await db.select().from(students).where(eq(students.registerLink, token));
+    return result[0];
+  }
+  
   async getStudentsByCourseId(courseId: number): Promise<Student[]> {
     // In an actual implementation, this would use a proper relationship
     // For now, we're checking if the courseId matches
