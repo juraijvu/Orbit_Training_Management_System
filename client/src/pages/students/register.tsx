@@ -14,10 +14,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -42,7 +44,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Plus, Trash2, Printer } from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { SignaturePad } from "@/components/ui/signature-pad";
+import { Loader2, Plus, Trash2, Printer, Share2, Copy } from "lucide-react";
 
 // Form validation schema
 const registerFormSchema = z.object({
@@ -119,7 +132,9 @@ export default function RegisterStudent() {
           price: 0,
           discount: 0
         }
-      ]
+      ],
+      signatureData: "",
+      termsAccepted: false
     }
   });
 
@@ -147,6 +162,9 @@ export default function RegisterStudent() {
           country: data.country || null,
           companyOrUniversityName: data.companyOrUniversityName || null,
           classType: data.classType,
+          signatureData: data.signatureData || null,
+          termsAccepted: data.termsAccepted,
+          signatureDate: new Date().toISOString(),
         },
         courses: data.courses
       });
@@ -604,29 +622,126 @@ export default function RegisterStudent() {
                 </div>
               </div>
               
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/students")}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createRegistrationMutation.isPending}
-                >
-                  {createRegistrationMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Registering...
-                    </>
-                  ) : (
-                    <>
-                      Submit & Print
-                    </>
-                  )}
-                </Button>
+              <div className="bg-primary/5 p-4 rounded-lg">
+                <h3 className="text-lg font-medium mb-4">Terms & Digital Signature</h3>
+                
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="signatureData"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Your Signature*</FormLabel>
+                        <FormDescription>
+                          Please sign in the box below using your mouse or touchscreen
+                        </FormDescription>
+                        <FormControl>
+                          <SignaturePad
+                            value={field.value}
+                            onChange={field.onChange}
+                            width={400}
+                            height={200}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="termsAccepted"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Terms and Conditions*
+                          </FormLabel>
+                          <FormDescription>
+                            I have read, understood, and I do hereby consent to the Terms & Conditions 
+                            of Orbit Institute. I certify that the information provided is correct and 
+                            complete. I agree that any misrepresentation of facts will lead to the 
+                            denial or cancellation of admission.
+                          </FormDescription>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline">
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Generate Registration Link
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Share Registration Link</DialogTitle>
+                      <DialogDescription>
+                        Send this link to the student to let them register online
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col space-y-4 py-4">
+                      <p className="text-sm text-muted-foreground">
+                        This feature is coming soon! It will allow you to generate a unique link with 
+                        pre-set courses and discounts that students can use to register online.
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <Input 
+                          value="https://orbitinstitute.ae/register/sample-link" 
+                          readOnly
+                          disabled
+                        />
+                        <Button type="button" size="icon" disabled>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <DialogFooter className="sm:justify-start">
+                      <DialogClose asChild>
+                        <Button type="button" variant="secondary">
+                          Close
+                        </Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                
+                <div className="space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate("/students")}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createRegistrationMutation.isPending}
+                  >
+                    {createRegistrationMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Registering...
+                      </>
+                    ) : (
+                      <>
+                        Submit & Print
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </Form>

@@ -275,8 +275,33 @@ export default function PrintRegistration() {
             and hence, will lead to the denial or cancellation of the admission, not to mention expulsion</p>
             <p className="mt-2">I have read, understood, and I do hereby consent to the above Terms & Conditions</p>
             <div className="mt-8 flex justify-between">
-              <p className="inline-flex items-center">Date: <span className="w-32 h-px bg-black mx-2"></span></p>
-              <p className="inline-flex items-center">Signature: <span className="w-32 h-px bg-black mx-2"></span></p>
+              <div>
+                <p className="inline-flex items-center">
+                  Date: {student.signatureDate 
+                    ? new Date(student.signatureDate).toLocaleDateString() 
+                    : <span className="w-32 h-px bg-black mx-2"></span>}
+                </p>
+              </div>
+              <div>
+                <p className="inline-flex items-center mb-2">Signature: 
+                  {student.signatureData ? (
+                    <img 
+                      src={student.signatureData} 
+                      alt="Digital Signature"
+                      className="h-16 ml-2"
+                    />
+                  ) : (
+                    <span className="w-32 h-px bg-black mx-2"></span>
+                  )}
+                </p>
+                {student.termsAccepted && (
+                  <p className="text-xs text-right italic mt-1">
+                    *Terms and conditions accepted digitally on {student.signatureDate 
+                      ? new Date(student.signatureDate).toLocaleDateString() 
+                      : new Date().toLocaleDateString()}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

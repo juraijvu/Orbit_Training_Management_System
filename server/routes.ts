@@ -453,10 +453,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate Orbit-specific registration number with year-specific counter
       const regNumber = generateId('ORB', 0); // The count is ignored as we use year-specific counter
       
-      // Create student record
+      // Create student record with signature data and terms acceptance
       const student = await storage.createStudent({
         ...studentData,
         registrationNumber: regNumber,
+        signatureData: studentData.signatureData,
+        termsAccepted: studentData.termsAccepted,
+        signatureDate: studentData.signatureDate,
         createdBy: req.user?.id
       });
       
