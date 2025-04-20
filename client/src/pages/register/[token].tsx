@@ -239,25 +239,25 @@ export default function PublicRegistration() {
   }
 
   return (
-    <div className="container py-8">
+    <div className="container py-4 px-2 sm:py-8 sm:px-4">
       <div className="max-w-4xl mx-auto">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Orbit Institute Registration</CardTitle>
-            <CardDescription>
+        <Card className="shadow-lg">
+          <CardHeader className="text-center px-4 sm:px-6">
+            <CardTitle className="text-xl sm:text-2xl">Orbit Institute Registration</CardTitle>
+            <CardDescription className="mt-2">
               {course ? `Register for ${course.name}` : "Complete your registration form"}
             </CardDescription>
           </CardHeader>
           
-          <CardContent>
+          <CardContent className="px-3 sm:px-6">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 md:space-y-6">
                 {/* Personal Information */}
                 <div>
-                  <h3 className="text-lg font-medium">Personal Information</h3>
-                  <Separator className="my-4" />
+                  <h3 className="text-base sm:text-lg font-medium">Personal Information</h3>
+                  <Separator className="my-3" />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <FormField
                       control={form.control}
                       name="firstName"
@@ -374,10 +374,10 @@ export default function PublicRegistration() {
                 
                 {/* Identification */}
                 <div>
-                  <h3 className="text-lg font-medium">Identification</h3>
-                  <Separator className="my-4" />
+                  <h3 className="text-base sm:text-lg font-medium">Identification</h3>
+                  <Separator className="my-3" />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <FormField
                       control={form.control}
                       name="passportNo"
@@ -410,10 +410,10 @@ export default function PublicRegistration() {
                 
                 {/* Address Information */}
                 <div>
-                  <h3 className="text-lg font-medium">Address Information</h3>
-                  <Separator className="my-4" />
+                  <h3 className="text-base sm:text-lg font-medium">Address Information</h3>
+                  <Separator className="my-3" />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <FormField
                       control={form.control}
                       name="address"
@@ -461,10 +461,10 @@ export default function PublicRegistration() {
                 {/* Course Details */}
                 {course && (
                   <div>
-                    <h3 className="text-lg font-medium">Course Details</h3>
-                    <Separator className="my-4" />
+                    <h3 className="text-base sm:text-lg font-medium">Course Details</h3>
+                    <Separator className="my-3" />
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                       <div className="space-y-2">
                         <Label>Course Name</Label>
                         <div className="p-2 border rounded-md bg-muted/50">
@@ -532,15 +532,15 @@ export default function PublicRegistration() {
                     </div>
                     
                     {/* Price Details */}
-                    <div className="mt-4 border rounded-md p-4 bg-muted/30">
+                    <div className="mt-3 sm:mt-4 border rounded-md p-3 sm:p-4 bg-muted/30">
                       <div className="space-y-2">
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm sm:text-base">
                           <span>Original Price:</span>
                           <span>AED {price.toFixed(2)}</span>
                         </div>
                         
                         {discount > 0 && (
-                          <div className="flex justify-between text-green-600">
+                          <div className="flex justify-between text-green-600 text-sm sm:text-base">
                             <span>Discount ({discount}%):</span>
                             <span>- AED {(price * (discount / 100)).toFixed(2)}</span>
                           </div>
@@ -548,7 +548,7 @@ export default function PublicRegistration() {
                         
                         <Separator className="my-2" />
                         
-                        <div className="flex justify-between font-bold">
+                        <div className="flex justify-between font-bold text-sm sm:text-base">
                           <span>Final Price:</span>
                           <span>AED {finalPrice.toFixed(2)}</span>
                         </div>
@@ -559,11 +559,11 @@ export default function PublicRegistration() {
                 
                 {/* Terms and Signature */}
                 <div>
-                  <h3 className="text-lg font-medium">Terms and Signature</h3>
-                  <Separator className="my-4" />
+                  <h3 className="text-base sm:text-lg font-medium">Terms and Signature</h3>
+                  <Separator className="my-3" />
                   
-                  <div className="space-y-4">
-                    <div className="bg-muted/30 p-4 rounded-md text-sm space-y-2">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="bg-muted/30 p-3 sm:p-4 rounded-md text-xs sm:text-sm space-y-1 sm:space-y-2">
                       <p className="font-medium">Orbit Institute Dubai - Terms and Conditions</p>
                       <p>1. Registration is considered complete only after payment of fees.</p>
                       <p>2. Course fees are non-refundable and non-transferable.</p>
@@ -617,11 +617,12 @@ export default function PublicRegistration() {
                   </div>
                 </div>
                 
-                <div className="flex justify-end">
+                <div className="flex justify-center sm:justify-end mt-4">
                   <Button 
                     type="submit" 
                     disabled={submitMutation.isPending}
-                    className="min-w-[150px]"
+                    className="w-full sm:w-auto sm:min-w-[150px]"
+                    size="lg"
                   >
                     {submitMutation.isPending ? (
                       <>
@@ -635,7 +636,7 @@ export default function PublicRegistration() {
             </Form>
           </CardContent>
           
-          <CardFooter className="flex flex-col items-center text-center text-sm text-muted-foreground">
+          <CardFooter className="flex flex-col items-center text-center text-xs sm:text-sm text-muted-foreground px-3 py-4 sm:py-6">
             <p>For any assistance, please contact Orbit Institute at +971 4 885 2477</p>
             <p>© {new Date().getFullYear()} Orbit Institute UAE. All rights reserved.</p>
           </CardFooter>
