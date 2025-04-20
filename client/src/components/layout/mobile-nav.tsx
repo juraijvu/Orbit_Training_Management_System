@@ -329,17 +329,17 @@ export function MobileNav() {
   return (
     <>
       {/* Mobile Navigation Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-75 md:hidden z-50 shadow-lg">
-        <div className="flex justify-between items-center">
+      <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-80 md:hidden z-50 shadow-lg">
+        <div className="flex justify-between items-center py-1">
           <Link href="/">
             <Button
               variant="ghost"
-              className={cn("flex-1 flex flex-col items-center py-3 rounded-none", 
+              className={cn("flex-1 flex flex-col items-center py-2 rounded-none", 
                 location === "/" ? "text-primary" : "text-white"
               )}
             >
-              <HomeIcon className="h-5 w-5" />
-              <span className="text-xs mt-1">Institute</span>
+              <HomeIcon className="h-6 w-6 mb-1" />
+              <span className="text-xs">Institute</span>
             </Button>
           </Link>
 
@@ -347,12 +347,12 @@ export function MobileNav() {
             <Link href="/crm/dashboard">
               <Button
                 variant="ghost"
-                className={cn("flex-1 flex flex-col items-center py-3 rounded-none", 
+                className={cn("flex-1 flex flex-col items-center py-2 rounded-none", 
                   location?.startsWith("/crm") ? "text-primary" : "text-white"
                 )}
               >
-                <BarChart className="h-5 w-5" />
-                <span className="text-xs mt-1">CRM</span>
+                <BarChart className="h-6 w-6 mb-1" />
+                <span className="text-xs">CRM</span>
               </Button>
             </Link>
           )}
@@ -361,27 +361,27 @@ export function MobileNav() {
             <Link href="/hrm">
               <Button
                 variant="ghost"
-                className={cn("flex-1 flex flex-col items-center py-3 rounded-none", 
+                className={cn("flex-1 flex flex-col items-center py-2 rounded-none", 
                   (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-white"
                 )}
               >
-                <Building className="h-5 w-5" />
-                <span className="text-xs mt-1">HRM</span>
+                <Building className="h-6 w-6 mb-1" />
+                <span className="text-xs">HRM</span>
               </Button>
             </Link>
           )}
 
           <Button
             variant="ghost"
-            className="flex-1 flex flex-col items-center py-3 rounded-none text-white relative"
+            className="flex-1 flex flex-col items-center py-2 rounded-none text-white relative"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? (
-              <X className="h-5 w-5" />
+              <X className="h-8 w-8 mb-1" />
             ) : (
-              <Menu className="h-5 w-5" />
+              <Menu className="h-8 w-8 mb-1" />
             )}
-            <span className="text-xs mt-1">Menu</span>
+            <span className="text-xs">Menu</span>
           </Button>
         </div>
       </div>
