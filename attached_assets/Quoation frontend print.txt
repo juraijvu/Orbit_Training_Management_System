@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotation - Max Orbit Education and Training</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+                font-size: 17px;
+            }
+            .page {
+                page-break-after: always;
+                position: relative;
+                height: 100vh;
+            }
+            .container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                max-width: 100%;
+                background-color: black !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .logo {
+                flex: 1;
+            }
+            .description {
+                flex: 1;
+                text-align: right;
+            }
+            h3 {
+                margin: 0;
+                padding: 3px 0;
+                font-size: 17px;
+            }
+            .main-content {
+                padding: 10px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+            th, td {
+                border: 1px solid black;
+                padding: 5px;
+                text-align: left;
+                font-size: 12px;
+            }
+            .no-border {
+                border: none;
+            }
+            .text-right {
+                text-align: right;
+            }
+            ul {
+                padding-left: 20px;
+                margin: 5px 0;
+            }
+            .footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    background-color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.addresslist {
+    width: calc(75% - 1px);
+    background-color: black !important;
+    color: white !important;
+    padding: 10px;
+    border-right: 2px solid white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.iconlist {
+    width: 2%;
+    background-color: black !important;
+    color: white !important;
+    padding: 10px 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.contactlist {
+    width: 22%;
+    background-color: white !important;
+    color: black !important;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    align-self: stretch;
+}
+.footer p {
+    margin: 0;
+    font-size: 12px;
+}
+        }
+    </style>
+</head>
+{% load static %}
+<body>
+    <div class="page">
+        <div class="container">
+            <div class="logo">
+                <img alt='Orbit logo' src="{% static 'Orbit-Logo-1.png' %}"/>
+            </div>
+            <div class="description">
+                <h3>Max Orbit Education and Training</h3>
+                <h3>Computer Software</h3>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <h1 style="text-align: center;"><u>{% with items=quotation.items.all %}
+                {% for item in items %}
+                    {{ item.course.name }}
+                    {% if not forloop.last %}
+                        {% if items|length == 2 %}
+                            and 
+                        {% elif forloop.counter == items|length|add:"-1" %}
+                             and 
+                        {% else %}
+                            , 
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}</u></h1>
+            
+            <p>Dear {{ quotation.Client_name }},</p>
+            <p>Thank you for considering our services for your corporate training needs. We are delighted 
+                to present you with a comprehensive quotation for   {% with items=quotation.items.all %}
+                {% for item in items %}
+                    {{ item.course.name }}
+                    {% if not forloop.last %}
+                        {% if items|length == 2 %}
+                            and 
+                        {% elif forloop.counter == items|length|add:"-1" %}
+                             and 
+                        {% else %}
+                            , 
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}.</p>
+            <p>
+                <b>Our Approach to Training:</b> At Orbit Training Centre, we recognize
+                that every organization has distinct training needs for their workforce. 
+                As a result, our approach is centred around customizing our courses to align with
+                your specific goals and objectives. Our team of skilled instructors is highly 
+                knowledgeable in Industry best practices, guaranteeing 
+                that your employees receive Professional and applicable training that can be put into practice right away.
+            </p>
+            <p><b><u>Training Details:</u></b></p>
+            <ul>
+                <li>Course:   {% with items=quotation.items.all %}
+                    {% for item in items %}
+                        {{ item.course.name }}
+                        {% if not forloop.last %}
+                            {% if items|length == 2 %}
+                                and 
+                            {% elif forloop.counter == items|length|add:"-1" %}
+                                 and 
+                            {% else %}
+                                , 
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% endwith %}</li>
+                <li>Schedule: {{ quotation.schedule }}</li>
+                <li>Duration: (duration)</li>
+                <li>Training Venue: {{ quotation.training_venue }} </li>
+            </ul>
+            <p><b><u>Pricing:</u></b> The total cost of the AutoCad Training package, which includes Orbit Training Center 
+                the number of participants (1 Pax) the duration of the training, and any specific requirements you may have. (Vat excluded)</p>
+            
+            <h3 style="text-align: center;">{% with items=quotation.items.all %}
+                {% for item in items %}
+                    {{ item.course.name }}
+                    {% if not forloop.last %}
+                        {% if items|length == 2 %}
+                            and 
+                        {% elif forloop.counter == items|length|add:"-1" %}
+                             and 
+                        {% else %}
+                            , 
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}{{% if quotation.training_venue == 'Company Premises (External)' %}} (External)
+            {{% elif quotation.training_venue == 'Orbit Training (In-House)' %}} (In-House)
+            {{% elif quotation.training_venue == 'online' %}} (Online)
+            {% endif %}
+        </h3>
+            <table>
+                <tr>
+                    <th>Course Name</th>
+                    <th>Duration</th>
+                    <th>Course Fee (Per Pax)</th>
+                    <th>Pax</th>
+                    <th>Total Fee</th>
+                </tr>
+                {% for item in quotation.items.all %}
+                <tr>
+                    <td>{{ item.course.name }}</td>
+                    <td>{{ item.duration }}</td>
+                    <td>{{ item.course.rate }}/Pax</td>
+                    <td>{{ item.number_of_persons }}</td>
+                    <th>{{ item.get_total }}</th>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <th colspan="4" class="no-border text-right">Discount</th>
+                    <th>{{ quotation.discount }}</th>
+                </tr>
+                <tr>
+                    <th colspan="4" class="no-border text-right">Grand Total</th>
+                    <th>{{ quotation.get_grand_total }}</th>
+                </tr>
+            </table>
+        </div>
+
+        <div class="footer">
+            <div class="addresslist">
+                <p>Address: 211, Pinnacle Sheikh Zayed Road, Al Barsha 1</p>
+                <p>Dubai, United Arab Emirates</p>
+                <p>PO Box No. 450450</p>
+            </div>
+            <div class="iconlist">
+                <p><i class="fa fa-phone" style="font-size:16px;"></i></p>
+                <p><i class="fa fa-envelope" style="font-size:16px;"></i></p>
+                <p><i class="fa fa-globe" style="font-size:16px;"></i></p>
+            </div>
+            <div class="contactlist">
+                <p><b>+971-552048878</b></p>
+                <p><b>info@orbittraining.ae</b></p>
+                <p><b>www.orbittraining.ae</b></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="container">
+            <div class="logo">
+                <img alt='Orbit logo' src="{% static 'Orbit-Logo-1.png' %}"/>
+            </div>
+            <div class="description">
+                <h3>Max Orbit Education and Training</h3>
+                <h3>Computer Software</h3>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Content from the second page -->
+            <p><b><u>Process:</u></b> To proceed with the quotation process or to discuss any specific requirements, please feel free to contact us at 
+                {{ quotation.consultant_number }} , {{ quotation.consultant_name }} or {{ quotation.consultant_email }}. We are eager to address any queries you 
+                may have and customize the training to best suit your organization's needs.</p>
+        
+            <p>We assure you of our commitment to delivering top-quality training that 
+                will empower your team with the skills and knowledge necessary to excel in the field of Project Management.</p>
+        
+            <p>Thank you once again for considering our services. We look forward to the opportunity 
+                to work with you and contribute to the growth of your organization.</p>
+        
+            <p>Best Regards</p>
+            <p>{{ quotation.consultant_name }}</p>
+            <p>{{ quotation.position }}</p>
+            <p>{{ quotation.training_venue }}</p>
+            <p>{{ quotation.consultant_number }}</p>
+    
+            <h3><u>Account Details</u></h3>
+            <table>
+                <tr><th>Bank Transfer Details</th></tr>
+                <tr><td>Bank Name: Wio Bank</td></tr>
+                <tr><td>Account Name: Max Orbit Education and Training Computer Software</td></tr>
+                <tr><td>Bic: WIOBAEADXXX</td></tr>
+                <tr><td>IBAN: AE460860000009548530832</td></tr>
+                <tr><td>Address: 211, Pinnacle Sheikh Zayed Road, Al Barsha First, Dubai</td></tr>
+            </table>
+    
+            <h3><u>Terms and Conditions</u></h3>
+            <ul>
+                <li>Training will be on Agreed Parameter and Schedule.</li>
+                <li>Before Starting the training, the organization should pay the full amount.</li>
+                <li>The organization should provide the Equipment and Proper Training Space.</li>
+                <li>Training Will be Scheduled after 1 Week of Payment Date.</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <div class="addresslist">
+                <p>Address: 211, Pinnacle Sheikh Zayed Road, Al Barsha 1</p>
+                <p>Dubai, United Arab Emirates</p>
+                <p>PO Box No. 450450</p>
+            </div>
+            <div class="iconlist">
+                <p><i class="fa fa-phone" style="font-size:16px;"></i></p>
+                <p><i class="fa fa-envelope" style="font-size:16px;"></i></p>
+                <p><i class="fa fa-globe" style="font-size:16px;"></i></p>
+            </div>
+            <div class="contactlist">
+                <p><b>+971-552048878</b></p>
+                <p><b>info@orbittraining.ae</b></p>
+                <p><b>www.orbittraining.ae</b></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+:quotation print

@@ -155,12 +155,17 @@ export const insertCertificateSchema = createInsertSchema(certificates).omit({
 export const quotations = pgTable("quotations", {
   id: serial("id").primaryKey(),
   quotationNumber: text("quotation_number").notNull().unique(), // e.g., QUOT-2023-001
+  clientName: text("client_name").notNull(),
   companyName: text("company_name").notNull(),
   contactPerson: text("contact_person").notNull(),
   email: text("email").notNull(),
   phone: text("phone").notNull(),
-  courseId: integer("course_id").notNull(),
-  participants: integer("participants").notNull(),
+  schedule: text("schedule").notNull(),
+  trainingVenue: text("training_venue").notNull(),
+  consultantName: text("consultant_name").notNull(),
+  consultantEmail: text("consultant_email").notNull(),
+  consultantNumber: text("consultant_number").notNull(),
+  position: text("position").notNull(),
   totalAmount: numeric("total_amount").notNull(),
   discount: numeric("discount").default("0"),
   finalAmount: numeric("final_amount").notNull(),
@@ -171,6 +176,23 @@ export const quotations = pgTable("quotations", {
 });
 
 export const insertQuotationSchema = createInsertSchema(quotations).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Quotation Items Table
+export const quotationItems = pgTable("quotation_items", {
+  id: serial("id").primaryKey(),
+  quotationId: integer("quotation_id").notNull(),
+  courseId: integer("course_id").notNull(),
+  duration: text("duration").notNull(),
+  numberOfPersons: integer("number_of_persons").notNull(),
+  rate: numeric("rate").notNull(),
+  total: numeric("total").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertQuotationItemSchema = createInsertSchema(quotationItems).omit({
   id: true,
   createdAt: true,
 });
@@ -227,6 +249,9 @@ export type Certificate = typeof certificates.$inferSelect;
 
 export type InsertQuotation = z.infer<typeof insertQuotationSchema>;
 export type Quotation = typeof quotations.$inferSelect;
+
+export type InsertQuotationItem = z.infer<typeof insertQuotationItemSchema>;
+export type QuotationItem = typeof quotationItems.$inferSelect;
 
 export type InsertProposal = z.infer<typeof insertProposalSchema>;
 export type Proposal = typeof proposals.$inferSelect;
