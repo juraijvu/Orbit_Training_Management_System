@@ -333,6 +333,15 @@ function Router() {
           );
         }} />
         
+        <ProtectedRoute path="/students/view/:id" component={() => {
+          const StudentViewPage = React.lazy(() => import("@/pages/students/view"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <StudentViewPage />
+            </React.Suspense>
+          );
+        }} />
+        
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
