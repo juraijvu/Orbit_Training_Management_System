@@ -402,6 +402,7 @@ export class MemStorage implements IStorage {
     this.chatbotActionsMap = new Map();
     this.chatbotSessionsMap = new Map();
     this.cannedResponsesMap = new Map();
+    this.registrationCoursesMap = new Map();
     
     // Initialize new CRM and WhatsApp feature maps
     this.crmMeetingsMap = new Map();
@@ -2961,6 +2962,57 @@ export class DatabaseStorage implements IStorage {
       .where(eq(whatsAppChats.id, id))
       .returning();
     return result[0];
+  }
+  
+  // Registration Courses methods
+  async getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]> {
+    try {
+      return await db
+        .select()
+        .from(registrationCourses)
+        .where(eq(registrationCourses.studentId, studentId));
+    } catch (error) {
+      console.error("Error fetching registration courses:", error);
+      return [];
+    }
+  }
+  
+  async getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined> {
+    try {
+      const [course] = await db
+        .select()
+        .from(registrationCourses)
+        .where(eq(registrationCourses.id, id));
+      return course;
+    } catch (error) {
+      console.error("Error fetching registration course:", error);
+      return undefined;
+    }
+  }
+  
+  async createRegistrationCourse(course: InsertRegistrationCourse): Promise<RegistrationCourse> {
+    try {
+      const [newCourse] = await db
+        .insert(registrationCourses)
+        .values(course)
+        .returning();
+      return newCourse;
+    } catch (error) {
+      console.error("Error creating registration course:", error);
+      throw error;
+    }
+  }
+  
+  async deleteRegistrationCourse(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(registrationCourses)
+        .where(eq(registrationCourses.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting registration course:", error);
+      return false;
+    }
   }
 }
 
