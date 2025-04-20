@@ -47,6 +47,12 @@ export const students = pgTable("students", {
   balanceDue: numeric("balance_due"),
   paymentMode: text("payment_mode"),
   paymentStatus: text("payment_status"), // paid, partial, pending
+  signatureData: text("signature_data"), // Store base64 signature image data
+  termsAccepted: boolean("terms_accepted").default(false), // Whether terms & conditions were accepted
+  signatureDate: timestamp("signature_date"), // Date when signature was done
+  registerLink: text("register_link"), // Unique link for online registration
+  registerLinkExpiry: timestamp("register_link_expiry"), // When the registration link expires
+  registerLinkDiscount: numeric("register_link_discount").default("0"), // Pre-set discount for online registration
   createdAt: timestamp("created_at").notNull().defaultNow(),
   createdBy: integer("created_by"),
 });

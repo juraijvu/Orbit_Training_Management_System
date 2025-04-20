@@ -72,7 +72,11 @@ const registerFormSchema = z.object({
       price: z.number().min(0, "Price must be a positive number"),
       discount: z.number().min(0, "Discount must be positive").max(20, "Maximum discount is 20%")
     })
-  ).min(1, "At least one course must be selected")
+  ).min(1, "At least one course must be selected"),
+  signatureData: z.string().optional(),
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: "You must accept the terms and conditions"
+  })
 });
 
 type RegisterFormValues = z.infer<typeof registerFormSchema>;
