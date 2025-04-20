@@ -338,8 +338,8 @@ export function MobileNav() {
                 location === "/" ? "text-primary" : "text-white"
               )}
             >
-              <HomeIcon className="h-[15px] w-[15px] mb-0.5" />
-              <span className="text-[10px] mt-[1px]">Home</span>
+              <HomeIcon className="h-[20px] w-[20px]" />
+              <span className="text-[10px] mt-[0px]">Home</span>
             </Button>
           </Link>
 
@@ -351,8 +351,8 @@ export function MobileNav() {
                   location?.startsWith("/crm") ? "text-primary" : "text-white"
                 )}
               >
-                <BarChart className="h-[15px] w-[15px] mb-0.5" />
-                <span className="text-[10px] mt-[1px]">CRM</span>
+                <BarChart className="h-[20px] w-[20px]" />
+                <span className="text-[10px] mt-[0px]">CRM</span>
               </Button>
             </Link>
           )}
@@ -379,8 +379,8 @@ export function MobileNav() {
                   (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-white"
                 )}
               >
-                <Building className="h-[15px] w-[15px] mb-0.5" />
-                <span className="text-[10px] mt-[1px]">HRM</span>
+                <Building className="h-[20px] w-[20px]" />
+                <span className="text-[10px] mt-[0px]">HRM</span>
               </Button>
             </Link>
           )}
@@ -392,8 +392,8 @@ export function MobileNav() {
                 location?.startsWith("/profile") ? "text-primary" : "text-white"
               )}
             >
-              <Users className="h-[15px] w-[15px] mb-0.5" />
-              <span className="text-[10px] mt-[1px]">Profile</span>
+              <Users className="h-[20px] w-[20px]" />
+              <span className="text-[10px] mt-[0px]">Profile</span>
             </Button>
           </Link>
         </div>
@@ -468,10 +468,10 @@ export function MobileNav() {
                             "bg-primary/10": location === item.href,
                           })}
                         >
-                          <div className="h-[15px] w-[15px] flex items-center justify-center">
-                            {React.cloneElement(item.icon as React.ReactElement, { className: "h-[15px] w-[15px]" })}
+                          <div className="h-[20px] w-[20px] flex items-center justify-center">
+                            {React.cloneElement(item.icon as React.ReactElement, { className: "h-[20px] w-[20px]" })}
                           </div>
-                          <span className="ml-1">{item.title}</span>
+                          <span className="ml-[1px]">{item.title}</span>
                         </Button>
                       </Link>
                     ))
@@ -484,10 +484,10 @@ export function MobileNav() {
                             "bg-primary/10": location === item.href,
                           })}
                         >
-                          <div className="h-[15px] w-[15px] flex items-center justify-center">
-                            {React.cloneElement(item.icon as React.ReactElement, { className: "h-[15px] w-[15px]" })}
+                          <div className="h-[20px] w-[20px] flex items-center justify-center">
+                            {React.cloneElement(item.icon as React.ReactElement, { className: "h-[20px] w-[20px]" })}
                           </div>
-                          <span className="ml-1">{item.title}</span>
+                          <span className="ml-[1px]">{item.title}</span>
                         </Button>
                       </Link>
                     ))
@@ -500,10 +500,10 @@ export function MobileNav() {
                             "bg-primary/10": location === item.href,
                           })}
                         >
-                          <div className="h-[15px] w-[15px] flex items-center justify-center">
-                            {React.cloneElement(item.icon as React.ReactElement, { className: "h-[15px] w-[15px]" })}
+                          <div className="h-[20px] w-[20px] flex items-center justify-center">
+                            {React.cloneElement(item.icon as React.ReactElement, { className: "h-[20px] w-[20px]" })}
                           </div>
-                          <span className="ml-1">{item.title}</span>
+                          <span className="ml-[1px]">{item.title}</span>
                         </Button>
                       </Link>
                     ))
@@ -522,10 +522,10 @@ export function MobileNav() {
                     className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
                     onClick={() => logoutMutation.mutate()}
                   >
-                    <div className="h-[15px] w-[15px] flex items-center justify-center">
-                      <LogOut className="h-[15px] w-[15px]" />
+                    <div className="h-[20px] w-[20px] flex items-center justify-center">
+                      <LogOut className="h-[20px] w-[20px]" />
                     </div>
-                    <span className="ml-1">Logout</span>
+                    <span className="ml-[1px]">Logout</span>
                   </Button>
                 </div>
               </div>
