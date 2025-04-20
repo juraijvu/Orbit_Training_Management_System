@@ -2,6 +2,7 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import { createServer, type Server } from "http";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import multer from "multer";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -559,6 +560,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting registration course:", error);
       res.status(500).json({ message: "Failed to delete registration course" });
+    }
+  });
+  
+  // Generate registration link for a student
+  app.post('/api/registrations/:studentId/generate-link', isAuthenticated, async (req, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const { expiryDays, discountPercentage } = req.body;
+      
+      // Validate that student exists
+      const student = await storage.getStudent(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      // Generate a unique token
+      const token = crypto.randomUUID().replace(/-/g, '');
+      
+      // Set expiry date (default to 7 days if not specified)
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + (expiryDays || 7));
+      
+      // Update student with the registration link information
+      const updatedStudent = await storage.updateStudent(studentId, {
+        registerLink: token,
+        registerLinkExpiry: expiryDate,
+        registerLinkDiscount: discountPercentage || 0
+      });
+      
+      // Generate full URL for the registration link
+      const registrationUrl = `${req.protocol}://${req.get('host')}/register/${token}`;
+      
+      res.json({
+        registrationUrl,
+        expiryDate,
+        discountPercentage: discountPercentage || 0
+      });
+    } catch (error) {
+      console.error("Error generating registration link:", error);
+      res.status(500).json({ message: "Failed to generate registration link" });
     }
   });
 
