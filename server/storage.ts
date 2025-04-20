@@ -324,7 +324,6 @@ export class MemStorage implements IStorage {
   private whatsappMessagesMap: Map<number, WhatsappMessage>;
   private titanEmailSettingsMap: Map<number, TitanEmailSettings>;
   private registrationCoursesMap: Map<number, RegistrationCourse>;
-  private registrationCourseId: number = 1;
   private emailTemplatesMap: Map<number, EmailTemplate>;
   private emailHistoryMap: Map<number, EmailHistory>;
   private chatbotFlowsMap: Map<number, ChatbotFlow>;
@@ -338,7 +337,6 @@ export class MemStorage implements IStorage {
   private crmMeetingsMap: Map<number, CrmMeeting>;
   private corporateLeadsMap: Map<number, CorporateLead>;
   private crmPostsMap: Map<number, CrmPost>;
-  private registrationCoursesMap: Map<number, RegistrationCourse>;
   private whatsAppTemplatesMap: Map<number, WhatsAppTemplate>;
   private whatsAppChatsMap: Map<number, WhatsAppChat>;
   
@@ -632,6 +630,27 @@ export class MemStorage implements IStorage {
     const newSchedule: Schedule = { ...schedule, id, createdAt: new Date() };
     this.schedulesMap.set(id, newSchedule);
     return newSchedule;
+  }
+  
+  // Registration Courses methods
+  async getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]> {
+    return Array.from(this.registrationCoursesMap.values())
+      .filter(course => course.studentId === studentId);
+  }
+  
+  async getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined> {
+    return this.registrationCoursesMap.get(id);
+  }
+  
+  async createRegistrationCourse(course: InsertRegistrationCourse): Promise<RegistrationCourse> {
+    const id = this.registrationCourseId++;
+    const newCourse: RegistrationCourse = { ...course, id, createdAt: new Date() };
+    this.registrationCoursesMap.set(id, newCourse);
+    return newCourse;
+  }
+  
+  async deleteRegistrationCourse(id: number): Promise<boolean> {
+    return this.registrationCoursesMap.delete(id);
   }
 
   async updateSchedule(id: number, schedule: Partial<Schedule>): Promise<Schedule | undefined> {
