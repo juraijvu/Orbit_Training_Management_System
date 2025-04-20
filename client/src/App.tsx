@@ -32,6 +32,22 @@ function Router() {
     <MainLayout>
       <Switch>
         <Route path="/auth" component={AuthPage} />
+        <Route path="/register/:token" component={() => {
+          const PublicRegistrationPage = React.lazy(() => import("@/pages/register/[token]"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PublicRegistrationPage />
+            </React.Suspense>
+          );
+        }} />
+        <Route path="/register/success" component={() => {
+          const RegistrationSuccessPage = React.lazy(() => import("@/pages/register/success"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <RegistrationSuccessPage />
+            </React.Suspense>
+          );
+        }} />
         <ProtectedRoute path="/" component={Dashboard} />
         <ProtectedRoute path="/student-registration" component={StudentRegistration} />
         <ProtectedRoute path="/student-list" component={StudentList} />
