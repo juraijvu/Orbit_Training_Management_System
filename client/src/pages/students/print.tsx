@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useParams, useNavigate } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export default function PrintRegistration() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const [_, navigate] = useLocation();
   const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
   

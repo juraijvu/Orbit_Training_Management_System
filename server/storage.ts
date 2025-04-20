@@ -323,6 +323,8 @@ export class MemStorage implements IStorage {
   private whatsappChatsMap: Map<number, WhatsappChat>;
   private whatsappMessagesMap: Map<number, WhatsappMessage>;
   private titanEmailSettingsMap: Map<number, TitanEmailSettings>;
+  private registrationCoursesMap: Map<number, RegistrationCourse>;
+  private registrationCourseId: number = 1;
   private emailTemplatesMap: Map<number, EmailTemplate>;
   private emailHistoryMap: Map<number, EmailHistory>;
   private chatbotFlowsMap: Map<number, ChatbotFlow>;
