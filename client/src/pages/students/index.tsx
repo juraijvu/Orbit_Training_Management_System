@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, queryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Loader2, Search, Plus, FileText, Edit, Trash2, ListFilter } from "lucide-react";
+import { Loader2, Search, Plus, FileText, Edit, Trash2, ListFilter, Database } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,37 @@ export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [studentsPerPage] = useState(10);
+  
+  // Seed students mutation
+  const seedMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/seed/students");
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      if (data.seedingSkipped) {
+        toast({
+          title: "Seeding Skipped",
+          description: data.message,
+        });
+      } else {
+        toast({
+          title: "Sample Data Created",
+          description: `Successfully created ${data.studentsCreated} students with ${data.registrationCoursesCreated} courses and ${data.invoicesCreated} invoices.`,
+          variant: "success",
+        });
+        // Refresh the student list
+        queryClient.invalidateQueries({ queryKey: ["/api/students"] });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to seed sample student data",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Fetch students
   const { 
@@ -107,9 +139,28 @@ export default function StudentsPage() {
               Manage student registrations and records
             </CardDescription>
           </div>
-          <Button onClick={() => navigate("/students/register")}>
-            <Plus className="h-4 w-4 mr-2" /> Register New Student
-          </Button>
+          <div className="flex gap-2">
+            {students.length === 0 && (
+              <Button 
+                variant="outline" 
+                onClick={() => seedMutation.mutate()}
+                disabled={seedMutation.isPending}
+              >
+                {seedMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Seeding...
+                  </>
+                ) : (
+                  <>
+                    <Database className="h-4 w-4 mr-2" /> Add Sample Data
+                  </>
+                )}
+              </Button>
+            )}
+            <Button onClick={() => navigate("/students/register")}>
+              <Plus className="h-4 w-4 mr-2" /> Register New Student
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4 mb-6">

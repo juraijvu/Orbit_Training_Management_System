@@ -172,6 +172,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch students" });
     }
   });
+  
+  // Seed sample student data (for development purposes)
+  app.post('/api/seed/students', isSuperAdmin, async (req, res) => {
+    try {
+      // First, check if we already have students
+      const existingStudents = await storage.getStudents();
+      
+      if (existingStudents.length > 0) {
+        return res.json({ 
+          message: `Found ${existingStudents.length} existing students, skipping student seeding`,
+          seedingSkipped: true
+        });
+      }
+      
+      // Sample student data
+      const sampleStudents = [
+        {
+          firstName: "Ahmed",
+          lastName: "Al-Mansoori",
+          email: "ahmed.almansoori@example.com",
+          phoneNo: "+971501234567",
+          alternativeNo: "+971551234567",
+          dateOfBirth: "1995-03-15",
+          passportNo: "A12345678",
+          emiratesIdNo: "784-1995-1234567-8",
+          nationality: "Emirati",
+          education: "Bachelor's in Civil Engineering",
+          address: "Villa 23, Al Wasl Road, Dubai",
+          country: "United Arab Emirates",
+          companyOrUniversityName: "Dubai Municipality",
+          classType: "offline",
+          studentId: "ST-2023-001",
+          registrationNumber: "ORB-2023-001",
+          createdAt: new Date(),
+          createdBy: req.user?.id || 2 // Use authenticated user id or default to superadmin
+        },
+        {
+          firstName: "Sara",
+          lastName: "Khan",
+          email: "sara.khan@example.com",
+          phoneNo: "+971502345678",
+          alternativeNo: null,
+          dateOfBirth: "1998-07-22",
+          passportNo: "B87654321",
+          emiratesIdNo: "784-1998-7654321-0",
+          nationality: "Pakistani",
+          education: "Bachelor's in Computer Science",
+          address: "Apartment 405, Al Nahda 2, Dubai",
+          country: "United Arab Emirates",
+          companyOrUniversityName: "Tech Solutions LLC",
+          classType: "online",
+          studentId: "ST-2023-002",
+          registrationNumber: "ORB-2023-002",
+          createdAt: new Date(),
+          createdBy: req.user?.id || 2
+        },
+        {
+          firstName: "John",
+          lastName: "Smith",
+          email: "john.smith@example.com",
+          phoneNo: "+971503456789",
+          alternativeNo: "+971553456789",
+          dateOfBirth: "1990-11-10",
+          passportNo: "C45678901",
+          emiratesIdNo: "784-1990-4567890-1",
+          nationality: "British",
+          education: "Master's in Architecture",
+          address: "Villa 78, Jumeirah 3, Dubai",
+          country: "United Arab Emirates",
+          companyOrUniversityName: "ABC Architects",
+          classType: "private",
+          studentId: "ST-2023-003",
+          registrationNumber: "ORB-2023-003",
+          createdAt: new Date(),
+          createdBy: req.user?.id || 2
+        }
+      ];
+      
+      // Insert students
+      const createdStudents = [];
+      for (const studentData of sampleStudents) {
+        const student = await storage.createStudent(studentData);
+        createdStudents.push(student);
+      }
+      
+      // Get all courses for registrations
+      const courses = await storage.getCourses();
+      
+      if (!courses.length) {
+        return res.status(400).json({ 
+          message: "No courses found. Please add courses first.",
+          studentsCreated: createdStudents.length,
+          registrationCoursesCreated: 0,
+          invoicesCreated: 0
+        });
+      }
+      
+      // Create registration courses
+      const registrationCoursesData = [];
+      
+      // For each student, register 1-2 courses
+      for (const student of createdStudents) {
+        // Get 1-2 random courses
+        const numberOfCourses = Math.floor(Math.random() * 2) + 1;
+        const shuffledCourses = [...courses].sort(() => 0.5 - Math.random());
+        const selectedCourses = shuffledCourses.slice(0, numberOfCourses);
+        
+        for (const course of selectedCourses) {
+          // Calculate price based on class type
+          let price;
+          
+          switch (student.classType) {
+            case "online":
+              price = parseFloat(course.onlineRate || course.fee);
+              break;
+            case "offline":
+              price = parseFloat(course.offlineRate || course.fee);
+              break;
+            case "private":
+              price = parseFloat(course.privateRate || course.fee);
+              break;
+            case "batch":
+              price = parseFloat(course.batchRate || course.fee);
+              break;
+            default:
+              price = parseFloat(course.fee);
+          }
+          
+          // Apply random discount (0-15%)
+          const discount = Math.floor(Math.random() * 16); // 0-15
+          
+          const regCourse = await storage.createRegistrationCourse({
+            studentId: student.id,
+            courseId: course.id,
+            price: price.toString(),
+            discount: discount.toString(),
+            createdAt: new Date()
+          });
+          
+          registrationCoursesData.push(regCourse);
+        }
+      }
+      
+      // Create invoices for each student
+      const invoiceData = [];
+      
+      for (const student of createdStudents) {
+        // Get registration courses for this student
+        const studentCourses = registrationCoursesData.filter(c => c.studentId === student.id);
+        
+        if (studentCourses.length === 0) continue;
+        
+        // Calculate total amount
+        let totalAmount = 0;
+        
+        for (const course of studentCourses) {
+          const price = parseFloat(course.price);
+          const discount = parseFloat(course.discount);
+          const discountAmount = price * (discount / 100);
+          totalAmount += price - discountAmount;
+        }
+        
+        // Add VAT (5%)
+        totalAmount += totalAmount * 0.05;
+        
+        // Generate invoice number
+        const invoiceNumber = `INV-${new Date().getFullYear()}-${String(student.id).padStart(3, '0')}`;
+        
+        // Random payment mode
+        const paymentModes = ["Cash", "Card", "Tabby", "Tamara"];
+        const paymentMode = paymentModes[Math.floor(Math.random() * paymentModes.length)];
+        
+        // Random status (80% paid, 20% pending)
+        const status = Math.random() < 0.8 ? "paid" : "pending";
+        
+        // Transaction ID for card payments
+        const transactionId = paymentMode === "Card" ? `TXN-${Math.floor(Math.random() * 1000000)}` : null;
+        
+        const invoice = await storage.createInvoice({
+          invoiceNumber,
+          studentId: student.id,
+          amount: totalAmount.toFixed(2),
+          paymentMode,
+          transactionId,
+          paymentDate: new Date(),
+          status,
+          createdAt: new Date()
+        });
+        
+        invoiceData.push(invoice);
+      }
+      
+      res.json({
+        message: "Sample student data seeded successfully",
+        studentsCreated: createdStudents.length,
+        registrationCoursesCreated: registrationCoursesData.length,
+        invoicesCreated: invoiceData.length
+      });
+    } catch (error) {
+      console.error("Error seeding student data:", error);
+      res.status(500).json({ message: "Failed to seed student data" });
+    }
+  });
 
   // Get student by ID
   app.get('/api/students/:id', isAuthenticated, async (req, res) => {
