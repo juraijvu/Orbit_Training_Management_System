@@ -1,11 +1,11 @@
-import { FC, useState, useRef } from 'react';
+import { FC, useState, useRef, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { insertQuotationSchema } from '@shared/schema';
+import { insertQuotationSchema, insertQuotationItemSchema } from '@shared/schema';
 import { format, addDays } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -55,12 +55,25 @@ import {
   Check, 
   FilePlus, 
   Download,
-  Mail
+  Mail,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { QuotationStatus } from '@shared/types';
 import PrintTemplate from '@/components/print/print-template';
 import { generateQuotationPdf } from '@/lib/pdf-templates';
 import { useReactToPrint } from 'react-to-print';
+
+interface QuotationItem {
+  id: number;
+  quotationId: number;
+  courseId: number;
+  duration: string;
+  numberOfPersons: number;
+  rate: number;
+  total: number;
+  createdAt: string;
+}
 
 interface Quotation {
   id: number;
@@ -69,8 +82,6 @@ interface Quotation {
   contactPerson: string;
   email: string;
   phone: string;
-  courseId: number;
-  participants: number;
   totalAmount: number;
   discount: number;
   finalAmount: number;
@@ -78,6 +89,7 @@ interface Quotation {
   status: string;
   createdBy: number;
   createdAt: string;
+  items?: QuotationItem[];
 }
 
 interface Course {
@@ -88,9 +100,30 @@ interface Course {
   fee: number;
 }
 
+// Define the form values for a quotation item
+interface QuotationItemFormValues {
+  id?: number;
+  courseId: number;
+  duration: string;
+  numberOfPersons: number;
+  rate: number;
+  total: number;
+}
+
+// Quotation item schema
+const quotationItemSchema = z.object({
+  id: z.number().optional(),
+  courseId: z.number().min(1, "Course is required"),
+  duration: z.string().min(1, "Duration is required"),
+  numberOfPersons: z.number().min(1, "Number of persons must be at least 1"),
+  rate: z.number().min(0, "Rate must be a positive number"),
+  total: z.number().min(0, "Total must be a positive number"),
+});
+
 // Quotation form schema
 const quotationFormSchema = insertQuotationSchema.extend({
   validity: z.string().min(1, "Validity date is required"),
+  items: z.array(quotationItemSchema).min(1, "At least one course item is required"),
 });
 
 type QuotationFormValues = z.infer<typeof quotationFormSchema>;
@@ -113,15 +146,28 @@ const QuotationsPage: FC = () => {
       contactPerson: '',
       email: '',
       phone: '',
-      courseId: undefined,
-      participants: 1,
       totalAmount: 0,
       discount: 0,
       finalAmount: 0,
       validity: format(addDays(new Date(), 30), 'yyyy-MM-dd'),
       status: QuotationStatus.PENDING,
       createdBy: user?.id,
+      items: [
+        {
+          courseId: 0,
+          duration: '',
+          numberOfPersons: 1,
+          rate: 0,
+          total: 0
+        }
+      ]
     },
+  });
+  
+  // Field array for quotation items
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items"
   });
   
   // Fetch quotations
@@ -186,22 +232,42 @@ const QuotationsPage: FC = () => {
     },
   });
   
-  // Watch for changes in course and participants
-  const watchedCourseId = form.watch('courseId');
-  const watchedParticipants = form.watch('participants');
+  // Watch for changes in form values
+  const watchedItems = form.watch('items');
   const watchedDiscount = form.watch('discount');
   
-  // Update total and final amount when course or participants change
-  useState(() => {
-    if (watchedCourseId) {
-      const course = courses?.find(c => c.id === Number(watchedCourseId));
-      if (course) {
-        const total = course.fee * (watchedParticipants || 1);
-        form.setValue('totalAmount', total);
-        form.setValue('finalAmount', total - (watchedDiscount || 0));
+  // Calculate totals for all items
+  const calculateTotals = () => {
+    const items = form.getValues('items') || [];
+    let totalAmount = 0;
+    
+    items.forEach((item, index) => {
+      if (item.courseId && item.numberOfPersons) {
+        const course = courses?.find(c => c.id === Number(item.courseId));
+        if (course) {
+          const rate = course.fee;
+          const total = rate * item.numberOfPersons;
+          
+          // Update rate and total in the form
+          form.setValue(`items.${index}.rate`, rate);
+          form.setValue(`items.${index}.total`, total);
+          
+          // Add to total amount
+          totalAmount += total;
+        }
       }
+    });
+    
+    form.setValue('totalAmount', totalAmount);
+    form.setValue('finalAmount', totalAmount - (Number(watchedDiscount) || 0));
+  };
+  
+  // Update calculations when form values change
+  useEffect(() => {
+    if (courses) {
+      calculateTotals();
     }
-  });
+  }, [watchedItems, watchedDiscount, courses]);
   
   // Submit form
   const onSubmit = (values: QuotationFormValues) => {
