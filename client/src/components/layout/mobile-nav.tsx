@@ -330,15 +330,15 @@ export function MobileNav() {
     <>
       {/* Mobile Navigation Footer */}
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 md:hidden z-50 w-[90%] max-w-md">
-        <div className="flex justify-between items-center bg-white rounded-full shadow-lg px-6 py-3 mx-auto w-full">
+        <div className="flex justify-between items-center bg-black rounded-full shadow-lg px-6 py-2 mx-auto w-full">
           <Link href="/">
             <Button
               variant="ghost"
               className={cn("flex flex-col items-center rounded-none px-1", 
-                location === "/" ? "text-primary" : "text-muted-foreground"
+                location === "/" ? "text-primary" : "text-white"
               )}
             >
-              <HomeIcon className="h-6 w-6 mb-1" />
+              <HomeIcon className="h-6 w-6 mb-0.5" />
               <span className="text-[10px]">Home</span>
             </Button>
           </Link>
@@ -348,10 +348,10 @@ export function MobileNav() {
               <Button
                 variant="ghost"
                 className={cn("flex flex-col items-center rounded-none px-1", 
-                  location?.startsWith("/crm") ? "text-primary" : "text-muted-foreground"
+                  location?.startsWith("/crm") ? "text-primary" : "text-white"
                 )}
               >
-                <BarChart className="h-6 w-6 mb-1" />
+                <BarChart className="h-6 w-6 mb-0.5" />
                 <span className="text-[10px]">CRM</span>
               </Button>
             </Link>
@@ -360,7 +360,7 @@ export function MobileNav() {
           <Button
             variant="ghost"
             className={cn("flex flex-col items-center justify-center relative",
-              isOpen ? "text-white bg-primary rounded-full h-16 w-16 -mt-10 shadow-lg" : "text-white bg-indigo-600 rounded-full h-16 w-16 -mt-10 shadow-lg"
+              isOpen ? "text-white bg-primary rounded-full h-16 w-16 -mt-10 shadow-lg" : "text-white bg-primary rounded-full h-16 w-16 -mt-10 shadow-lg"
             )}
             onClick={() => setIsOpen(!isOpen)}
           >
@@ -376,10 +376,10 @@ export function MobileNav() {
               <Button
                 variant="ghost"
                 className={cn("flex flex-col items-center rounded-none px-1", 
-                  (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-muted-foreground"
+                  (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-white"
                 )}
               >
-                <Building className="h-6 w-6 mb-1" />
+                <Building className="h-6 w-6 mb-0.5" />
                 <span className="text-[10px]">HRM</span>
               </Button>
             </Link>
@@ -389,10 +389,10 @@ export function MobileNav() {
             <Button
               variant="ghost"
               className={cn("flex flex-col items-center rounded-none px-1", 
-                location?.startsWith("/settings") ? "text-primary" : "text-muted-foreground"
+                location?.startsWith("/settings") ? "text-primary" : "text-white"
               )}
             >
-              <Settings className="h-6 w-6 mb-1" />
+              <Settings className="h-6 w-6 mb-0.5" />
               <span className="text-[10px]">Settings</span>
             </Button>
           </Link>
