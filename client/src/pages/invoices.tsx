@@ -352,8 +352,8 @@ const InvoicesPage: FC = () => {
                             <TableCell className="font-medium">{student.studentId}</TableCell>
                             <TableCell>{student.fullName}</TableCell>
                             <TableCell>{course?.name || `ID: ${student.courseId}`}</TableCell>
-                            <TableCell>₹{student.totalFee.toLocaleString()}</TableCell>
-                            <TableCell>₹{student.balanceDue.toLocaleString()}</TableCell>
+                            <TableCell>₹{student.totalFee ? student.totalFee.toLocaleString() : '0'}</TableCell>
+                            <TableCell>₹{student.balanceDue ? student.balanceDue.toLocaleString() : '0'}</TableCell>
                             <TableCell>
                               <Badge className="bg-yellow-100 text-yellow-800">
                                 {student.paymentStatus}
