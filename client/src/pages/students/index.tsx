@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, queryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Loader2, Search, Plus, FileText, Edit, Trash2, ListFilter, Database } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

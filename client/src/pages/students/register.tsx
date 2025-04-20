@@ -184,19 +184,24 @@ export default function RegisterStudent() {
           // Set price based on class type
           switch (selectedClassType) {
             case "online":
-              coursePrice = parseFloat(course.onlineRate || course.fee || '0');
+              coursePrice = parseFloat(course.onlineRate) || parseFloat(course.fee) || 0;
               break;
             case "offline":
-              coursePrice = parseFloat(course.offlineRate || course.fee || '0');
+              coursePrice = parseFloat(course.offlineRate) || parseFloat(course.fee) || 0;
               break;
             case "private":
-              coursePrice = parseFloat(course.privateRate || course.fee || '0');
+              coursePrice = parseFloat(course.privateRate) || parseFloat(course.fee) || 0;
               break;
             case "batch":
-              coursePrice = parseFloat(course.batchRate || course.fee || '0');
+              coursePrice = parseFloat(course.batchRate) || parseFloat(course.fee) || 0;
               break;
             default:
-              coursePrice = parseFloat(course.fee || '0');
+              coursePrice = parseFloat(course.fee) || 0;
+          }
+          
+          // Make sure price is a valid number
+          if (isNaN(coursePrice)) {
+            coursePrice = 0;
           }
           
           // Log for debugging
