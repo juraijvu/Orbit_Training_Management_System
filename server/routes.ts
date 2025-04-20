@@ -567,12 +567,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/registrations/:studentId/generate-link', isAuthenticated, async (req, res) => {
     try {
       const studentId = parseInt(req.params.studentId);
-      const { expiryDays, discountPercentage } = req.body;
+      const { expiryDays, discountPercentage, courseId } = req.body;
       
       // Validate that student exists
       const student = await storage.getStudent(studentId);
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
+      }
+      
+      // Validate that course exists if provided
+      let course = null;
+      if (courseId) {
+        course = await storage.getCourse(courseId);
+        if (!course) {
+          return res.status(404).json({ message: "Course not found" });
+        }
       }
       
       // Generate a unique token
@@ -586,7 +595,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedStudent = await storage.updateStudent(studentId, {
         registerLink: token,
         registerLinkExpiry: expiryDate,
-        registerLinkDiscount: discountPercentage || 0
+        registerLinkDiscount: discountPercentage || 0,
+        registerLinkCourseId: courseId || null
       });
       
       // Generate full URL for the registration link
@@ -595,11 +605,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         registrationUrl,
         expiryDate,
-        discountPercentage: discountPercentage || 0
+        discountPercentage: discountPercentage || 0,
+        courseId: courseId || null,
+        courseName: course ? course.name : null
       });
     } catch (error) {
       console.error("Error generating registration link:", error);
       res.status(500).json({ message: "Failed to generate registration link" });
+    }
+  });
+  
+  // Get registration link details (public endpoint)
+  app.get('/api/register/:token', async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      // Find student with this registration link
+      const student = await storage.getStudentByRegisterLink(token);
+      if (!student) {
+        return res.status(404).json({ message: "Invalid registration link" });
+      }
+      
+      // Check if link is expired
+      if (student.registerLinkExpiry && new Date(student.registerLinkExpiry) < new Date()) {
+        return res.status(400).json({ 
+          message: "Registration link expired",
+          expired: true
+        });
+      }
+      
+      // Get associated course if any
+      let course = null;
+      if (student.registerLinkCourseId) {
+        course = await storage.getCourse(student.registerLinkCourseId);
+      }
+      
+      res.json({
+        studentId: student.id,
+        expiryDate: student.registerLinkExpiry,
+        discountPercentage: student.registerLinkDiscount || 0,
+        course: course
+      });
+    } catch (error) {
+      console.error("Error fetching registration link details:", error);
+      res.status(500).json({ message: "Failed to fetch registration link details" });
+    }
+  });
+  
+  // Submit registration via public link
+  app.post('/api/register/:token/submit', async (req, res) => {
+    try {
+      const { token } = req.params;
+      const registrationData = req.body;
+      
+      // Find student with this registration link
+      const existingStudent = await storage.getStudentByRegisterLink(token);
+      if (!existingStudent) {
+        return res.status(404).json({ message: "Invalid registration link" });
+      }
+      
+      // Check if link is expired
+      if (existingStudent.registerLinkExpiry && new Date(existingStudent.registerLinkExpiry) < new Date()) {
+        return res.status(400).json({ 
+          message: "Registration link expired",
+          expired: true
+        });
+      }
+      
+      // Create a new student record with the registration data
+      const studentData = {
+        firstName: registrationData.firstName,
+        lastName: registrationData.lastName,
+        email: registrationData.email,
+        phoneNo: registrationData.phoneNo,
+        alternativeNo: registrationData.alternativeNo || null,
+        dateOfBirth: registrationData.dateOfBirth,
+        passportNo: registrationData.passportNo || null,
+        emiratesIdNo: registrationData.emiratesIdNo || null,
+        nationality: registrationData.nationality,
+        education: registrationData.education || null,
+        address: registrationData.address || null,
+        country: registrationData.country || null,
+        companyOrUniversityName: registrationData.companyOrUniversityName || null,
+        classType: registrationData.classType,
+        signatureData: registrationData.signatureData,
+        signatureDate: registrationData.signatureDate,
+        termsAccepted: registrationData.termsAccepted
+      };
+      
+      // Generate student ID and registration number
+      const students = await storage.getStudents();
+      const studentId = `ST-${new Date().getFullYear()}-${(students.length + 1).toString().padStart(3, '0')}`;
+      const regNumber = `ORB-${new Date().getFullYear()}-${(students.length + 1).toString().padStart(3, '0')}`;
+      
+      // Create the new student
+      const newStudent = await storage.createStudent({
+        ...studentData,
+        studentId,
+        registrationNumber: regNumber,
+        createdAt: new Date()
+      });
+      
+      // If course was linked to the registration link, create registration course
+      let invoice = null;
+      if (existingStudent.registerLinkCourseId) {
+        const course = await storage.getCourse(existingStudent.registerLinkCourseId);
+        
+        if (course) {
+          // Calculate price based on class type
+          let price;
+          
+          switch (registrationData.classType) {
+            case "online":
+              price = parseFloat(course.onlineRate || course.fee);
+              break;
+            case "offline":
+              price = parseFloat(course.offlineRate || course.fee);
+              break;
+            case "private":
+              price = parseFloat(course.privateRate || course.fee);
+              break;
+            case "batch":
+              price = parseFloat(course.batchRate || course.fee);
+              break;
+            default:
+              price = parseFloat(course.fee);
+          }
+          
+          // Apply discount if set in registration link
+          const discount = existingStudent.registerLinkDiscount || 0;
+          
+          // Create registration course
+          await storage.createRegistrationCourse({
+            studentId: newStudent.id,
+            courseId: course.id,
+            price: price.toString(),
+            discount: discount.toString()
+          });
+          
+          // Create invoice if payment method is not "cash"
+          if (registrationData.paymentMethod !== "cash") {
+            // Generate invoice number
+            const invoices = await storage.getInvoices();
+            const invoiceNumber = `INV-${new Date().getFullYear()}-${(invoices.length + 1).toString().padStart(3, '0')}`;
+            
+            // Calculate amount after discount
+            const discountAmount = price * (discount / 100);
+            const finalAmount = price - discountAmount;
+            
+            // Create invoice
+            invoice = await storage.createInvoice({
+              studentId: newStudent.id,
+              invoiceNumber,
+              amount: finalAmount.toString(),
+              status: "pending",
+              paymentMode: registrationData.paymentMethod,
+              paymentDate: null,
+              transactionId: null
+            });
+          }
+        }
+      }
+      
+      // Invalidate the registration link by removing token from the existing student
+      await storage.updateStudent(existingStudent.id, {
+        registerLink: null,
+        registerLinkExpiry: null,
+        registerLinkDiscount: null,
+        registerLinkCourseId: null
+      });
+      
+      // Generate payment URL if needed
+      let paymentUrl = null;
+      if (invoice && registrationData.paymentMethod !== "cash") {
+        // TODO: Implement payment gateway integration here
+        // For now, just use a stub URL
+        paymentUrl = `/payment/${invoice.id}`;
+      }
+      
+      res.status(201).json({
+        student: newStudent,
+        paymentUrl
+      });
+    } catch (error) {
+      console.error("Error submitting registration:", error);
+      res.status(500).json({ message: "Failed to submit registration" });
     }
   });
 
