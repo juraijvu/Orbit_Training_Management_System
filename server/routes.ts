@@ -157,9 +157,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Helper function to generate IDs
+  // Generate unique IDs with year-specific counters
+  const counters: Record<string, Record<number, number>> = {};
+  
   const generateId = (prefix: string, count: number): string => {
     const year = new Date().getFullYear();
-    return `${prefix}-${year}-${count.toString().padStart(3, '0')}`;
+    
+    // Initialize counter for this prefix and year if it doesn't exist
+    if (!counters[prefix]) {
+      counters[prefix] = {};
+    }
+    
+    if (!counters[prefix][year]) {
+      counters[prefix][year] = 0;
+    }
+    
+    // Increment the year-specific counter
+    counters[prefix][year]++;
+    
+    // Use the counter value instead of the total count
+    return `${prefix}-${year}-${counters[prefix][year].toString().padStart(3, '0')}`;
   };
 
   // ================== Students API ==================
@@ -433,9 +450,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { studentData, courses } = req.body;
       
-      // Generate registration number
-      const students = await storage.getStudents();
-      const regNumber = generateId('REG', students.length + 1);
+      // Generate Orbit-specific registration number with year-specific counter
+      const regNumber = generateId('ORB', 0); // The count is ignored as we use year-specific counter
       
       // Create student record
       const student = await storage.createStudent({
