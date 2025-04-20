@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { UserRole } from "@shared/types";
 import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, Shield, User as UserIcon, Calendar, BarChart2, CheckCircle, Clock } from "lucide-react";
@@ -27,6 +28,16 @@ export default function UserProfilePage() {
   const id = params.id;
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  const [profileData, setProfileData] = useState({
+    fullName: '',
+    email: '',
+    phone: ''
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
   
   // Fetch user profile
   const { 
@@ -35,6 +46,13 @@ export default function UserProfilePage() {
     error 
   } = useQuery({
     queryKey: [`/api/users/${id}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile');
+      }
+      return response.json();
+    },
     retry: 1,
   });
 
@@ -48,6 +66,99 @@ export default function UserProfilePage() {
       });
     }
   }, [error, toast]);
+  
+  // Initialize form data when user data is loaded
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        fullName: user.fullName,
+        email: user.email || '',
+        phone: user.phone || ''
+      });
+    }
+  }, [user]);
+  
+  // Update profile handler
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profileData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      
+      toast({
+        title: "Success",
+        description: "Your profile has been updated successfully",
+      });
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Change password handler
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New password and confirmation do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/users/${id}/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to change password');
+      }
+      
+      toast({
+        title: "Success",
+        description: "Your password has been changed successfully",
+      });
+      
+      // Reset password fields
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to change password",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Helper function to determine role badge color
   const getRoleBadgeColor = (role: string) => {
@@ -262,24 +373,115 @@ export default function UserProfilePage() {
           {/* Settings Tab (only for current user) */}
           {user.id === currentUser?.id && (
             <TabsContent value="settings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Personal Settings</CardTitle>
-                  <CardDescription>
-                    Manage your personal information and preferences
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      To edit your personal information, please use the main {" "}
-                      <Button variant="link" className="px-1 py-0 h-auto" onClick={() => window.location.href = "/settings"}>
-                        Settings page
-                      </Button>
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Edit Profile</CardTitle>
+                    <CardDescription>
+                      Update your personal information
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form className="space-y-4" onSubmit={handleUpdateProfile}>
+                      <div className="space-y-2">
+                        <label htmlFor="fullName" className="text-sm font-medium">Full Name</label>
+                        <Input
+                          id="fullName"
+                          name="fullName"
+                          value={profileData.fullName}
+                          onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="email" className="text-sm font-medium">Email</label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={profileData.email}
+                          onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="phone" className="text-sm font-medium">Phone</label>
+                        <Input
+                          id="phone"
+                          name="phone"
+                          value={profileData.phone}
+                          onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                        />
+                      </div>
+                      
+                      <Button type="submit" className="mt-4">Save Changes</Button>
+                    </form>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Change Password</CardTitle>
+                    <CardDescription>
+                      Update your account password
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="currentPassword" className="text-sm font-medium">Current Password</label>
+                        <Input
+                          id="currentPassword"
+                          name="currentPassword"
+                          type="password"
+                          placeholder="Enter current password"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="newPassword" className="text-sm font-medium">New Password</label>
+                        <Input
+                          id="newPassword"
+                          name="newPassword"
+                          type="password"
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</label>
+                        <Input
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          type="password"
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                      
+                      <Button type="submit" className="mt-4">Change Password</Button>
+                    </form>
+                  </CardContent>
+                </Card>
+                
+                <Card className="md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Account Preferences</CardTitle>
+                    <CardDescription>
+                      Manage your account settings
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        For advanced settings and system-wide configuration, please visit the main {" "}
+                        <Button variant="link" className="px-1 py-0 h-auto" onClick={() => window.location.href = "/settings"}>
+                          Settings page
+                        </Button>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           )}
         </Tabs>
