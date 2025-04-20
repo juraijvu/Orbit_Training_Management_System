@@ -7,6 +7,7 @@ import {
   schedules, Schedule, InsertSchedule,
   certificates, Certificate, InsertCertificate,
   quotations, Quotation, InsertQuotation,
+  quotationItems, QuotationItem, InsertQuotationItem,
   proposals, Proposal, InsertProposal,
   leads, Lead, InsertLead,
   campaigns, Campaign, InsertCampaign,
@@ -112,6 +113,13 @@ export interface IStorage {
   getQuotation(id: number): Promise<Quotation | undefined>;
   createQuotation(quotation: InsertQuotation): Promise<Quotation>;
   updateQuotation(id: number, quotation: Partial<Quotation>): Promise<Quotation | undefined>;
+  
+  // Quotation Items
+  getQuotationItems(quotationId: number): Promise<QuotationItem[]>;
+  getQuotationItem(id: number): Promise<QuotationItem | undefined>;
+  createQuotationItem(item: InsertQuotationItem): Promise<QuotationItem>;
+  updateQuotationItem(id: number, item: Partial<QuotationItem>): Promise<QuotationItem | undefined>;
+  deleteQuotationItem(id: number): Promise<boolean>;
   
   // Proposals
   getProposals(): Promise<Proposal[]>;
@@ -314,6 +322,7 @@ export class MemStorage implements IStorage {
   private schedulesMap: Map<number, Schedule>;
   private certificatesMap: Map<number, Certificate>;
   private quotationsMap: Map<number, Quotation>;
+  private quotationItemsMap: Map<number, QuotationItem>;
   private proposalsMap: Map<number, Proposal>;
   private leadsMap: Map<number, Lead>;
   private campaignsMap: Map<number, Campaign>;
@@ -348,6 +357,7 @@ export class MemStorage implements IStorage {
   private scheduleId: number = 1;
   private certificateId: number = 1;
   private quotationId: number = 1;
+  private quotationItemId: number = 1;
   private proposalId: number = 1;
   private leadId: number = 1;
   private campaignId: number = 1;
@@ -385,6 +395,7 @@ export class MemStorage implements IStorage {
     this.schedulesMap = new Map();
     this.certificatesMap = new Map();
     this.quotationsMap = new Map();
+    this.quotationItemsMap = new Map();
     this.proposalsMap = new Map();
     this.leadsMap = new Map();
     this.campaignsMap = new Map();
@@ -711,6 +722,37 @@ export class MemStorage implements IStorage {
     const updatedQuotation = { ...existingQuotation, ...quotation };
     this.quotationsMap.set(id, updatedQuotation);
     return updatedQuotation;
+  }
+  
+  // Quotation Items methods
+  async getQuotationItems(quotationId: number): Promise<QuotationItem[]> {
+    return Array.from(this.quotationItemsMap.values()).filter(
+      (item) => item.quotationId === quotationId
+    );
+  }
+
+  async getQuotationItem(id: number): Promise<QuotationItem | undefined> {
+    return this.quotationItemsMap.get(id);
+  }
+
+  async createQuotationItem(item: InsertQuotationItem): Promise<QuotationItem> {
+    const id = this.quotationItemId++;
+    const newItem: QuotationItem = { ...item, id, createdAt: new Date() };
+    this.quotationItemsMap.set(id, newItem);
+    return newItem;
+  }
+
+  async updateQuotationItem(id: number, item: Partial<QuotationItem>): Promise<QuotationItem | undefined> {
+    const existingItem = this.quotationItemsMap.get(id);
+    if (!existingItem) return undefined;
+
+    const updatedItem = { ...existingItem, ...item };
+    this.quotationItemsMap.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteQuotationItem(id: number): Promise<boolean> {
+    return this.quotationItemsMap.delete(id);
   }
 
   // Proposals methods
