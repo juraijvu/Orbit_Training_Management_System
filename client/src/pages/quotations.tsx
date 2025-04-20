@@ -495,13 +495,13 @@ const QuotationsPage: FC = () => {
                   />
                 </div>
                 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Course Items</h3>
+                <div className="space-y-4 max-h-[400px] overflow-y-auto border border-gray-100 rounded-md p-4">
+                  <h3 className="text-lg font-medium sticky top-0 bg-white pt-1 pb-3">Course Items</h3>
                   
                   {fields.map((field, index) => (
                     <div 
                       key={field.id} 
-                      className="p-3 sm:p-4 bg-gray-50 rounded-md border border-gray-200 overflow-hidden"
+                      className="p-3 sm:p-4 bg-gray-50 rounded-md border border-gray-200 mb-4"
                     >
                       <div className="flex justify-between items-center mb-2">
                         <h4 className="text-xs sm:text-sm font-medium">Item #{index + 1}</h4>
@@ -518,7 +518,7 @@ const QuotationsPage: FC = () => {
                         )}
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      <div className="grid grid-cols-1 gap-3">
                         <FormField
                           control={form.control}
                           name={`items.${index}.courseId`}
@@ -551,87 +551,89 @@ const QuotationsPage: FC = () => {
                           )}
                         />
                         
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.duration`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Duration</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  {...field}
-                                  placeholder="e.g., 3 days, 2 weeks"
-                                  disabled={isPending}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.numberOfPersons`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Number of Persons</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  min="1" 
-                                  {...field}
-                                  onChange={(e) => {
-                                    const val = parseInt(e.target.value);
-                                    field.onChange(val || 1);
-                                    calculateTotals();
-                                  }}
-                                  disabled={isPending}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.duration`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Duration</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field}
+                                    placeholder="e.g., 3 days, 2 weeks"
+                                    disabled={isPending}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.numberOfPersons`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Persons</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    min="1" 
+                                    {...field}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value);
+                                      field.onChange(val || 1);
+                                      calculateTotals();
+                                    }}
+                                    disabled={isPending}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.rate`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Rate per Person (₹)</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  {...field}
-                                  disabled={true}
-                                  className="bg-gray-100"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.total`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Total (₹)</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  {...field}
-                                  disabled={true}
-                                  className="bg-gray-100"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.rate`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Rate per Person (₹)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    {...field}
+                                    disabled={true}
+                                    className="bg-gray-100"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.total`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Total (₹)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    {...field}
+                                    disabled={true}
+                                    className="bg-gray-100"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -647,7 +649,7 @@ const QuotationsPage: FC = () => {
                       rate: 0,
                       total: 0
                     })}
-                    className="w-full"
+                    className="w-full sticky bottom-0 bg-white mt-2"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Another Course
