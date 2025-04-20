@@ -571,7 +571,11 @@ export default function Settings() {
                   ) : (
                     users.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell>{user.fullName}</TableCell>
+                        <TableCell>
+                          <Link href={`/profile/${user.id}`} className="text-primary hover:underline">
+                            {user.fullName}
+                          </Link>
+                        </TableCell>
                         <TableCell>{user.username}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>{user.phone}</TableCell>

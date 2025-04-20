@@ -296,6 +296,17 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        
+        {/* User Profile Page */}
+        <ProtectedRoute path="/profile/:id" component={() => {
+          const UserProfilePage = React.lazy(() => import("@/pages/profile/[id]"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <UserProfilePage />
+            </React.Suspense>
+          );
+        }} />
+        
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
