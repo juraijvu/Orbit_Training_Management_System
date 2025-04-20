@@ -329,17 +329,17 @@ export function MobileNav() {
   return (
     <>
       {/* Mobile Navigation Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-80 md:hidden z-50 shadow-lg">
-        <div className="flex justify-between items-center py-3">
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 md:hidden z-50 w-[90%] max-w-md">
+        <div className="flex justify-between items-center bg-white rounded-full shadow-lg px-6 py-3 mx-auto w-full">
           <Link href="/">
             <Button
               variant="ghost"
-              className={cn("flex-1 flex flex-col items-center py-2 rounded-none", 
-                location === "/" ? "text-primary" : "text-white"
+              className={cn("flex flex-col items-center rounded-none px-1", 
+                location === "/" ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <HomeIcon className="h-7 w-7 mb-1" />
-              <span className="text-xs">Institute</span>
+              <HomeIcon className="h-6 w-6 mb-1" />
+              <span className="text-[10px]">Home</span>
             </Button>
           </Link>
 
@@ -347,42 +347,55 @@ export function MobileNav() {
             <Link href="/crm/dashboard">
               <Button
                 variant="ghost"
-                className={cn("flex-1 flex flex-col items-center py-2 rounded-none", 
-                  location?.startsWith("/crm") ? "text-primary" : "text-white"
+                className={cn("flex flex-col items-center rounded-none px-1", 
+                  location?.startsWith("/crm") ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                <BarChart className="h-7 w-7 mb-1" />
-                <span className="text-xs">CRM</span>
+                <BarChart className="h-6 w-6 mb-1" />
+                <span className="text-[10px]">CRM</span>
               </Button>
             </Link>
           )}
+          
+          <Button
+            variant="ghost"
+            className={cn("flex flex-col items-center justify-center relative",
+              isOpen ? "text-white bg-primary rounded-full h-16 w-16 -mt-10 shadow-lg" : "text-white bg-indigo-600 rounded-full h-16 w-16 -mt-10 shadow-lg"
+            )}
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? (
+              <X className="h-8 w-8" />
+            ) : (
+              <Menu className="h-8 w-8" />
+            )}
+          </Button>
           
           {hasHrmAccess && (
             <Link href="/hrm">
               <Button
                 variant="ghost"
-                className={cn("flex-1 flex flex-col items-center py-2 rounded-none", 
-                  (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-white"
+                className={cn("flex flex-col items-center rounded-none px-1", 
+                  (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                <Building className="h-7 w-7 mb-1" />
-                <span className="text-xs">HRM</span>
+                <Building className="h-6 w-6 mb-1" />
+                <span className="text-[10px]">HRM</span>
               </Button>
             </Link>
           )}
-
-          <Button
-            variant="ghost"
-            className="flex-1 flex flex-col items-center py-2 rounded-none text-white relative"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? (
-              <X className="h-10 w-10 mb-1" />
-            ) : (
-              <Menu className="h-10 w-10 mb-1" />
-            )}
-            <span className="text-xs">Menu</span>
-          </Button>
+          
+          <Link href="/settings">
+            <Button
+              variant="ghost"
+              className={cn("flex flex-col items-center rounded-none px-1", 
+                location?.startsWith("/settings") ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <Settings className="h-6 w-6 mb-1" />
+              <span className="text-[10px]">Settings</span>
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -394,7 +407,7 @@ export function MobileNav() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed bottom-20 left-0 right-0 bg-background md:hidden z-40 shadow-lg border-t"
+            className="fixed bottom-24 left-4 right-4 bg-background md:hidden z-40 shadow-lg border rounded-lg"
           >
             <ScrollArea className="max-h-[60vh] overflow-y-auto">
               <div className="px-4 py-4">
@@ -514,7 +527,7 @@ export function MobileNav() {
       </AnimatePresence>
 
       {/* Extra space at the bottom to prevent content from being hidden behind the mobile nav */}
-      <div className="md:hidden h-20"></div>
+      <div className="md:hidden h-24"></div>
     </>
   );
 }
