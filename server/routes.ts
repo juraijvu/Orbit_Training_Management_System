@@ -6,7 +6,7 @@ import multer from "multer";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import * as chatbot from "./chatbot";
 import { emailNotificationService } from "./notifications";
 import {
@@ -1102,7 +1102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user (admin only)
-  app.patch('/api/users/:id', isAdmin, async (req, res) => {
+  app.patch('/api/users/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const existingUser = await storage.getUser(id);
@@ -1110,20 +1110,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Prevent role escalation - only superadmin can create superadmins
-      if (req.body.role === 'superadmin' && req.user?.role !== 'superadmin') {
-        return res.status(403).json({ message: "Only superadmins can create or modify superadmin accounts" });
+      // If not admin and not updating yourself, reject
+      const isOwnProfile = id === req.user?.id;
+      const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
+      
+      if (!isOwnProfile && !isAdmin) {
+        return res.status(403).json({ message: "You can only update your own profile" });
       }
       
-      // Prevent updating your own role
-      if (id === req.user?.id && req.body.role) {
-        return res.status(403).json({ message: "You cannot modify your own role" });
+      // Non-admins can only update certain fields
+      let updateData = req.body;
+      
+      if (!isAdmin) {
+        // Regular users can only update their profile info, not role or other sensitive fields
+        const { fullName, email, phone } = req.body;
+        updateData = { fullName, email, phone };
+      } else {
+        // Prevent role escalation - only superadmin can create superadmins
+        if (req.body.role === 'superadmin' && req.user?.role !== 'superadmin') {
+          return res.status(403).json({ message: "Only superadmins can create or modify superadmin accounts" });
+        }
+        
+        // Prevent updating your own role
+        if (isOwnProfile && req.body.role) {
+          return res.status(403).json({ message: "You cannot modify your own role" });
+        }
       }
       
-      const updatedUser = await storage.updateUser(id, req.body);
-      res.json(updatedUser);
+      const updatedUser = await storage.updateUser(id, updateData);
+      
+      // If the current user is updating their own profile, update the session
+      if (isOwnProfile) {
+        // Remove password from session data
+        const { password, ...userWithoutPassword } = updatedUser;
+        req.login(updatedUser, (err) => {
+          if (err) {
+            console.error("Failed to update session:", err);
+          }
+        });
+      }
+      
+      // Remove sensitive information when sending response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
     } catch (error) {
+      console.error("User update error:", error);
       res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+  
+  // Change password (users can only change their own password)
+  app.post('/api/users/:id/change-password', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Only allow users to change their own password unless they are an admin/superadmin
+      if (id !== req.user?.id && req.user?.role !== 'admin' && req.user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "You can only change your own password" });
+      }
+      
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+      
+      // Get the user
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Verify current password
+      const isPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update the user's password
+      const updatedUser = await storage.updateUser(id, { password: hashedPassword });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update password" });
+      }
+      
+      res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Password change error:", error);
+      res.status(500).json({ message: "Failed to change password" });
     }
   });
 

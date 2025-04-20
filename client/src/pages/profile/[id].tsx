@@ -427,7 +427,7 @@ export default function UserProfilePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <form className="space-y-4">
+                    <form className="space-y-4" onSubmit={handleChangePassword}>
                       <div className="space-y-2">
                         <label htmlFor="currentPassword" className="text-sm font-medium">Current Password</label>
                         <Input
@@ -435,6 +435,8 @@ export default function UserProfilePage() {
                           name="currentPassword"
                           type="password"
                           placeholder="Enter current password"
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
                         />
                       </div>
                       
@@ -445,6 +447,8 @@ export default function UserProfilePage() {
                           name="newPassword"
                           type="password"
                           placeholder="Enter new password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
                         />
                       </div>
                       
@@ -455,6 +459,8 @@ export default function UserProfilePage() {
                           name="confirmPassword"
                           type="password"
                           placeholder="Confirm new password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
                         />
                       </div>
                       
