@@ -1,4 +1,4 @@
-import { FC, useState, useRef } from 'react';
+import { FC, useState, useRef, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -46,7 +46,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Printer, Plus, Loader2 } from 'lucide-react';
+import { Eye, Printer, Plus, Loader2, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import PrintTemplate from '@/components/print/print-template';
 import { generateInvoicePdf } from '@/lib/pdf-templates';
@@ -86,6 +86,8 @@ interface Course {
 
 // Extend the schema for the form validation
 const invoiceFormSchema = insertInvoiceSchema.extend({
+  // Override amount to accept string input in the form
+  amount: z.string(),
   paymentDate: z.string().refine(val => {
     try {
       const date = new Date(val);
@@ -100,12 +102,24 @@ const invoiceFormSchema = insertInvoiceSchema.extend({
 
 type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 
+// Form schema for editing invoices with string amount
+const editInvoiceFormSchema = z.object({
+  amount: z.string().optional(),
+  paymentMode: z.string().optional(),
+  transactionId: z.string().optional(),
+  paymentDate: z.string().optional(),
+  status: z.string().optional(),
+});
+
+type EditInvoiceFormValues = z.infer<typeof editInvoiceFormSchema>;
+
 const InvoicesPage: FC = () => {
   const [location, params] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all-invoices');
   const [selectedInvoice, setSelectedInvoice] = useState<(Invoice & { student?: Student, course?: Course }) | null>(null);
-  const [isNewModalOpen, setIsNewModalOpen] = useState(params?.search?.includes('new=true') || false);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   const invoicePrintRef = useRef<HTMLDivElement>(null);
   
@@ -129,7 +143,7 @@ const InvoicesPage: FC = () => {
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
       studentId: undefined,
-      amount: 0,
+      amount: "0", // Use string for form input
       paymentMode: PaymentMode.CASH,
       transactionId: '',
       paymentDate: format(new Date(), 'yyyy-MM-dd'),
@@ -141,19 +155,39 @@ const InvoicesPage: FC = () => {
   const watchedStudentId = form.watch('studentId');
   
   // Update amount when student is selected
-  useState(() => {
+  useEffect(() => {
     if (watchedStudentId) {
       const student = students?.find(s => s.id === Number(watchedStudentId));
       if (student) {
-        form.setValue('amount', student.balanceDue);
+        form.setValue('amount', student.balanceDue.toString());
       }
     }
-  });
+  }, [watchedStudentId, students]);
   
   // Create invoice mutation
   const invoiceMutation = useMutation({
     mutationFn: async (data: InvoiceFormValues) => {
-      const res = await apiRequest('POST', '/api/invoices', data);
+      // Create a properly typed payload for the server
+      // Type that matches what the server expects (numeric amount)
+      interface ServerInvoicePayload {
+        studentId: number;
+        amount: number;
+        paymentMode: string;
+        transactionId: string;
+        paymentDate: string;
+        status: string;
+      }
+      
+      const payload: ServerInvoicePayload = {
+        studentId: Number(data.studentId),
+        amount: data.amount ? Number(data.amount) : 0,
+        paymentMode: data.paymentMode,
+        transactionId: data.transactionId || '',
+        paymentDate: data.paymentDate,
+        status: data.status
+      };
+      
+      const res = await apiRequest('POST', '/api/invoices', payload);
       return await res.json();
     },
     onSuccess: () => {
@@ -168,6 +202,75 @@ const InvoicesPage: FC = () => {
       
       setIsNewModalOpen(false);
       form.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Edit invoice form
+  const editForm = useForm<EditInvoiceFormValues>({
+    resolver: zodResolver(editInvoiceFormSchema),
+    defaultValues: {
+      status: '',
+      paymentMode: '',
+      amount: "0", // Use string for form input
+      transactionId: '',
+      paymentDate: '',
+    }
+  });
+  
+  // Update form values when an invoice is selected for editing
+  useEffect(() => {
+    if (selectedInvoice && isEditModalOpen) {
+      editForm.setValue('status', selectedInvoice.status);
+      editForm.setValue('amount', selectedInvoice.amount.toString());
+      editForm.setValue('paymentMode', selectedInvoice.paymentMode as PaymentMode);
+      editForm.setValue('transactionId', selectedInvoice.transactionId || '');
+      editForm.setValue('paymentDate', format(new Date(selectedInvoice.paymentDate), 'yyyy-MM-dd'));
+    }
+  }, [selectedInvoice, isEditModalOpen, editForm]);
+  
+  // Update invoice mutation
+  const updateInvoiceMutation = useMutation({
+    mutationFn: async (data: { id: number, updates: EditInvoiceFormValues }) => {
+      // Create a properly typed payload for the server
+      const serverUpdates: Partial<Invoice> = {};
+      
+      if (data.updates.amount) {
+        serverUpdates.amount = Number(data.updates.amount);
+      }
+      if (data.updates.paymentMode) {
+        serverUpdates.paymentMode = data.updates.paymentMode;
+      }
+      if (data.updates.transactionId !== undefined) {
+        serverUpdates.transactionId = data.updates.transactionId;
+      }
+      if (data.updates.paymentDate) {
+        serverUpdates.paymentDate = data.updates.paymentDate;
+      }
+      if (data.updates.status) {
+        serverUpdates.status = data.updates.status;
+      }
+      
+      const res = await apiRequest('PATCH', `/api/invoices/${data.id}`, serverUpdates);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/students'] });
+      
+      toast({
+        title: 'Success',
+        description: 'Invoice has been updated successfully',
+      });
+      
+      setIsEditModalOpen(false);
+      setSelectedInvoice(null);
     },
     onError: (error) => {
       toast({
@@ -197,13 +300,16 @@ const InvoicesPage: FC = () => {
   
   // Handle print invoice
   const handlePrintInvoice = useReactToPrint({
-    content: () => invoicePrintRef.current,
+    documentTitle: 'Invoice',
     onAfterPrint: () => {
       toast({
         title: 'Success',
         description: 'Invoice has been printed successfully.',
       });
     },
+    // TypeScript workaround for content property
+    // @ts-ignore
+    content: () => invoicePrintRef.current,
   });
   
   // Loading state
@@ -309,6 +415,16 @@ const InvoicesPage: FC = () => {
                               >
                                 <Printer className="h-4 w-4" />
                               </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                  viewInvoice(invoice);
+                                  setIsEditModalOpen(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -364,7 +480,7 @@ const InvoicesPage: FC = () => {
                                 size="sm"
                                 onClick={() => {
                                   form.setValue('studentId', student.id);
-                                  form.setValue('amount', student.balanceDue);
+                                  form.setValue('amount', student.balanceDue.toString());
                                   setIsNewModalOpen(true);
                                 }}
                               >
@@ -406,7 +522,7 @@ const InvoicesPage: FC = () => {
                         field.onChange(Number(value));
                         const student = students?.find(s => s.id === Number(value));
                         if (student) {
-                          form.setValue('amount', student.balanceDue);
+                          form.setValue('amount', student.balanceDue.toString());
                         }
                       }} 
                       value={field.value?.toString()}
@@ -439,7 +555,7 @@ const InvoicesPage: FC = () => {
                       <Input 
                         type="number"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))} 
+                        onChange={(e) => field.onChange(e.target.value)} 
                       />
                     </FormControl>
                     <FormMessage />
@@ -478,7 +594,7 @@ const InvoicesPage: FC = () => {
                   <FormItem>
                     <FormLabel>Transaction ID (Optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -548,8 +664,151 @@ const InvoicesPage: FC = () => {
         </DialogContent>
       </Dialog>
       
+      {/* Edit invoice dialog */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Invoice</DialogTitle>
+            <DialogDescription>
+              Update invoice details and payment status
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedInvoice && (
+            <Form {...editForm}>
+              <form 
+                onSubmit={editForm.handleSubmit((values: EditInvoiceFormValues) => {
+                  updateInvoiceMutation.mutate({
+                    id: selectedInvoice.id,
+                    updates: values
+                  });
+                })} 
+                className="space-y-4"
+              >
+                <FormField
+                  control={editForm.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Amount (AED)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value)} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="paymentMode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Payment Mode</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select payment mode" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={PaymentMode.CASH}>Cash</SelectItem>
+                          <SelectItem value={PaymentMode.UPI}>UPI</SelectItem>
+                          <SelectItem value={PaymentMode.BANK_TRANSFER}>Bank Transfer</SelectItem>
+                          <SelectItem value={PaymentMode.CHEQUE}>Cheque</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="transactionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Transaction ID (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="paymentDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Payment Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="paid">Paid</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="partially_paid">Partially Paid</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter className="mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updateInvoiceMutation.isPending}
+                  >
+                    {updateInvoiceMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Invoice'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          )}
+        </DialogContent>
+      </Dialog>
+      
       {/* Invoice details dialog */}
-      <Dialog open={!!selectedInvoice} onOpenChange={() => setSelectedInvoice(null)}>
+      <Dialog open={!!selectedInvoice && !isEditModalOpen} onOpenChange={() => setSelectedInvoice(null)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Invoice Details</DialogTitle>
