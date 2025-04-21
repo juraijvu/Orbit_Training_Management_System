@@ -12,6 +12,11 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const { user, isLoading } = useAuth();
   const [location] = useLocation();
+  
+  // Check if the current path is for authentication or public registration
+  const isAuthPath = location === "/auth" || 
+                    location.startsWith("/register/") ||
+                    location.includes("/register-link/");
 
   if (isLoading) {
     return (
@@ -21,10 +26,19 @@ export function MainLayout({ children }: MainLayoutProps) {
     );
   }
 
+  // If no user and not on an auth path, ProtectedRoute will handle redirecting
+  // Only render children without layout for auth paths
+  if (!user && isAuthPath) {
+    return <>{children}</>;
+  }
+  
+  // If there's no user and we're not on an auth path, still render just the children
+  // (the ProtectedRoute will handle the redirect)
   if (!user) {
     return <>{children}</>;
   }
 
+  // User is authenticated, show full layout with sidebar and content
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Desktop Sidebar - hidden on mobile */}

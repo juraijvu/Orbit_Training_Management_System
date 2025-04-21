@@ -22,7 +22,9 @@ export function ProtectedRoute({
     );
   }
 
+  // Strictly enforce authentication - redirect if no user
   if (!user) {
+    console.log('ProtectedRoute: No user, redirecting to auth page');
     return (
       <Route path={path}>
         <Redirect to="/auth" />
