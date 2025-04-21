@@ -36,17 +36,32 @@ npm install
 
 This will install all the dependencies listed in package.json, including Electron and related packages.
 
-## Step 3: Configure the Database Connection
+## Step 3: Configure the MySQL Database Connection
 
-Update the database connection in the Electron main file:
+Update the database connection in the Electron main file to use your Hostinger MySQL database:
 
 1. Open `electron/main.js` in a text editor
-2. Find the line containing `DATABASE_URL` (around line 12)
-3. Replace the connection string with your online database URL:
+2. Find the MySQL connection string (around line 15)
+3. Replace it with your Hostinger MySQL connection details:
 
 ```javascript
-const DATABASE_URL = 'your-postgres-connection-string';
+// For MySQL (Hostinger)
+const MYSQL_DATABASE_URL = 'mysql://your_username:your_password@your_hostname:3306/your_database_name';
+
+// Make sure this is set to 'mysql'
+const DATABASE_TYPE = 'mysql';
 ```
+
+The MySQL connection string format is: `mysql://username:password@hostname:3306/database_name`
+
+For example, if your Hostinger details are:
+- Username: orbituser
+- Password: yourpassword123
+- Hostname: sql.hostinger.com
+- Database name: orbitinstitute
+
+Your connection string would be:
+`mysql://orbituser:yourpassword123@sql.hostinger.com:3306/orbitinstitute`
 
 ## Step 4: Prepare the Application for Electron
 

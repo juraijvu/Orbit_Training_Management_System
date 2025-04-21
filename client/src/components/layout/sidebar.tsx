@@ -137,6 +137,13 @@ function Sidebar({ className }: SidebarNavProps) {
       section: "main"
     },
     {
+      title: "Analytics Dashboard",
+      href: "/analytics-dashboard",
+      icon: <BarChart className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
+    {
       title: "Facilities",
       href: "/facilities",
       icon: <Building className="h-5 w-5" />,

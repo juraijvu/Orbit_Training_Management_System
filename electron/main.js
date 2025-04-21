@@ -7,8 +7,15 @@ const isDev = process.env.NODE_ENV === 'development';
 // Keep a global reference of the window object to avoid garbage collection
 let mainWindow;
 
-// Database connection URL - this would be replaced with your online database URL
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_rV2QkSZOMFy8@ep-jolly-rain-a4njokz1.us-east-1.aws.neon.tech/neondb?sslmode=require';
+// Database connection URLs - these would be replaced with your online database URLs
+// For PostgreSQL (default)
+const POSTGRES_DATABASE_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_rV2QkSZOMFy8@ep-jolly-rain-a4njokz1.us-east-1.aws.neon.tech/neondb?sslmode=require';
+
+// For MySQL (Hostinger)
+const MYSQL_DATABASE_URL = process.env.MYSQL_DATABASE_URL || 'mysql://username:password@hostname:3306/database_name';
+
+// Set which database to use (postgres or mysql)
+const DATABASE_TYPE = 'mysql';
 
 function createWindow() {
   // Create the browser window
@@ -51,7 +58,13 @@ app.whenReady().then(() => {
   createWindow();
 
   // Set up environment variables for the database connection
-  process.env.DATABASE_URL = DATABASE_URL;
+  if (DATABASE_TYPE === 'mysql') {
+    process.env.MYSQL_DATABASE_URL = MYSQL_DATABASE_URL;
+    console.log('Using MySQL database connection');
+  } else {
+    process.env.DATABASE_URL = POSTGRES_DATABASE_URL;
+    console.log('Using PostgreSQL database connection');
+  }
 
   app.on('activate', () => {
     // On macOS re-create a window when dock icon is clicked and no other windows are open

@@ -18,6 +18,7 @@ import Certificates from "@/pages/certificates";
 import CertificateTemplates from "@/pages/certificate-templates";
 import Quotations from "@/pages/quotations";
 import Proposals from "@/pages/proposals";
+import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import ProposalTemplates from "@/pages/proposal-templates";
 import Settings from "@/pages/settings";
 import WhatsappSettings from "@/pages/whatsapp-settings";
@@ -341,6 +342,8 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        
+        <ProtectedRoute path="/analytics-dashboard" component={AnalyticsDashboard} />
         
         {/* Students Module */}
         <ProtectedRoute path="/students" component={() => {

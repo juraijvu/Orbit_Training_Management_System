@@ -9,6 +9,7 @@ import { fromZodError } from "zod-validation-error";
 import { storage } from "./storage";
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import * as chatbot from "./chatbot";
+import * as analytics from "./analytics";
 import { emailNotificationService } from "./notifications";
 import {
   insertStudentSchema,
@@ -3843,6 +3844,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ================== End of Titan Email API ==================
+
+  // ================== Analytics API ==================
+  
+  // Get dashboard stats
+  app.get('/api/analytics/dashboard', isAuthenticated, async (req, res) => {
+    try {
+      const stats = await analytics.getDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dashboard analytics:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard analytics" });
+    }
+  });
+
+  // Get student analytics
+  app.get('/api/analytics/students', isAuthenticated, async (req, res) => {
+    try {
+      const data = await analytics.getStudentAnalytics();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching student analytics:", error);
+      res.status(500).json({ message: "Failed to fetch student analytics" });
+    }
+  });
+
+  // Get financial analytics
+  app.get('/api/analytics/financial', isAuthenticated, async (req, res) => {
+    try {
+      const data = await analytics.getFinancialAnalytics();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching financial analytics:", error);
+      res.status(500).json({ message: "Failed to fetch financial analytics" });
+    }
+  });
+
+  // Get course analytics
+  app.get('/api/analytics/courses', isAuthenticated, async (req, res) => {
+    try {
+      const data = await analytics.getCourseAnalytics();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching course analytics:", error);
+      res.status(500).json({ message: "Failed to fetch course analytics" });
+    }
+  });
+
+  // Get CRM analytics
+  app.get('/api/analytics/crm', isAuthenticated, async (req, res) => {
+    try {
+      const data = await analytics.getCrmAnalytics();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching CRM analytics:", error);
+      res.status(500).json({ message: "Failed to fetch CRM analytics" });
+    }
+  });
+
+  // Get HRM analytics
+  app.get('/api/analytics/hrm', isAuthenticated, async (req, res) => {
+    try {
+      const data = await analytics.getHrmAnalytics();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching HRM analytics:", error);
+      res.status(500).json({ message: "Failed to fetch HRM analytics" });
+    }
+  });
+
+  // ================== End of Analytics API ==================
 
   const httpServer = createServer(app);
   return httpServer;
