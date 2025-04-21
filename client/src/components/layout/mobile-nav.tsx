@@ -22,7 +22,7 @@ import {
   LogOut,
   Briefcase, // For HRM
   Building,  // For HRM
-  DollarSign, // For HRM/Payroll
+  DollarSign, // For HRM/Payroll & Payment Gateway
   FileEdit, // For Interviews
   Plane, // For Visa Management
   Clock // For Attendance
@@ -69,14 +69,14 @@ export function MobileNav() {
     // Student Management
     {
       title: "Student Registration",
-      href: "/student-registration",
+      href: "/students/register",
       icon: <UserPlus className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
       section: "main"
     },
     {
       title: "Student List",
-      href: "/student-list",
+      href: "/students",
       icon: <Users className="h-5 w-5" />,
       roles: ["admin", "superadmin", "counselor"],
       section: "main"
@@ -217,6 +217,36 @@ export function MobileNav() {
       roles: ["admin", "superadmin"],
       section: "crm"
     },
+    {
+      title: "Payment Link Generator",
+      href: "/crm/payment-link-generator",
+      icon: <FileText className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "crm"
+    },
+    
+    // Reports & Analytics
+    {
+      title: "Reports",
+      href: "/reports",
+      icon: <FileText className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
+    {
+      title: "Analytics Dashboard",
+      href: "/analytics-dashboard",
+      icon: <BarChart className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
+    {
+      title: "Facilities",
+      href: "/facilities",
+      icon: <Building className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "main"
+    },
     
     // External Integrations
     {
@@ -248,6 +278,27 @@ export function MobileNav() {
       icon: <Settings className="h-5 w-5" />,
       roles: ["admin", "superadmin"],
       section: "main"
+    },
+    {
+      title: "CRM Settings",
+      href: "/settings/crm",
+      icon: <Settings className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "crm"
+    },
+    {
+      title: "Payment Gateway",
+      href: "/settings/crm/payment-gateway",
+      icon: <DollarSign className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "crm"
+    },
+    {
+      title: "HRM Settings",
+      href: "/settings/hrm",
+      icon: <Settings className="h-5 w-5" />,
+      roles: ["admin", "superadmin"],
+      section: "hrm"
     },
     
     // HRM Section
