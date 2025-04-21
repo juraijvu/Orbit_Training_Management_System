@@ -1,5 +1,5 @@
 -- MySQL Export for Orbit Institute System
--- Generated: 2025-04-21T22:40:05.033Z
+-- Generated: 2025-04-21T22:42:25.625Z
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET FOREIGN_KEY_CHECKS = 0;
@@ -62,10 +62,10 @@ CREATE TABLE `quotations` (
   `course_id` int NOT NULL,
   `participants` int NOT NULL,
   `total_amount` varchar(255) NOT NULL,
-  `discount` varchar(255) DEFAULT ''0'::numeric',
+  `discount` varchar(255) DEFAULT '0',
   `final_amount` varchar(255) NOT NULL,
   `validity` date NOT NULL,
-  `status` text NOT NULL DEFAULT ''pending'::text',
+  `status` text NOT NULL DEFAULT 'pending',
   `created_by` int NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -82,7 +82,7 @@ CREATE TABLE `schedules` (
   `student_ids` text NOT NULL,
   `start_time` datetime NOT NULL,
   `end_time` datetime NOT NULL,
-  `status` text NOT NULL DEFAULT ''confirmed'::text',
+  `status` text NOT NULL DEFAULT 'confirmed',
   `created_by` int NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -95,7 +95,7 @@ CREATE TABLE `users` (
   `id` int AUTO_INCREMENT NOT NULL,
   `username` text NOT NULL,
   `password` text NOT NULL,
-  `role` text NOT NULL DEFAULT ''counselor'::text',
+  `role` text NOT NULL DEFAULT 'counselor',
   `full_name` text NOT NULL,
   `email` text,
   `phone` text,
@@ -175,7 +175,7 @@ CREATE TABLE `email_templates` (
   `subject` text NOT NULL,
   `body_text` text,
   `body_html` text NOT NULL,
-  `category` text NOT NULL DEFAULT ''general'::text',
+  `category` text NOT NULL DEFAULT 'general',
   `variables` text,
   `is_default` tinyint(1) DEFAULT '0',
   `created_by` int,
@@ -189,7 +189,7 @@ CREATE TABLE `email_templates` (
 DROP TABLE IF EXISTS `email_history`;
 CREATE TABLE `email_history` (
   `id` int AUTO_INCREMENT NOT NULL,
-  `status` text NOT NULL DEFAULT ''draft'::text',
+  `status` text NOT NULL DEFAULT 'draft',
   `subject` text NOT NULL,
   `recipient_email` text NOT NULL,
   `student_id` int,
@@ -217,9 +217,9 @@ CREATE TABLE `leads` (
   `consultant_id` int NOT NULL,
   `source` text NOT NULL,
   `interested_courses` text NOT NULL,
-  `status` text NOT NULL DEFAULT ''New'::text',
-  `priority` text NOT NULL DEFAULT ''Medium'::text',
-  `followup_status` text DEFAULT ''Pending'::text',
+  `status` text NOT NULL DEFAULT 'New',
+  `priority` text NOT NULL DEFAULT 'Medium',
+  `followup_status` text DEFAULT 'Pending',
   `notes` text,
   `meeting_date` datetime,
   `assigned_to` int,
@@ -269,8 +269,8 @@ CREATE TABLE `follow_ups` (
   `outcome` text,
   `next_follow_up` datetime,
   `next_follow_up_time` text,
-  `priority` text NOT NULL DEFAULT ''Medium'::text',
-  `status` text NOT NULL DEFAULT ''Pending'::text',
+  `priority` text NOT NULL DEFAULT 'Medium',
+  `status` text NOT NULL DEFAULT 'Pending',
   `is_notified` tinyint(1) DEFAULT '0',
   `created_by` int NOT NULL,
   `consultant_id` int NOT NULL,
@@ -290,11 +290,11 @@ CREATE TABLE `proposals` (
   `phone` text NOT NULL,
   `course_ids` text NOT NULL,
   `total_amount` varchar(255) NOT NULL,
-  `discount` varchar(255) DEFAULT ''0'::numeric',
+  `discount` varchar(255) DEFAULT '0',
   `final_amount` varchar(255) NOT NULL,
   `cover_page` text,
   `content` text,
-  `status` text NOT NULL DEFAULT ''draft'::text',
+  `status` text NOT NULL DEFAULT 'draft',
   `created_by` int NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `company_profile_filename` text,
@@ -364,7 +364,7 @@ CREATE TABLE `students` (
   `batch` text NOT NULL,
   `registration_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `course_fee` varchar(255) NOT NULL,
-  `discount` varchar(255) DEFAULT ''0'::numeric',
+  `discount` varchar(255) DEFAULT '0',
   `total_fee` varchar(255) NOT NULL,
   `initial_payment` varchar(255) NOT NULL,
   `balance_due` varchar(255) NOT NULL,

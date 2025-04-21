@@ -120,6 +120,11 @@ async function exportMySql() {
             if (defaultVal.includes('now()')) {
               colDef += ` DEFAULT CURRENT_TIMESTAMP`;
             } else {
+              // Remove PostgreSQL type casts like '0'::numeric or 'pending'::text
+              if (defaultVal.includes('::')) {
+                defaultVal = defaultVal.split('::')[0];
+              }
+              
               // Clean up default value
               if (defaultVal.startsWith("'") && defaultVal.endsWith("'")) {
                 defaultVal = defaultVal.slice(1, -1);
