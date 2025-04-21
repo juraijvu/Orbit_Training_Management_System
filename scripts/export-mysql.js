@@ -116,16 +116,21 @@ async function exportMySql() {
           if (!col.column_default.includes('nextval')) {
             let defaultVal = col.column_default;
             
-            // Clean up default value
-            if (defaultVal.startsWith("'") && defaultVal.endsWith("'")) {
-              defaultVal = defaultVal.slice(1, -1);
+            // Handle now() function for timestamps
+            if (defaultVal.includes('now()')) {
+              colDef += ` DEFAULT CURRENT_TIMESTAMP`;
+            } else {
+              // Clean up default value
+              if (defaultVal.startsWith("'") && defaultVal.endsWith("'")) {
+                defaultVal = defaultVal.slice(1, -1);
+              }
+              
+              // Handle boolean defaults
+              if (defaultVal === 'true') defaultVal = '1';
+              if (defaultVal === 'false') defaultVal = '0';
+              
+              colDef += ` DEFAULT '${defaultVal}'`;
             }
-            
-            // Handle boolean defaults
-            if (defaultVal === 'true') defaultVal = '1';
-            if (defaultVal === 'false') defaultVal = '0';
-            
-            colDef += ` DEFAULT '${defaultVal}'`;
           }
         }
         

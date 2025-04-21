@@ -1,5 +1,5 @@
 -- MySQL Export for Orbit Institute System
--- Generated: 2025-04-21T22:22:52.644Z
+-- Generated: 2025-04-21T22:40:05.033Z
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET FOREIGN_KEY_CHECKS = 0;
@@ -13,9 +13,9 @@ CREATE TABLE `certificates` (
   `certificate_number` text NOT NULL,
   `student_id` int NOT NULL,
   `course_id` int NOT NULL,
-  `issue_date` datetime NOT NULL DEFAULT 'now()',
+  `issue_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `issued_by` int NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -29,9 +29,9 @@ CREATE TABLE `invoices` (
   `amount` varchar(255) NOT NULL,
   `payment_mode` text NOT NULL,
   `transaction_id` text,
-  `payment_date` datetime NOT NULL DEFAULT 'now()',
+  `payment_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `status` text NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -67,7 +67,7 @@ CREATE TABLE `quotations` (
   `validity` date NOT NULL,
   `status` text NOT NULL DEFAULT ''pending'::text',
   `created_by` int NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -84,7 +84,7 @@ CREATE TABLE `schedules` (
   `end_time` datetime NOT NULL,
   `status` text NOT NULL DEFAULT ''confirmed'::text',
   `created_by` int NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -119,7 +119,7 @@ CREATE TABLE `trainers` (
   `specialization` text NOT NULL,
   `courses` text NOT NULL,
   `availability` text NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `profile_pdf` text,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -161,8 +161,8 @@ CREATE TABLE `titan_email_settings` (
   `sender_email` text NOT NULL,
   `reply_to_email` text,
   `enabled` tinyint(1) DEFAULT '0',
-  `created_at` datetime NOT NULL DEFAULT 'now()',
-  `updated_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -179,8 +179,8 @@ CREATE TABLE `email_templates` (
   `variables` text,
   `is_default` tinyint(1) DEFAULT '0',
   `created_by` int,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
-  `updated_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -201,7 +201,7 @@ CREATE TABLE `email_history` (
   `sent_by` int,
   `error_message` text,
   `titan_message_id` text,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -227,7 +227,7 @@ CREATE TABLE `leads` (
   `next_follow_up_date` datetime,
   `next_follow_up_time` text,
   `created_by` int NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -252,7 +252,7 @@ CREATE TABLE `campaigns` (
   `clicks` int DEFAULT '0',
   `cost_per_lead` varchar(255),
   `created_by` int NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -274,7 +274,7 @@ CREATE TABLE `follow_ups` (
   `is_notified` tinyint(1) DEFAULT '0',
   `created_by` int NOT NULL,
   `consultant_id` int NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -296,7 +296,7 @@ CREATE TABLE `proposals` (
   `content` text,
   `status` text NOT NULL DEFAULT ''draft'::text',
   `created_by` int NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `company_profile_filename` text,
   `company_profile_mime_type` text,
   PRIMARY KEY (`id`)
@@ -311,7 +311,7 @@ CREATE TABLE `registration_courses` (
   `course_id` int NOT NULL,
   `price` varchar(255) NOT NULL,
   `discount` varchar(255) DEFAULT '0',
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -342,10 +342,10 @@ CREATE TABLE `user_sessions` (
 -- Dumping data for table `user_sessions`
 
 INSERT INTO `user_sessions` (`sid`, `sess`, `expire`) VALUES
+('mfzsapANhKVFg6UWBev2ZKqFsPpn9FLm', '{"cookie":{"originalMaxAge":86400000,"expires":"2025-04-22T06:56:44.931Z","httpOnly":true,"path":"/"},"passport":{"user":1}}', '2025-04-22 22:40:04'),
 ('3G_hSXJBM1HciYyQtGnwXYNzPGJvv6NL', '{"cookie":{"originalMaxAge":86400000,"expires":"2025-04-22T14:08:56.583Z","httpOnly":true,"path":"/"},"passport":{"user":2}}', '2025-04-22 14:23:02'),
 ('XccvP9KA-bDD9FiqUH2vf0jc2zDdmP5O', '{"cookie":{"originalMaxAge":86400000,"expires":"2025-04-22T06:30:22.887Z","httpOnly":true,"path":"/"},"passport":{"user":2}}', '2025-04-22 21:22:15'),
-('1Pko5j8K5OnbnSfzeUv1Iwqi2xT9AnOE', '{"cookie":{"originalMaxAge":86400000,"expires":"2025-04-22T09:37:05.235Z","httpOnly":true,"path":"/"},"passport":{"user":1}}', '2025-04-22 16:31:42'),
-('mfzsapANhKVFg6UWBev2ZKqFsPpn9FLm', '{"cookie":{"originalMaxAge":86400000,"expires":"2025-04-22T06:56:44.931Z","httpOnly":true,"path":"/"},"passport":{"user":1}}', '2025-04-22 22:22:32');
+('1Pko5j8K5OnbnSfzeUv1Iwqi2xT9AnOE', '{"cookie":{"originalMaxAge":86400000,"expires":"2025-04-22T09:37:05.235Z","httpOnly":true,"path":"/"},"passport":{"user":1}}', '2025-04-22 16:31:42');
 
 -- Table structure for table `students`
 
@@ -362,7 +362,7 @@ CREATE TABLE `students` (
   `address` text NOT NULL,
   `course_id` int NOT NULL,
   `batch` text NOT NULL,
-  `registration_date` datetime NOT NULL DEFAULT 'now()',
+  `registration_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `course_fee` varchar(255) NOT NULL,
   `discount` varchar(255) DEFAULT ''0'::numeric',
   `total_fee` varchar(255) NOT NULL,
@@ -370,7 +370,7 @@ CREATE TABLE `students` (
   `balance_due` varchar(255) NOT NULL,
   `payment_mode` text NOT NULL,
   `payment_status` text NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `registration_number` text,
   `first_name` text,
   `last_name` text,
@@ -574,7 +574,7 @@ CREATE TABLE `courses` (
   `fee` varchar(255) NOT NULL,
   `content` text,
   `active` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` datetime NOT NULL DEFAULT 'now()',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `online_rate` varchar(255),
   `offline_rate` varchar(255),
   `private_rate` varchar(255),
