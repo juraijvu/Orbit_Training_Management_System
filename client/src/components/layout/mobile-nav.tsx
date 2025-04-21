@@ -40,9 +40,9 @@ export function MobileNav() {
 
   // Set section based on the current location
   useEffect(() => {
-    if (location?.startsWith("/crm")) {
+    if (location?.startsWith("/crm") || location?.startsWith("/settings/crm")) {
       setActiveSection("crm");
-    } else if (location?.startsWith("/hrm") || location === "/visa-management") {
+    } else if (location?.startsWith("/hrm") || location?.startsWith("/visa-management") || location?.startsWith("/settings/hrm")) {
       setActiveSection("hrm");
     } else {
       setActiveSection("main");
@@ -348,7 +348,7 @@ export function MobileNav() {
               <Button
                 variant="ghost"
                 className={cn("flex flex-col items-center rounded-none px-1", 
-                  location?.startsWith("/crm") ? "text-primary" : "text-white"
+                  (location?.startsWith("/crm") || location?.startsWith("/settings/crm")) ? "text-primary" : "text-white"
                 )}
               >
                 <BarChart className="h-[20px] w-[20px]" />
@@ -376,7 +376,7 @@ export function MobileNav() {
               <Button
                 variant="ghost"
                 className={cn("flex flex-col items-center rounded-none px-1", 
-                  (location?.startsWith("/hrm") || location === "/visa-management") ? "text-primary" : "text-white"
+                  (location?.startsWith("/hrm") || location === "/visa-management" || location?.startsWith("/settings/hrm")) ? "text-primary" : "text-white"
                 )}
               >
                 <Building className="h-[20px] w-[20px]" />
