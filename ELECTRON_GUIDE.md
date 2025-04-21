@@ -46,7 +46,7 @@ Update the database connection in the Electron main file to use your Hostinger M
 
 ```javascript
 // For MySQL (Hostinger)
-const MYSQL_DATABASE_URL = 'mysql://your_username:your_password@your_hostname:3306/your_database_name';
+const MYSQL_DATABASE_URL = 'mysql://u912142054_orbit_app:Orbit@Dubai@2024@auth-db1443.hstgr.io:3306/u912142054_orbit_app';
 
 // Make sure this is set to 'mysql'
 const DATABASE_TYPE = 'mysql';
@@ -54,14 +54,16 @@ const DATABASE_TYPE = 'mysql';
 
 The MySQL connection string format is: `mysql://username:password@hostname:3306/database_name`
 
-For example, if your Hostinger details are:
-- Username: orbituser
-- Password: yourpassword123
-- Hostname: sql.hostinger.com
-- Database name: orbitinstitute
+For Orbit Institute's Hostinger database:
+- Username: u912142054_orbit_app
+- Password: Orbit@Dubai@2024
+- Hostname: auth-db1443.hstgr.io
+- Database name: u912142054_orbit_app
 
-Your connection string would be:
-`mysql://orbituser:yourpassword123@sql.hostinger.com:3306/orbitinstitute`
+Your connection string (already configured above):
+`mysql://u912142054_orbit_app:Orbit@Dubai@2024@auth-db1443.hstgr.io:3306/u912142054_orbit_app`
+
+> **Note about @ character in passwords**: If your password contains special characters like the @ symbol, they need to be properly encoded in the URL. The code in the Electron app will handle this encoding automatically.
 
 ## Step 4: Prepare the Application for Electron
 
@@ -118,9 +120,19 @@ When you need to update the application:
 
 If you encounter issues:
 
-- **Connection Issues**: Verify the database connection string is correct
+- **Connection Issues**: 
+  - Verify the database connection string is correct
+  - Make sure the IP address of your computer/network is allowed in the Hostinger MySQL database settings
+  - For Hostinger MySQL specifically:
+    1. Log in to your Hostinger control panel
+    2. Go to MySQL Databases
+    3. Select your database (u912142054_orbit_app)
+    4. Go to the "Remote Access" tab
+    5. Add your current IP address or use % for any IP (less secure but helpful for testing)
+  
 - **Build Errors**: Make sure all dependencies are installed
 - **Runtime Errors**: Check the application logs in the console
+- **Special Characters in Password**: If your password contains special characters like '@', the URL encoding should be handled automatically by the application, but if you encounter issues, try manually encoding the special characters.
 
 ## Important Security Notes
 

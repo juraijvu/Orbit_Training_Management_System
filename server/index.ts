@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Load environment variables from .env file
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -39,13 +40,25 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Create session table
-  await createSessionTable();
-  
-  // Seed default users
-  await seedDefaultUsers();
-  
-  const server = await registerRoutes(app);
+  try {
+    console.log('Environment settings:', {
+      USE_MYSQL: process.env.USE_MYSQL,
+      DATABASE_URL_EXISTS: !!process.env.DATABASE_URL,
+      MYSQL_DATABASE_URL_EXISTS: !!process.env.MYSQL_DATABASE_URL
+    });
+    
+    // Test database connection
+    const { testActiveDatabase } = await import('./db-selector');
+    const isConnected = await testActiveDatabase();
+    console.log('Database connection test result:', isConnected);
+    
+    // Create session table
+    await createSessionTable();
+    
+    // Seed default users
+    await seedDefaultUsers();
+    
+    const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -76,4 +89,8 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+  } catch (error) {
+    console.error('Error starting server:', error);
+    process.exit(1);
+  }
 })();

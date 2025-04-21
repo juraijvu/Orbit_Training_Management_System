@@ -3,7 +3,7 @@ import mysql from 'mysql2/promise';
 import * as schema from "@shared/schema";
 
 // MySQL connection configuration
-const CONNECTION_STRING = process.env.MYSQL_DATABASE_URL || 'mysql://username:password@hostname:3306/database_name';
+const CONNECTION_STRING = process.env.MYSQL_DATABASE_URL || 'mysql://u912142054_orbit_app:Orbit%40Dubai%402024@auth-db1443.hstgr.io:3306/u912142054_orbit_app';
 
 // Create MySQL connection pool
 export const pool = mysql.createPool(CONNECTION_STRING);

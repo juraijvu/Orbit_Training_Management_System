@@ -13,6 +13,14 @@ This guide will help you deploy the Orbit Institute System to Hostinger web host
 
 ## Step 1: Set Up MySQL Database on Hostinger
 
+> **Note**: For Orbit Institute, the MySQL database has already been set up with the following credentials:
+> - Hostname: auth-db1443.hstgr.io
+> - Database name: u912142054_orbit_app
+> - Username: u912142054_orbit_app
+> - Password: Orbit@Dubai@2024
+
+If you need to set up a new database:
+
 1. Log in to your Hostinger control panel
 2. Navigate to the MySQL Databases section
 3. Create a new database:
