@@ -12,7 +12,7 @@ let mainWindow;
 const POSTGRES_DATABASE_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_rV2QkSZOMFy8@ep-jolly-rain-a4njokz1.us-east-1.aws.neon.tech/neondb?sslmode=require';
 
 // For MySQL (Hostinger)
-const MYSQL_DATABASE_URL = process.env.MYSQL_DATABASE_URL || 'mysql://username:password@hostname:3306/database_name';
+const MYSQL_DATABASE_URL = process.env.MYSQL_DATABASE_URL || 'mysql://u912142054_orbit_app:Orbit%40Dubai%402024@auth-db1443.hstgr.io:3306/u912142054_orbit_app';
 
 // Set which database to use (postgres or mysql)
 const DATABASE_TYPE = 'mysql';
