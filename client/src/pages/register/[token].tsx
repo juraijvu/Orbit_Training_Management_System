@@ -33,6 +33,7 @@ const publicRegistrationSchema = z.object({
   companyOrUniversityName: z.string().optional(),
   passportNo: z.string().optional(),
   emiratesIdNo: z.string().optional(),
+  emirates: z.string().optional(),
   classType: z.enum(["online", "offline", "private", "batch"]),
   paymentMethod: z.enum(["cash", "card", "tabby", "tamara"]),
   signatureData: z.string().min(1, "Signature is required"),
@@ -74,6 +75,7 @@ export default function PublicRegistration() {
       companyOrUniversityName: "",
       passportNo: "",
       emiratesIdNo: "",
+      emirates: "",
       classType: "offline",
       paymentMethod: "cash",
       signatureData: "",
@@ -395,6 +397,33 @@ export default function PublicRegistration() {
                           <FormControl>
                             <Input {...field} placeholder="Your Emirates ID number" />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="emirates"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emirate</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Emirate" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Abu Dhabi">Abu Dhabi</SelectItem>
+                              <SelectItem value="Dubai">Dubai</SelectItem>
+                              <SelectItem value="Sharjah">Sharjah</SelectItem>
+                              <SelectItem value="Ajman">Ajman</SelectItem>
+                              <SelectItem value="Umm Al Quwain">Umm Al Quwain</SelectItem>
+                              <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                              <SelectItem value="Fujairah">Fujairah</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

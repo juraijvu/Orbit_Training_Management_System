@@ -36,6 +36,7 @@ export const students = pgTable("students", {
   passportNo: text("passport_no"),
   uidNo: text("uid_no"),
   emiratesIdNo: text("emirates_id_no"),
+  emirates: text("emirates"), // The specific emirate (Dubai, Abu Dhabi, etc.)
   nationality: text("nationality"),
   education: text("education"),
   gender: text("gender"),

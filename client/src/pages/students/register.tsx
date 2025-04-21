@@ -70,6 +70,7 @@ const registerFormSchema = z.object({
   passportNo: z.string().optional(),
   uidNo: z.string().optional(),
   emiratesIdNo: z.string().optional(),
+  emirates: z.string().optional(),
   nationality: z.string().min(2, "Nationality is required"),
   education: z.string().optional(),
   country: z.string().optional(),
@@ -121,6 +122,7 @@ export default function RegisterStudent() {
       passportNo: "",
       uidNo: "",
       emiratesIdNo: "",
+      emirates: "",
       nationality: "",
       education: "",
       country: "",
@@ -157,6 +159,7 @@ export default function RegisterStudent() {
           passportNo: data.passportNo || null,
           uidNo: data.uidNo || null,
           emiratesIdNo: data.emiratesIdNo || null,
+          emirates: data.emirates || null,
           nationality: data.nationality,
           education: data.education || null,
           country: data.country || null,
@@ -406,6 +409,36 @@ export default function RegisterStudent() {
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="emirates"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Emirate</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Emirate" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Abu Dhabi">Abu Dhabi</SelectItem>
+                            <SelectItem value="Dubai">Dubai</SelectItem>
+                            <SelectItem value="Sharjah">Sharjah</SelectItem>
+                            <SelectItem value="Ajman">Ajman</SelectItem>
+                            <SelectItem value="Umm Al Quwain">Umm Al Quwain</SelectItem>
+                            <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                            <SelectItem value="Fujairah">Fujairah</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

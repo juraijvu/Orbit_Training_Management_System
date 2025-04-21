@@ -682,6 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dateOfBirth: registrationData.dateOfBirth,
         passportNo: registrationData.passportNo || null,
         emiratesIdNo: registrationData.emiratesIdNo || null,
+        emirates: registrationData.emirates || null,
         nationality: registrationData.nationality,
         education: registrationData.education || null,
         address: registrationData.address || null,

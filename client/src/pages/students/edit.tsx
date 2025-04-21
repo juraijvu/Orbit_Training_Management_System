@@ -51,6 +51,7 @@ const studentEditSchema = z.object({
   registrationNumber: z.string().optional(),
   passportNo: z.string().optional(),
   emiratesIdNo: z.string().optional(),
+  emirates: z.string().optional(),
   nationality: z.string().min(1, "Nationality is required"),
   education: z.string().optional(),
   address: z.string().optional(),
@@ -102,6 +103,7 @@ export default function EditStudentPage() {
         registrationNumber: student.registrationNumber,
         passportNo: student.passportNo || "",
         emiratesIdNo: student.emiratesIdNo || "",
+        emirates: student.emirates || "",
         nationality: student.nationality,
         education: student.education || "",
         address: student.address || "",
@@ -331,6 +333,33 @@ export default function EditStudentPage() {
                       <FormControl>
                         <Input placeholder="Emirates ID number" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="emirates"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Emirate (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Emirate" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Abu Dhabi">Abu Dhabi</SelectItem>
+                          <SelectItem value="Dubai">Dubai</SelectItem>
+                          <SelectItem value="Sharjah">Sharjah</SelectItem>
+                          <SelectItem value="Ajman">Ajman</SelectItem>
+                          <SelectItem value="Umm Al Quwain">Umm Al Quwain</SelectItem>
+                          <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                          <SelectItem value="Fujairah">Fujairah</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
