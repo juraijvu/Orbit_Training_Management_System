@@ -77,11 +77,20 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
+  // ALWAYS serve the app on port specified in .env or fallback to 5050
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  // Use a different port if 5000 is already in use
   const port = process.env.PORT ? parseInt(process.env.PORT) : 5050;
+  
+  // Kill any existing process that might be using the port
+  try {
+    const { execSync } = require('child_process');
+    execSync(`lsof -t -i:${port} | xargs -r kill -9`);
+    console.log(`Killed any process using port ${port}`);
+  } catch (error) {
+    console.log(`No process found using port ${port}`);
+  }
+  
   server.listen({
     port,
     host: "0.0.0.0",

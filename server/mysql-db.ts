@@ -9,19 +9,50 @@ let connectionConfig;
 
 if (process.env.MYSQL_DATABASE_URL) {
   console.log("Using MYSQL_DATABASE_URL from environment variables");
-  // Using connection configuration to avoid URL parsing issues with special characters
-  connectionConfig = {
-    host: 'auth-db1443.hstgr.io',
-    port: 3306,
-    user: 'u912142054_orbit_app',
-    password: 'Orbit@Dubai@2024',
-    database: 'u912142054_orbit_app',
-    waitForConnections: true,
-    connectionLimit: 10,
-    maxIdle: 10,
-    idleTimeout: 60000,
-    queueLimit: 0
-  };
+  
+  try {
+    // Parse the connection string manually to handle special characters
+    const url = new URL(process.env.MYSQL_DATABASE_URL);
+    const username = decodeURIComponent(url.username);
+    const password = decodeURIComponent(url.password);
+    const database = url.pathname.substring(1); // Remove leading slash
+    
+    console.log("MySQL connection details:", {
+      host: url.hostname,
+      port: parseInt(url.port),
+      user: username,
+      database: database,
+      // Don't log the password
+    });
+    
+    connectionConfig = {
+      host: url.hostname,
+      port: parseInt(url.port),
+      user: username,
+      password: password,
+      database: database,
+      waitForConnections: true,
+      connectionLimit: 10,
+      maxIdle: 10,
+      idleTimeout: 60000,
+      queueLimit: 0
+    };
+  } catch (error) {
+    console.error("Error parsing MySQL connection string:", error);
+    // Fallback to hardcoded values if parsing fails
+    connectionConfig = {
+      host: 'auth-db1443.hstgr.io',
+      port: 3306,
+      user: 'u912142054_orbit_app',
+      password: 'Orbit@Dubai@2024',
+      database: 'u912142054_orbit_app',
+      waitForConnections: true,
+      connectionLimit: 10,
+      maxIdle: 10,
+      idleTimeout: 60000,
+      queueLimit: 0
+    };
+  }
 } else {
   // Fallback configuration
   connectionConfig = {

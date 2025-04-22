@@ -389,7 +389,7 @@ function Router() {
           );
         }} />
         
-        <Route component={NotFound} />
+        <ProtectedRoute path="*" component={NotFound} />
       </Switch>
     </MainLayout>
   );

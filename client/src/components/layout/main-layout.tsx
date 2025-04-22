@@ -3,7 +3,7 @@ import Sidebar from "@/components/layout/sidebar";
 import MobileNav from "@/components/layout/mobile-nav";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Redirect } from "wouter";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -21,8 +21,14 @@ export function MainLayout({ children }: MainLayoutProps) {
     );
   }
 
-  if (!user) {
+  // For auth page and registration pages, render without layout
+  if (!user && (location === '/auth' || location.startsWith('/register'))) {
     return <>{children}</>;
+  }
+  
+  // If not logged in and not on auth or registration pages, redirect to auth
+  if (!user) {
+    return <Redirect to="/auth" />;
   }
 
   return (
