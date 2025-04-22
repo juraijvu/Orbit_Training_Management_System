@@ -1,23 +1,18 @@
 import { db as postgresDb } from './db';
 import { db as mysqlDb, testDatabaseConnection } from './mysql-db';
 
+// Global flag to track if MySQL connection was successful
+let mysqlConnectionSuccess = false;
+
 // Determine which database to use based on environment variables
 export function selectDatabase() {
-  const useMysql = process.env.MYSQL_DATABASE_URL || process.env.USE_MYSQL === 'true';
+  const useMysql = process.env.USE_MYSQL === 'true';
   
-  // We'll try MySQL first but have a fallback to PostgreSQL
-  // This allows the app to run in development environments where MySQL might not be accessible
   if (useMysql) {
-    try {
-      console.log('Attempting to use MySQL database connection');
-      
-      // Test connection - we'll add this check later
-      // For now, just return the MySQL DB and let it fail gracefully if needed
-      return mysqlDb;
-    } catch (error) {
-      console.error('Failed to initialize MySQL connection, falling back to PostgreSQL:', error);
-      return postgresDb;
-    }
+    console.log('Attempting to use MySQL database connection');
+    // Return the MySQL database connection
+    // We'll check actual connectivity in testActiveDatabase
+    return mysqlDb;
   } else {
     console.log('Using PostgreSQL database connection');
     return postgresDb;
@@ -26,21 +21,24 @@ export function selectDatabase() {
 
 // Test the active database connection
 export async function testActiveDatabase() {
-  if (process.env.MYSQL_DATABASE_URL || process.env.USE_MYSQL === 'true') {
+  if (process.env.USE_MYSQL === 'true') {
     try {
+      // Test the MySQL connection
       const result = await testDatabaseConnection();
+      
+      // Update our connection success flag
+      mysqlConnectionSuccess = result;
       
       if (!result) {
         console.log('MySQL connection test failed, falling back to PostgreSQL');
-        // Modify the environment variable so future code uses PostgreSQL
-        process.env.USE_MYSQL = 'false';
+      } else {
+        console.log('MySQL connection test successful');
       }
       
       return result;
     } catch (error) {
-      console.error('MySQL connection test error, falling back to PostgreSQL:', error);
-      // Modify the environment variable so future code uses PostgreSQL
-      process.env.USE_MYSQL = 'false';
+      console.error('MySQL connection test error:', error);
+      mysqlConnectionSuccess = false;
       return false;
     }
   }
