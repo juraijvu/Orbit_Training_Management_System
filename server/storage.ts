@@ -36,7 +36,7 @@ import {
   cannedResponses, CannedResponse, InsertCannedResponse
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, asc, desc, gte, lte, lt } from "drizzle-orm";
+import { eq, and, asc, desc, gte, lte, lt, sql } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -1827,6 +1827,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createStudent(student: InsertStudent): Promise<Student> {
+    // If student_id is not provided, generate one
+    if (!student.studentId) {
+      // Generate a student ID like "ST-23-0001"
+      const year = new Date().getFullYear().toString().substr(2); // get last 2 digits of year
+      
+      // Get the latest student ID to generate the next one
+      const latestStudent = await db.select({ max: sql`MAX(student_id)` }).from(students).execute();
+      let nextNumber = 1;
+      
+      if (latestStudent[0]?.max) {
+        // If there's an existing student, extract the number and increment
+        const match = latestStudent[0].max.match(/ST-\d{2}-(\d{4})/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+      
+      // Format the number with leading zeros
+      const formattedNumber = nextNumber.toString().padStart(4, '0');
+      student.studentId = `ST-${year}-${formattedNumber}`; // Using backticks for template literal
+    }
+
     const studentWithDefaults = {
       ...student,
       createdAt: new Date(),
