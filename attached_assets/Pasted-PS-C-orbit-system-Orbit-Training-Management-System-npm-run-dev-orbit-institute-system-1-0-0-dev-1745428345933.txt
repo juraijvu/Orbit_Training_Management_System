@@ -1,0 +1,80 @@
+PS C:\orbit_system\Orbit_Training_Management_System> npm run dev
+
+> orbit-institute-system@1.0.0 dev
+> cross-env NODE_ENV=development tsx server/index.ts
+
+Using MYSQL_DATABASE_URL from environment variables
+MySQL connection details: {
+  host: 'auth-db1443.hstgr.io',
+  port: 3306,
+  user: 'u912142054_orbit_app',
+  database: 'u912142054_orbit_app'
+}
+Environment settings: {
+  USE_MYSQL: 'true',
+  DATABASE_URL_EXISTS: true,
+  MYSQL_DATABASE_URL_EXISTS: true
+}
+Attempting to use MySQL database connection
+Error connecting to MySQL database: Error: Access denied for user 'u912142054_orbit_app'@'217.165.23.210' (using password: YES)
+    at Packet.asError (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\packets\packet.js:740:17)
+    at ClientHandshake.execute (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\commands\command.js:29:26)
+    at PoolConnection.handlePacket (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\base\connection.js:475:34)
+    at PacketParser.onPacket (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5) {
+  code: 'ER_ACCESS_DENIED_ERROR',
+  errno: 1045,
+  sqlState: '28000',
+  sqlMessage: "Access denied for user 'u912142054_orbit_app'@'217.165.23.210' (using password: YES)",      
+  sql: undefined
+}
+MySQL connection test failed, falling back to PostgreSQL
+Database connection test result: false
+Creating session table if it doesn't exist...
+Error creating MySQL session table: Error: Access denied for user 'u912142054_orbit_app'@'217.165.23.210' (using password: YES)
+    at Packet.asError (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\packets\packet.js:740:17)
+    at ClientHandshake.execute (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\commands\command.js:29:26)
+    at PoolConnection.handlePacket (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\base\connection.js:475:34)
+    at PacketParser.onPacket (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (C:\orbit_system\Orbit_Training_Management_System\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5) {
+  code: 'ER_ACCESS_DENIED_ERROR',
+  errno: 1045,
+  sqlState: '28000',
+  sqlMessage: "Access denied for user 'u912142054_orbit_app'@'217.165.23.210' (using password: YES)",      
+  sql: undefined
+}
+Session table created or already exists.
+Admin user already exists.
+Superadmin user already exists.
+Database seeding completed!
+No process found using port 5000
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen ENOTSUP: operation not supported on socket 0.0.0.0:5000
+    at Server.setupListenHandle [as _listen2] (node:net:1917:21)
+    at listenInCluster (node:net:1996:12)
+    at node:net:2205:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1975:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'ENOTSUP',
+  errno: -4049,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 5000
+}
+
+Node.js v22.15.0
