@@ -6,7 +6,9 @@ import crypto from "crypto";
 import multer from "multer";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { sql } from "drizzle-orm";
 import { storage } from "./storage";
+import { db } from "./db";
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import * as chatbot from "./chatbot";
 import * as analytics from "./analytics";
@@ -461,45 +463,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const discountAmount = courses.reduce((sum, course) => sum + (parseFloat(course.price) * (parseFloat(course.discount) / 100)), 0);
       const finalFee = totalFee - discountAmount;
       
-      console.log("Creating student with the following data:", JSON.stringify({
-        studentData,
-        calculatedFields: {
-          totalFee,
-          discountAmount,
-          finalFee,
-          selectedCourseId: selectedCourse.courseId
-        }
-      }));
+      // Create a directly compatible object for the database
+      // This is more reliable than going through the storage layer's transformation
+      const fullName = `${studentData.firstName} ${studentData.lastName}`.trim();
       
-      // Map frontend fields to database fields and include the required fields
-      const studentForDb = {
-        ...studentData,
-        registrationNumber: regNumber,
-        full_name: `${studentData.firstName} ${studentData.lastName}`,
-        father_name: studentData.fatherName || "Not Provided",
-        phone: studentData.phoneNo,
-        dob: new Date(studentData.dateOfBirth),
-        course_id: selectedCourse.courseId,
-        batch: "Regular",
-        course_fee: selectedCourse.price,
-        total_fee: finalFee,
-        discount: discountAmount,
-        initial_payment: 0,
-        balance_due: finalFee,
-        payment_mode: "Not Set",
-        payment_status: "pending",
-        gender: studentData.gender || "Not Specified",
-        address: studentData.address || "Not Provided",
-        signatureData: studentData.signatureData,
-        termsAccepted: studentData.termsAccepted,
-        signatureDate: studentData.signatureDate ? new Date(studentData.signatureDate) : new Date(),
-        createdBy: req.user?.id
-      };
+      console.log("Creating student with direct SQL-compatible data. Full name:", fullName);
       
-      console.log("Final student data for DB:", JSON.stringify(studentForDb));
+      // Direct SQL query to insert the student record
+      const insertSql = sql`
+        INSERT INTO students (
+          student_id, 
+          full_name, 
+          father_name, 
+          email, 
+          phone, 
+          dob, 
+          gender, 
+          address, 
+          course_id, 
+          batch, 
+          registration_date, 
+          course_fee, 
+          total_fee, 
+          discount, 
+          initial_payment, 
+          balance_due, 
+          payment_mode, 
+          payment_status, 
+          created_at,
+          registration_number,
+          first_name,
+          last_name,
+          phone_no,
+          date_of_birth,
+          class_type,
+          signature_data,
+          terms_accepted,
+          signature_date,
+          created_by
+        ) VALUES (
+          ${`ST-25-0001`}, 
+          ${fullName}, 
+          ${"Not Provided"}, 
+          ${studentData.email || "No Email"}, 
+          ${studentData.phoneNo || "Not Provided"}, 
+          ${new Date(studentData.dateOfBirth)}, 
+          ${"Not Specified"}, 
+          ${"Not Provided"}, 
+          ${selectedCourse.courseId}, 
+          ${"Regular"}, 
+          ${new Date()}, 
+          ${selectedCourse.price}, 
+          ${finalFee}, 
+          ${discountAmount}, 
+          ${0}, 
+          ${finalFee}, 
+          ${"Not Set"}, 
+          ${"pending"}, 
+          ${new Date()},
+          ${regNumber},
+          ${studentData.firstName},
+          ${studentData.lastName},
+          ${studentData.phoneNo},
+          ${new Date(studentData.dateOfBirth)},
+          ${studentData.classType || "online"},
+          ${studentData.signatureData},
+          ${studentData.termsAccepted},
+          ${studentData.signatureDate ? new Date(studentData.signatureDate) : new Date()},
+          ${req.user?.id || null}
+        ) RETURNING *;
+      `;
       
-      // Create student record with signature data and terms acceptance
-      const student = await storage.createStudent(studentForDb);
+      console.log("Running SQL insert");
+      
+      // Execute the SQL query
+      const result = await db.execute(insertSql);
+      const student = result.rows[0];
+
+      console.log("Student created successfully:", student.id);
       
       // Create registration courses
       const registrationCourses = [];
