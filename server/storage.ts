@@ -1889,20 +1889,21 @@ export class DatabaseStorage implements IStorage {
         createdAt: now,
         discount: student.discount || null,
         registrationDate: student.registrationDate || now,
-        fullName: student.fullName || 'Not Provided',
-        fatherName: student.fatherName || 'Not Provided',
-        phone: student.phone || (student.phoneNo || 'Not Provided'),
-        dob: student.dob || (student.dateOfBirth ? student.dateOfBirth : now),
+        // Map the fields according to database requirements
+        full_name: student.full_name || `${student.firstName || ''} ${student.lastName || ''}`.trim() || 'Not Provided',
+        father_name: student.father_name || student.fatherName || 'Not Provided',
+        phone: student.phone || student.phoneNo || 'Not Provided',
+        dob: student.dob || (student.dateOfBirth ? new Date(student.dateOfBirth) : now),
         gender: student.gender || 'Not Specified',
         address: student.address || 'Not Provided',
-        courseId: student.courseId || 0,
+        course_id: student.course_id || student.courseId || 0,
         batch: student.batch || 'Regular',
-        courseFee: student.courseFee || 0,
-        totalFee: student.totalFee || 0,
-        initialPayment: student.initialPayment || 0,
-        balanceDue: student.balanceDue || 0,
-        paymentMode: student.paymentMode || 'Cash',
-        paymentStatus: student.paymentStatus || 'pending'
+        course_fee: student.course_fee || student.courseFee || 0,
+        total_fee: student.total_fee || student.totalFee || 0,
+        initial_payment: student.initial_payment || student.initialPayment || 0,
+        balance_due: student.balance_due || student.balanceDue || 0,
+        payment_mode: student.payment_mode || student.paymentMode || 'Cash',
+        payment_status: student.payment_status || student.paymentStatus || 'pending'
       };
       
       console.log("Creating student with data:", JSON.stringify(studentWithDefaults));
