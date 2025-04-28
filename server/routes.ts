@@ -455,15 +455,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate Orbit-specific registration number with year-specific counter
       const regNumber = generateId('ORB', 0); // The count is ignored as we use year-specific counter
       
-      // Create student record with signature data and terms acceptance
-      const student = await storage.createStudent({
+      // Calculate total fee, course fee and initial payment based on the selected courses
+      const selectedCourse = courses[0]; // Use the first course for primary course_id
+      const totalFee = courses.reduce((sum, course) => sum + parseFloat(course.price), 0);
+      const discountAmount = courses.reduce((sum, course) => sum + (parseFloat(course.price) * (parseFloat(course.discount) / 100)), 0);
+      const finalFee = totalFee - discountAmount;
+      
+      console.log("Creating student with the following data:", JSON.stringify({
+        studentData,
+        calculatedFields: {
+          totalFee,
+          discountAmount,
+          finalFee,
+          selectedCourseId: selectedCourse.courseId
+        }
+      }));
+      
+      // Map frontend fields to database fields and include the required fields
+      const studentForDb = {
         ...studentData,
         registrationNumber: regNumber,
+        full_name: `${studentData.firstName} ${studentData.lastName}`,
+        father_name: studentData.fatherName || "Not Provided",
+        phone: studentData.phoneNo,
+        dob: new Date(studentData.dateOfBirth),
+        course_id: selectedCourse.courseId,
+        batch: "Regular",
+        course_fee: selectedCourse.price,
+        total_fee: finalFee,
+        discount: discountAmount,
+        initial_payment: 0,
+        balance_due: finalFee,
+        payment_mode: "Not Set",
+        payment_status: "pending",
+        gender: studentData.gender || "Not Specified",
+        address: studentData.address || "Not Provided",
         signatureData: studentData.signatureData,
         termsAccepted: studentData.termsAccepted,
-        signatureDate: studentData.signatureDate,
+        signatureDate: studentData.signatureDate ? new Date(studentData.signatureDate) : new Date(),
         createdBy: req.user?.id
-      });
+      };
+      
+      console.log("Final student data for DB:", JSON.stringify(studentForDb));
+      
+      // Create student record with signature data and terms acceptance
+      const student = await storage.createStudent(studentForDb);
       
       // Create registration courses
       const registrationCourses = [];
