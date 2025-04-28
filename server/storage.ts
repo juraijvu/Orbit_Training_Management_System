@@ -1873,11 +1873,36 @@ export class DatabaseStorage implements IStorage {
         }
       }
       
+      // Set full_name field (required) by combining first and last name if not provided
+      if (!student.fullName && student.firstName && student.lastName) {
+        student.fullName = `${student.firstName} ${student.lastName}`;
+      }
+      
+      // Set phone field (required) from phoneNo if not provided
+      if (!student.phone && student.phoneNo) {
+        student.phone = student.phoneNo;
+      }
+      
+      // Ensure other required fields are present or set defaults
       const studentWithDefaults = {
         ...student,
         createdAt: now,
         discount: student.discount || null,
-        registrationDate: student.registrationDate || now
+        registrationDate: student.registrationDate || now,
+        fullName: student.fullName || 'Not Provided',
+        fatherName: student.fatherName || 'Not Provided',
+        phone: student.phone || (student.phoneNo || 'Not Provided'),
+        dob: student.dob || (student.dateOfBirth ? student.dateOfBirth : now),
+        gender: student.gender || 'Not Specified',
+        address: student.address || 'Not Provided',
+        courseId: student.courseId || 0,
+        batch: student.batch || 'Regular',
+        courseFee: student.courseFee || 0,
+        totalFee: student.totalFee || 0,
+        initialPayment: student.initialPayment || 0,
+        balanceDue: student.balanceDue || 0,
+        paymentMode: student.paymentMode || 'Cash',
+        paymentStatus: student.paymentStatus || 'pending'
       };
       
       console.log("Creating student with data:", JSON.stringify(studentWithDefaults));
