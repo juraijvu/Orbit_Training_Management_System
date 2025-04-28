@@ -1,0 +1,16 @@
+Error creating registration: ReferenceError: sql is not defined
+    at DatabaseStorage.createStudent (C:\orbit_system\Orbit_Training_Management_System\server\storage.ts:1836:52)
+    at <anonymous> (C:\orbit_system\Orbit_Training_Management_System\server\routes.ts:480:37)
+    at Layer.handle [as handle_request] (C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\route.js:149:13)    at isAuthenticated (C:\orbit_system\Orbit_Training_Management_System\server\routes.ts:140:14)
+    at Layer.handle [as handle_request] (C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\route.js:149:13)    at Route.dispatch (C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\layer.js:95:5)
+    at C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\index.js:284:15       
+    at Function.process_params (C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\index.js:346:12)
+    at next (C:\orbit_system\Orbit_Training_Management_System\node_modules\express\lib\router\index.js:280:10)    at strategy.pass (C:\orbit_system\Orbit_Training_Management_System\node_modules\passport\lib\middleware\authenticate.js:355:9)
+    at C:\orbit_system\Orbit_Training_Management_System\node_modules\passport\lib\strategies\session.js:120:12    at pass (C:\orbit_system\Orbit_Training_Management_System\node_modules\passport\lib\authenticator.js:352:31)
+    at deserialized (C:\orbit_system\Orbit_Training_Management_System\node_modules\passport\lib\authenticator.js:364:7)
+    at <anonymous> (C:\orbit_system\Orbit_Training_Management_System\server\auth.ts:68:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+8:50:05 PM [express] POST /api/registrations 500 in 1284ms :: {"message":"Failed to create registrat…
