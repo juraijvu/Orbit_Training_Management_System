@@ -1827,36 +1827,67 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createStudent(student: InsertStudent): Promise<Student> {
-    // If student_id is not provided, generate one
-    if (!student.studentId) {
-      // Generate a student ID like "ST-23-0001"
-      const year = new Date().getFullYear().toString().substr(2); // get last 2 digits of year
+    try {
+      // If student_id is not provided, generate one
+      if (!student.studentId) {
+        // Generate a student ID like "ST-23-0001"
+        const year = new Date().getFullYear().toString().substr(2); // get last 2 digits of year
+        
+        // Get the latest student ID to generate the next one
+        const latestStudent = await db.select({ max: sql`MAX(student_id)` }).from(students).execute();
+        let nextNumber = 1;
+        
+        if (latestStudent[0]?.max) {
+          // If there's an existing student, extract the number and increment
+          const match = latestStudent[0].max.match(/ST-\d{2}-(\d{4})/);
+          if (match) {
+            nextNumber = parseInt(match[1]) + 1;
+          }
+        }
+        
+        // Format the number with leading zeros
+        const formattedNumber = nextNumber.toString().padStart(4, '0');
+        student.studentId = `ST-${year}-${formattedNumber}`; // Using backticks for template literal
+      }
       
-      // Get the latest student ID to generate the next one
-      const latestStudent = await db.select({ max: sql`MAX(student_id)` }).from(students).execute();
-      let nextNumber = 1;
+      // Process date fields properly
+      // Make sure dates are proper Date objects before insertion
+      const now = new Date();
       
-      if (latestStudent[0]?.max) {
-        // If there's an existing student, extract the number and increment
-        const match = latestStudent[0].max.match(/ST-\d{2}-(\d{4})/);
-        if (match) {
-          nextNumber = parseInt(match[1]) + 1;
+      // Ensure dateOfBirth is a proper Date object if present
+      if (student.dateOfBirth && !(student.dateOfBirth instanceof Date)) {
+        // If it's a string, parse it to a Date
+        if (typeof student.dateOfBirth === 'string') {
+          student.dateOfBirth = new Date(student.dateOfBirth);
         }
       }
       
-      // Format the number with leading zeros
-      const formattedNumber = nextNumber.toString().padStart(4, '0');
-      student.studentId = `ST-${year}-${formattedNumber}`; // Using backticks for template literal
+      // Ensure signatureDate is a proper Date object if present
+      if (student.signatureDate && !(student.signatureDate instanceof Date)) {
+        // If it's a string, parse it to a Date
+        if (typeof student.signatureDate === 'string') {
+          student.signatureDate = new Date(student.signatureDate);
+        } else {
+          // If it's not a string or Date, set to null
+          student.signatureDate = null;
+        }
+      }
+      
+      const studentWithDefaults = {
+        ...student,
+        createdAt: now,
+        discount: student.discount || null,
+        registrationDate: student.registrationDate || now
+      };
+      
+      console.log("Creating student with data:", JSON.stringify(studentWithDefaults));
+      
+      const result = await db.insert(students).values(studentWithDefaults).returning();
+      return result[0];
+    } catch (error) {
+      console.error("Error in createStudent:", error);
+      throw error;
     }
-
-    const studentWithDefaults = {
-      ...student,
-      createdAt: new Date(),
-      discount: student.discount || null,
-      registrationDate: student.registrationDate || new Date()
-    };
-    const result = await db.insert(students).values(studentWithDefaults).returning();
-    return result[0];
   }
 
   async updateStudent(id: number, student: Partial<Student>): Promise<Student | undefined> {
@@ -2577,12 +2608,23 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createRegistrationCourse(course: InsertRegistrationCourse): Promise<RegistrationCourse> {
-    const courseWithDefaults = {
-      ...course,
-      createdAt: new Date()
-    };
-    const result = await db.insert(registrationCourses).values(courseWithDefaults).returning();
-    return result[0];
+    try {
+      console.log("Creating registration course with data:", JSON.stringify(course));
+      
+      // Create a fresh date instance
+      const now = new Date();
+      
+      const courseWithDefaults = {
+        ...course,
+        createdAt: now
+      };
+      
+      const result = await db.insert(registrationCourses).values(courseWithDefaults).returning();
+      return result[0];
+    } catch (error) {
+      console.error("Error in createRegistrationCourse:", error);
+      throw error;
+    }
   }
   
   async deleteRegistrationCourse(id: number): Promise<boolean> {
