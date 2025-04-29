@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,47 +18,40 @@ export function SignaturePad({
   width = 400,
   height = 200,
 }: SignaturePadProps) {
-  const signatureRef = useRef<SignatureCanvas>(null);
+  const sigCanvas = useRef<SignatureCanvas | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
 
-  // Clear previous effects when component is mounted
+  // Clear and load any existing value
   useEffect(() => {
-    // Make sure signature pad is clear on initial render
-    if (signatureRef.current) {
-      signatureRef.current.clear();
-    }
+    if (!sigCanvas.current) return;
     
-    // If there's a value, load it into the signature pad
-    if (value && signatureRef.current) {
-      signatureRef.current.fromDataURL(value);
-    }
-    
-    // Clean up function to prevent duplicate event listeners
-    return () => {
-      if (signatureRef.current) {
-        signatureRef.current.off();
-      }
-    };
-  }, []); // Only run once on mount
-  
-  // Effect to update signature pad when value changes externally
-  useEffect(() => {
-    if (value && signatureRef.current) {
-      signatureRef.current.clear();
-      signatureRef.current.fromDataURL(value);
+    // If we have an existing value, load it
+    if (value && sigCanvas.current) {
+      setTimeout(() => {
+        if (sigCanvas.current) {
+          sigCanvas.current.clear();
+          sigCanvas.current.fromDataURL(value);
+        }
+      }, 50);
     }
   }, [value]);
 
   const handleClear = () => {
-    if (signatureRef.current) {
-      signatureRef.current.clear();
+    if (sigCanvas.current) {
+      sigCanvas.current.clear();
       onChange("");
     }
   };
 
-  const handleSave = () => {
-    if (signatureRef.current && !signatureRef.current.isEmpty()) {
-      const dataURL = signatureRef.current.toDataURL();
-      onChange(dataURL);
+  const handleBegin = () => {
+    setIsDrawing(true);
+  };
+
+  const handleEnd = () => {
+    setIsDrawing(false);
+    if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
+      const trimmedDataURL = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+      onChange(trimmedDataURL);
     }
   };
 
@@ -66,20 +59,17 @@ export function SignaturePad({
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="border rounded-md overflow-hidden bg-white">
         <SignatureCanvas
-          ref={signatureRef}
+          ref={sigCanvas}
           canvasProps={{
             width,
             height,
             className: "signature-canvas",
+            style: { width: '100%', height: '100%' }
           }}
-          onEnd={handleSave}
-          options={{
-            penColor: "black",
-            velocityFilterWeight: 0.7,
-            minWidth: 0.5,
-            maxWidth: 2.5,
-            throttle: 16, // Increase throttle to avoid duplicate lines
-          }}
+          backgroundColor="white"
+          penColor="black"
+          onBegin={handleBegin}
+          onEnd={handleEnd}
         />
       </div>
       <div className="flex gap-2">
