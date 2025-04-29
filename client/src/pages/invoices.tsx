@@ -672,8 +672,22 @@ const InvoicesPage: FC = () => {
                   Cancel
                 </Button>
                 <Button
-                  type="submit"
+                  type="button" 
                   disabled={invoiceMutation.isPending}
+                  onClick={() => {
+                    console.log("Manual form submission");
+                    const formData = form.getValues();
+                    const payload = {
+                      studentId: Number(formData.studentId),
+                      amount: formData.amount ? Number(formData.amount) : 0,
+                      paymentMode: formData.paymentMode,
+                      transactionId: formData.transactionId || '',
+                      paymentDate: formData.paymentDate,
+                      status: formData.status
+                    };
+                    console.log("Submitting payload:", payload);
+                    invoiceMutation.mutate(payload as any);
+                  }}
                 >
                   {invoiceMutation.isPending ? (
                     <>
