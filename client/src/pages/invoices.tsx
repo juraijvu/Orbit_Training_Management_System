@@ -84,10 +84,12 @@ interface Course {
   duration: string;
 }
 
-// Extend the schema for the form validation
-const invoiceFormSchema = insertInvoiceSchema.extend({
-  // Override amount to accept string input in the form
+// Create the form validation schema
+const invoiceFormSchema = z.object({
+  studentId: z.string(), // Store as string in form, convert to number on submit
   amount: z.string(),
+  paymentMode: z.string(),
+  transactionId: z.string().optional(),
   paymentDate: z.string().refine(val => {
     try {
       const date = new Date(val);
@@ -98,6 +100,7 @@ const invoiceFormSchema = insertInvoiceSchema.extend({
   }, {
     message: "Please enter a valid date",
   }),
+  status: z.string(),
 });
 
 // We don't include invoiceNumber as the server generates it
