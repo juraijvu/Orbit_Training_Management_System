@@ -167,10 +167,11 @@ const InvoicesPage: FC = () => {
   
   // Create invoice mutation
   const invoiceMutation = useMutation({
-    mutationFn: async (data: InvoiceFormValues) => {
+    mutationFn: async (data: InvoiceFormValues & { invoiceNumber?: string }) => {
       // Create a properly typed payload for the server
       // Type that matches what the server expects
       interface ServerInvoicePayload {
+        invoiceNumber: string; // Server requires this field, but will generate its own
         studentId: number;
         amount: string; // Server expects a string for numeric values
         paymentMode: string;
@@ -180,6 +181,7 @@ const InvoicesPage: FC = () => {
       }
       
       const payload: ServerInvoicePayload = {
+        invoiceNumber: data.invoiceNumber || `INV-${new Date().getTime()}`, // This will be overwritten by server
         studentId: Number(data.studentId),
         amount: data.amount, // Keep as string for numeric field
         paymentMode: data.paymentMode,
@@ -290,8 +292,25 @@ const InvoicesPage: FC = () => {
     console.log("Form submitted with values:", values);
     
     try {
-      // Directly use the form values for mutation
-      invoiceMutation.mutate(values);
+      // Generate a simple invoice number based on date and student ID
+      // This is required by the server validation, though it will be overwritten
+      const today = new Date();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const studentIdNumber = Number(values.studentId);
+      const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
+      
+      // Add invoiceNumber to form values
+      const formValuesWithInvoiceNumber = {
+        ...values,
+        invoiceNumber
+      };
+      
+      console.log("Manual form submission");
+      console.log("Submitting payload:", formValuesWithInvoiceNumber);
+      
+      // Use the values with invoiceNumber
+      invoiceMutation.mutate(formValuesWithInvoiceNumber as any);
     } catch (error) {
       console.error("Error preparing form submission:", error);
       toast({
