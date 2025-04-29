@@ -187,8 +187,11 @@ const InvoicesPage: FC = () => {
         status: data.status
       };
       
+      console.log("Mutation sending payload to server:", payload);
       const res = await apiRequest('POST', '/api/invoices', payload);
-      return await res.json();
+      const result = await res.json();
+      console.log("Server response:", result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
@@ -284,7 +287,29 @@ const InvoicesPage: FC = () => {
   // Submit form
   const onSubmit = (values: InvoiceFormValues) => {
     console.log("Form submitted with values:", values);
-    invoiceMutation.mutate(values);
+    
+    try {
+      // Explicitly convert values to the expected format
+      const payload = {
+        studentId: Number(values.studentId),
+        amount: values.amount ? Number(values.amount) : 0,
+        paymentMode: values.paymentMode,
+        transactionId: values.transactionId || '',
+        paymentDate: values.paymentDate,
+        status: values.status
+      };
+      
+      console.log("Submitting payload:", payload);
+      // Use the prepared payload instead of the raw form values
+      invoiceMutation.mutate(payload as any);
+    } catch (error) {
+      console.error("Error preparing form submission:", error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process form data. Please check your inputs.',
+        variant: 'destructive',
+      });
+    }
   };
   
   // View invoice details
@@ -649,11 +674,6 @@ const InvoicesPage: FC = () => {
                 <Button
                   type="submit"
                   disabled={invoiceMutation.isPending}
-                  onClick={() => {
-                    console.log("Submit button clicked");
-                    console.log("Form values:", form.getValues());
-                    console.log("Form state:", form.formState);
-                  }}
                 >
                   {invoiceMutation.isPending ? (
                     <>
