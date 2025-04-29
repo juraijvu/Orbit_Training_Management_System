@@ -87,6 +87,7 @@ interface Course {
 // Extend the schema for the form validation
 const invoiceFormSchema = insertInvoiceSchema.extend({
   // Override amount to accept string input in the form
+  invoiceNumber: z.string().optional(), // Make it optional, we'll generate it
   amount: z.string(),
   paymentDate: z.string().refine(val => {
     try {
@@ -100,7 +101,9 @@ const invoiceFormSchema = insertInvoiceSchema.extend({
   }),
 });
 
-type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
+type InvoiceFormValues = z.infer<typeof invoiceFormSchema> & { 
+  invoiceNumber?: string;
+};
 
 // Form schema for editing invoices with string amount
 const editInvoiceFormSchema = z.object({
@@ -170,6 +173,7 @@ const InvoicesPage: FC = () => {
       // Create a properly typed payload for the server
       // Type that matches what the server expects (numeric amount)
       interface ServerInvoicePayload {
+        invoiceNumber: string;
         studentId: number;
         amount: number;
         paymentMode: string;
@@ -178,7 +182,15 @@ const InvoicesPage: FC = () => {
         status: string;
       }
       
+      // Generate a unique invoice number 
+      const today = new Date();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const studentIdNumber = Number(data.studentId);
+      const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
+      
       const payload: ServerInvoicePayload = {
+        invoiceNumber: data.invoiceNumber || invoiceNumber, // Use provided or generate new
         studentId: Number(data.studentId),
         amount: data.amount ? Number(data.amount) : 0,
         paymentMode: data.paymentMode,
