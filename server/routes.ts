@@ -500,16 +500,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           signature_data,
           terms_accepted,
           signature_date,
-          created_by
+          created_by,
+          passport_no,
+          uid_no,
+          emirates_id_no,
+          nationality,
+          education,
+          alternative_no,
+          country,
+          company_or_university_name,
+          emirates
         ) VALUES (
           ${`ST-25-0001`}, 
           ${fullName}, 
-          ${"Not Provided"}, 
+          ${studentData.fatherName || "Not Provided"}, 
           ${studentData.email || "No Email"}, 
           ${studentData.phoneNo || "Not Provided"}, 
           ${new Date(studentData.dateOfBirth)}, 
-          ${"Not Specified"}, 
-          ${"Not Provided"}, 
+          ${studentData.gender || "Not Specified"}, 
+          ${studentData.address || "Not Provided"}, 
           ${selectedCourse.courseId}, 
           ${"Regular"}, 
           ${new Date()}, 
@@ -530,7 +539,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ${studentData.signatureData},
           ${studentData.termsAccepted},
           ${studentData.signatureDate ? new Date(studentData.signatureDate) : new Date()},
-          ${req.user?.id || null}
+          ${req.user?.id || null},
+          ${studentData.passportNo || null},
+          ${studentData.uidNo || null},
+          ${studentData.emiratesIdNo || null},
+          ${studentData.nationality || null},
+          ${studentData.education || null},
+          ${studentData.alternativeNo || null},
+          ${studentData.country || null},
+          ${studentData.companyOrUniversityName || null},
+          ${studentData.emirates || null}
         ) RETURNING *;
       `;
       
