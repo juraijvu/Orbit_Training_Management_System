@@ -183,7 +183,7 @@ const InvoicesPage: FC = () => {
       const payload: ServerInvoicePayload = {
         invoiceNumber: data.invoiceNumber || `INV-${new Date().getTime()}`, // This will be overwritten by server
         studentId: Number(data.studentId),
-        amount: data.amount, // Keep as string for numeric field
+        amount: String(data.amount), // Ensure amount is a string
         paymentMode: data.paymentMode,
         transactionId: data.transactionId || null,
         paymentDate: new Date(data.paymentDate), // Convert to Date object
@@ -300,17 +300,18 @@ const InvoicesPage: FC = () => {
       const studentIdNumber = Number(values.studentId);
       const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
       
-      // Add invoiceNumber to form values
-      const formValuesWithInvoiceNumber = {
+      // Make sure the values are in the format the server expects
+      const formattedValues = {
         ...values,
+        amount: String(values.amount), // Ensure amount is a string
         invoiceNumber
       };
       
       console.log("Manual form submission");
-      console.log("Submitting payload:", formValuesWithInvoiceNumber);
+      console.log("Submitting payload:", formattedValues);
       
       // Use the values with invoiceNumber
-      invoiceMutation.mutate(formValuesWithInvoiceNumber as any);
+      invoiceMutation.mutate(formattedValues as any);
     } catch (error) {
       console.error("Error preparing form submission:", error);
       toast({
