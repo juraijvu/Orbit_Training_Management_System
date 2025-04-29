@@ -283,6 +283,7 @@ const InvoicesPage: FC = () => {
   
   // Submit form
   const onSubmit = (values: InvoiceFormValues) => {
+    console.log("Form submitted with values:", values);
     invoiceMutation.mutate(values);
   };
   
@@ -648,6 +649,11 @@ const InvoicesPage: FC = () => {
                 <Button
                   type="submit"
                   disabled={invoiceMutation.isPending}
+                  onClick={() => {
+                    console.log("Submit button clicked");
+                    console.log("Form values:", form.getValues());
+                    console.log("Form state:", form.formState);
+                  }}
                 >
                   {invoiceMutation.isPending ? (
                     <>
