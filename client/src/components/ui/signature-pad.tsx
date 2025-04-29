@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,40 +18,48 @@ export function SignaturePad({
   width = 400,
   height = 200,
 }: SignaturePadProps) {
-  const sigCanvas = useRef<SignatureCanvas | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const canvasRef = useRef<SignatureCanvas>(null);
 
-  // Clear and load any existing value
+  // Only load the initial value
   useEffect(() => {
-    if (!sigCanvas.current) return;
+    if (!canvasRef.current) return;
     
-    // If we have an existing value, load it
-    if (value && sigCanvas.current) {
-      setTimeout(() => {
-        if (sigCanvas.current) {
-          sigCanvas.current.clear();
-          sigCanvas.current.fromDataURL(value);
-        }
-      }, 50);
+    try {
+      // Clear the canvas
+      canvasRef.current.clear();
+      
+      // If we have a value, load it
+      if (value) {
+        canvasRef.current.fromDataURL(value);
+      }
+    } catch (error) {
+      console.error("Error initializing signature canvas:", error);
     }
-  }, [value]);
+  }, []);
+
+  // Simple save function that doesn't use any fancy trimming
+  const handleEndDrawing = () => {
+    if (!canvasRef.current) return;
+    
+    try {
+      if (!canvasRef.current.isEmpty()) {
+        // Just use the basic toDataURL without trimming
+        const dataURL = canvasRef.current.toDataURL('image/png');
+        onChange(dataURL);
+      }
+    } catch (error) {
+      console.error("Error saving signature:", error);
+    }
+  };
 
   const handleClear = () => {
-    if (sigCanvas.current) {
-      sigCanvas.current.clear();
+    if (!canvasRef.current) return;
+    
+    try {
+      canvasRef.current.clear();
       onChange("");
-    }
-  };
-
-  const handleBegin = () => {
-    setIsDrawing(true);
-  };
-
-  const handleEnd = () => {
-    setIsDrawing(false);
-    if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-      const trimmedDataURL = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
-      onChange(trimmedDataURL);
+    } catch (error) {
+      console.error("Error clearing signature:", error);
     }
   };
 
@@ -59,17 +67,16 @@ export function SignaturePad({
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="border rounded-md overflow-hidden bg-white">
         <SignatureCanvas
-          ref={sigCanvas}
+          ref={canvasRef}
           canvasProps={{
             width,
             height,
-            className: "signature-canvas",
-            style: { width: '100%', height: '100%' }
+            className: "signature-canvas"
           }}
           backgroundColor="white"
           penColor="black"
-          onBegin={handleBegin}
-          onEnd={handleEnd}
+          clearOnResize={false}
+          onEnd={handleEndDrawing}
         />
       </div>
       <div className="flex gap-2">
