@@ -87,7 +87,6 @@ interface Course {
 // Extend the schema for the form validation
 const invoiceFormSchema = insertInvoiceSchema.extend({
   // Override amount to accept string input in the form
-  invoiceNumber: z.string().optional(), // Make it optional, we'll generate it
   amount: z.string(),
   paymentDate: z.string().refine(val => {
     try {
@@ -101,9 +100,8 @@ const invoiceFormSchema = insertInvoiceSchema.extend({
   }),
 });
 
-type InvoiceFormValues = z.infer<typeof invoiceFormSchema> & { 
-  invoiceNumber?: string;
-};
+// We don't include invoiceNumber as the server generates it
+type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 
 // Form schema for editing invoices with string amount
 const editInvoiceFormSchema = z.object({
@@ -171,31 +169,22 @@ const InvoicesPage: FC = () => {
   const invoiceMutation = useMutation({
     mutationFn: async (data: InvoiceFormValues) => {
       // Create a properly typed payload for the server
-      // Type that matches what the server expects (numeric amount)
+      // Type that matches what the server expects
       interface ServerInvoicePayload {
-        invoiceNumber: string;
         studentId: number;
-        amount: number;
+        amount: string; // Server expects a string for numeric values
         paymentMode: string;
-        transactionId: string;
-        paymentDate: string;
+        transactionId: string | null;
+        paymentDate: Date; // Server expects a Date object
         status: string;
       }
       
-      // Generate a unique invoice number 
-      const today = new Date();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      const studentIdNumber = Number(data.studentId);
-      const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
-      
       const payload: ServerInvoicePayload = {
-        invoiceNumber: data.invoiceNumber || invoiceNumber, // Use provided or generate new
         studentId: Number(data.studentId),
-        amount: data.amount ? Number(data.amount) : 0,
+        amount: data.amount, // Keep as string for numeric field
         paymentMode: data.paymentMode,
-        transactionId: data.transactionId || '',
-        paymentDate: data.paymentDate,
+        transactionId: data.transactionId || null,
+        paymentDate: new Date(data.paymentDate), // Convert to Date object
         status: data.status
       };
       
@@ -301,27 +290,8 @@ const InvoicesPage: FC = () => {
     console.log("Form submitted with values:", values);
     
     try {
-      // Generate a simple invoice number based on date and student ID
-      const today = new Date();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      const studentIdNumber = Number(values.studentId);
-      const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
-      
-      // Explicitly convert values to the expected format
-      const payload = {
-        invoiceNumber: invoiceNumber,
-        studentId: Number(values.studentId),
-        amount: values.amount ? Number(values.amount) : 0,
-        paymentMode: values.paymentMode,
-        transactionId: values.transactionId || '',
-        paymentDate: values.paymentDate,
-        status: values.status
-      };
-      
-      console.log("Submitting payload:", payload);
-      // Use the prepared payload instead of the raw form values
-      invoiceMutation.mutate(payload as any);
+      // Directly use the form values for mutation
+      invoiceMutation.mutate(values);
     } catch (error) {
       console.error("Error preparing form submission:", error);
       toast({
