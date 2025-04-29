@@ -469,6 +469,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Creating student with direct SQL-compatible data. Full name:", fullName);
       
+      // Get student count for generating unique IDs
+      const countResult = await db.execute(sql`SELECT COUNT(*) FROM students`);
+      const studentCount = parseInt(countResult.rows[0].count) + 1;
+      
+      // Generate unique student ID and registration number
+      const currentYear = new Date().getFullYear().toString().substr(-2); // Get last 2 digits of year
+      const newStudentId = `ST-${currentYear}-${studentCount.toString().padStart(4, '0')}`;
+      const newRegNumber = `ORB-${currentYear}-${studentCount.toString().padStart(4, '0')}`;
+      
+      console.log("Generated unique student ID:", newStudentId);
+      console.log("Generated registration number:", newRegNumber);
+      
       // Direct SQL query to insert the student record
       const insertSql = sql`
         INSERT INTO students (
@@ -511,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           company_or_university_name,
           emirates
         ) VALUES (
-          ${`ST-25-0001`}, 
+          ${newStudentId}, 
           ${fullName}, 
           ${studentData.fatherName || "Not Provided"}, 
           ${studentData.email || "No Email"}, 
@@ -530,7 +542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ${"Not Set"}, 
           ${"pending"}, 
           ${new Date()},
-          ${regNumber},
+          ${newRegNumber},
           ${studentData.firstName},
           ${studentData.lastName},
           ${studentData.phoneNo},
@@ -790,10 +802,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         termsAccepted: registrationData.termsAccepted
       };
       
-      // Generate student ID and registration number
-      const students = await storage.getStudents();
-      const studentId = `ST-${new Date().getFullYear()}-${(students.length + 1).toString().padStart(3, '0')}`;
-      const regNumber = `ORB-${new Date().getFullYear()}-${(students.length + 1).toString().padStart(3, '0')}`;
+      // Get student count for generating unique IDs
+      const countResult = await db.execute(sql`SELECT COUNT(*) FROM students`);
+      const studentCount = parseInt(countResult.rows[0].count) + 1;
+      
+      // Generate unique student ID and registration number
+      const currentYear = new Date().getFullYear().toString().substr(-2); // Get last 2 digits of year
+      const newStudentId = `ST-${currentYear}-${studentCount.toString().padStart(4, '0')}`;
+      const newRegNumber = `ORB-${currentYear}-${studentCount.toString().padStart(4, '0')}`;
+      
+      console.log("Generated unique student ID:", newStudentId);
+      console.log("Generated registration number:", newRegNumber);
       
       // Create the new student
       const newStudent = await storage.createStudent({
