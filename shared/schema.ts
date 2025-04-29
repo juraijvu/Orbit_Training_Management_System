@@ -118,12 +118,6 @@ export const invoices = pgTable("invoices", {
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   id: true,
   createdAt: true,
-}).transform((data) => {
-  // Convert paymentDate string to Date if it's a string
-  if (typeof data.paymentDate === 'string') {
-    data.paymentDate = new Date(data.paymentDate);
-  }
-  return data;
 });
 
 // Schedule Table

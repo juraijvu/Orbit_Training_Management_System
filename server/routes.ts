@@ -1100,7 +1100,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create invoice
   app.post('/api/invoices', isAuthenticated, async (req, res) => {
     try {
-      const invoiceData = insertInvoiceSchema.parse(req.body);
+      // Pre-process the request body to handle the date conversion
+      const requestBody = { ...req.body };
+      
+      // Convert paymentDate string to Date if it exists
+      if (requestBody.paymentDate && typeof requestBody.paymentDate === 'string') {
+        requestBody.paymentDate = new Date(requestBody.paymentDate);
+      }
+      
+      const invoiceData = insertInvoiceSchema.parse(requestBody);
       
       // Generate invoice number
       const invoices = await storage.getInvoices();
