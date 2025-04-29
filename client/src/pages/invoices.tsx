@@ -289,8 +289,16 @@ const InvoicesPage: FC = () => {
     console.log("Form submitted with values:", values);
     
     try {
+      // Generate a simple invoice number based on date and student ID
+      const today = new Date();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const studentIdNumber = Number(values.studentId);
+      const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
+      
       // Explicitly convert values to the expected format
       const payload = {
+        invoiceNumber: invoiceNumber,
         studentId: Number(values.studentId),
         amount: values.amount ? Number(values.amount) : 0,
         paymentMode: values.paymentMode,
@@ -677,7 +685,16 @@ const InvoicesPage: FC = () => {
                   onClick={() => {
                     console.log("Manual form submission");
                     const formData = form.getValues();
+                    
+                    // Generate a simple invoice number based on date and student ID
+                    const today = new Date();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const studentIdNumber = Number(formData.studentId);
+                    const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
+                    
                     const payload = {
+                      invoiceNumber: invoiceNumber,
                       studentId: Number(formData.studentId),
                       amount: formData.amount ? Number(formData.amount) : 0,
                       paymentMode: formData.paymentMode,
@@ -685,6 +702,7 @@ const InvoicesPage: FC = () => {
                       paymentDate: formData.paymentDate,
                       status: formData.status
                     };
+                    
                     console.log("Submitting payload:", payload);
                     invoiceMutation.mutate(payload as any);
                   }}
