@@ -20,9 +20,30 @@ export function SignaturePad({
 }: SignaturePadProps) {
   const signatureRef = useRef<SignatureCanvas>(null);
 
+  // Clear previous effects when component is mounted
   useEffect(() => {
+    // Make sure signature pad is clear on initial render
+    if (signatureRef.current) {
+      signatureRef.current.clear();
+    }
+    
     // If there's a value, load it into the signature pad
     if (value && signatureRef.current) {
+      signatureRef.current.fromDataURL(value);
+    }
+    
+    // Clean up function to prevent duplicate event listeners
+    return () => {
+      if (signatureRef.current) {
+        signatureRef.current.off();
+      }
+    };
+  }, []); // Only run once on mount
+  
+  // Effect to update signature pad when value changes externally
+  useEffect(() => {
+    if (value && signatureRef.current) {
+      signatureRef.current.clear();
       signatureRef.current.fromDataURL(value);
     }
   }, [value]);
@@ -52,6 +73,13 @@ export function SignaturePad({
             className: "signature-canvas",
           }}
           onEnd={handleSave}
+          options={{
+            penColor: "black",
+            velocityFilterWeight: 0.7,
+            minWidth: 0.5,
+            maxWidth: 2.5,
+            throttle: 16, // Increase throttle to avoid duplicate lines
+          }}
         />
       </div>
       <div className="flex gap-2">
