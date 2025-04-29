@@ -176,9 +176,14 @@ const InvoicesPage: FC = () => {
         amount: string; // Server expects a string for numeric values
         paymentMode: string;
         transactionId: string | null;
-        paymentDate: Date; // Server expects a Date object
+        paymentDate: string; // Send as ISO string - server will validate/convert to Date
         status: string;
       }
+      
+      // Parse the date and create a new Date object
+      const dateObj = new Date(data.paymentDate);
+      // Convert to ISO format string
+      const isoDateString = dateObj.toISOString();
       
       const payload: ServerInvoicePayload = {
         invoiceNumber: data.invoiceNumber || `INV-${new Date().getTime()}`, // This will be overwritten by server
@@ -186,7 +191,7 @@ const InvoicesPage: FC = () => {
         amount: String(data.amount), // Ensure amount is a string
         paymentMode: data.paymentMode,
         transactionId: data.transactionId || null,
-        paymentDate: new Date(data.paymentDate), // Convert to Date object
+        paymentDate: isoDateString, // Send as ISO string format
         status: data.status
       };
       
