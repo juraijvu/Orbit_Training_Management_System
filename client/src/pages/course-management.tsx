@@ -347,7 +347,7 @@ const CourseManagement: FC = () => {
       
       {/* Add/Edit Course Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{isEditMode ? 'Edit Course' : 'Add New Course'}</DialogTitle>
             <DialogDescription>
@@ -358,7 +358,7 @@ const CourseManagement: FC = () => {
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex-1 overflow-y-auto pr-1">
               <FormField
                 control={form.control}
                 name="name"
@@ -518,7 +518,7 @@ const CourseManagement: FC = () => {
                             </div>
                           </div>
                           
-                          <div className="space-y-4 mt-4">
+                          <div className="space-y-4 mt-4 max-h-[250px] overflow-y-auto pr-1">
                             {modules.length === 0 ? (
                               <div className="text-center p-4 border border-dashed rounded-md text-gray-500">
                                 No modules added yet. Add your first module above.
@@ -667,7 +667,7 @@ const CourseManagement: FC = () => {
       
       {/* View Course Content Dialog */}
       <Dialog open={isViewContentOpen} onOpenChange={setIsViewContentOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{viewingCourse?.name} - Course Content</DialogTitle>
             <DialogDescription>
@@ -675,7 +675,7 @@ const CourseManagement: FC = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="mt-4 max-h-96 overflow-y-auto">
+          <div className="mt-4 flex-1 overflow-y-auto">
             {viewingCourse?.content ? (
               <div className="space-y-6">
                 {(() => {
