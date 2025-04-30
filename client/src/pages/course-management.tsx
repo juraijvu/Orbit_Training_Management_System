@@ -75,8 +75,8 @@ interface Course {
 // Course form schema
 const courseFormSchema = insertCourseSchema.extend({
   fee: z.preprocess(
-    (value) => (value === '' ? 0 : Number(value)),
-    z.number().min(0, "Fee cannot be negative")
+    (value) => (value === '' ? '0' : String(value)),
+    z.string().min(1, "Fee is required")
   ),
 });
 
@@ -100,7 +100,7 @@ const CourseManagement: FC = () => {
       name: '',
       description: '',
       duration: '',
-      fee: 0,
+      fee: '0',
       content: '',
       active: true,
     },
@@ -199,7 +199,7 @@ const CourseManagement: FC = () => {
       name: '',
       description: '',
       duration: '',
-      fee: 0,
+      fee: '0',
       content: '',
       active: true,
     });
@@ -398,7 +398,7 @@ const CourseManagement: FC = () => {
                         <Input 
                           type="number" 
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))} 
+                          onChange={(e) => field.onChange(e.target.value)} 
                         />
                       </FormControl>
                       <FormMessage />
