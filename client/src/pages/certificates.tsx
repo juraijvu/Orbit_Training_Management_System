@@ -126,8 +126,15 @@ const CertificatesPage: FC = () => {
       console.log("Attempting to create certificate with data:", data);
       try {
         const res = await apiRequest('POST', '/api/certificates', data);
-        if (!res.ok) {
-          // If the response is not OK, get the error message
+        // Check for specific status codes
+        if (res.status === 401) {
+          console.error("Authentication error - User not logged in");
+          throw new Error('You need to be logged in to create certificates');
+        } else if (res.status === 403) {
+          console.error("Authorization error - User lacks superadmin privileges");
+          throw new Error('Only superadmins can create certificates');
+        } else if (!res.ok) {
+          // For other errors
           const errorData = await res.json();
           console.error("Certificate creation failed:", errorData);
           throw new Error(errorData.message || 'Failed to create certificate');
@@ -269,6 +276,23 @@ const CertificatesPage: FC = () => {
   const isLoading = certificatesLoading || studentsLoading || coursesLoading;
   const isPending = createCertificateMutation.isPending;
   
+  // Check if user is loaded or not
+  if (user === null) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-64">
+          <X className="h-16 w-16 text-red-500 mb-4" />
+          <h1 className="text-2xl font-semibold text-gray-800 mb-2">Authentication Required</h1>
+          <p className="text-gray-600 mb-4">You need to be logged in to access the certificate management system.</p>
+          <Button onClick={() => window.location.href = "/auth"}>
+            Log In
+          </Button>
+        </div>
+      </AppLayout>
+    );
+  }
+  
+  // Check if user has correct permissions
   if (!isSuperAdmin) {
     return (
       <AppLayout>
@@ -276,6 +300,7 @@ const CertificatesPage: FC = () => {
           <X className="h-16 w-16 text-red-500 mb-4" />
           <h1 className="text-2xl font-semibold text-gray-800 mb-2">Access Denied</h1>
           <p className="text-gray-600">Only super administrators can generate certificates.</p>
+          <p className="text-gray-500 mt-2">Your current role: {user.role}</p>
         </div>
       </AppLayout>
     );
