@@ -66,7 +66,7 @@ interface Course {
   name: string;
   description: string;
   duration: string;
-  fee: number;
+  fee: string;
   content?: string;
   active: boolean;
   createdAt: string;
@@ -214,7 +214,7 @@ const CourseManagement: FC = () => {
       name: course.name,
       description: course.description,
       duration: course.duration,
-      fee: course.fee,
+      fee: String(course.fee),
       content: course.content || '',
       active: course.active,
     });
@@ -307,7 +307,7 @@ const CourseManagement: FC = () => {
                   <p className="text-sm text-gray-700 mb-4">{course.description}</p>
                   <div className="flex items-center justify-between text-sm font-medium">
                     <span>Fee:</span>
-                    <span className="text-primary-700">₹{course.fee.toLocaleString()}</span>
+                    <span className="text-primary-700">₹{Number(course.fee).toLocaleString()}</span>
                   </div>
                 </div>
               </CardContent>
