@@ -123,10 +123,25 @@ const CertificatesPage: FC = () => {
   // Create certificate mutation
   const createCertificateMutation = useMutation({
     mutationFn: async (data: CertificateFormValues) => {
-      const res = await apiRequest('POST', '/api/certificates', data);
-      return await res.json();
+      console.log("Attempting to create certificate with data:", data);
+      try {
+        const res = await apiRequest('POST', '/api/certificates', data);
+        if (!res.ok) {
+          // If the response is not OK, get the error message
+          const errorData = await res.json();
+          console.error("Certificate creation failed:", errorData);
+          throw new Error(errorData.message || 'Failed to create certificate');
+        }
+        const responseData = await res.json();
+        console.log("Certificate created successfully:", responseData);
+        return responseData;
+      } catch (err) {
+        console.error("Error during certificate creation:", err);
+        throw err;
+      }
     },
     onSuccess: (data) => {
+      console.log("Certificate mutation succeeded:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/certificates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/activities'] });
@@ -143,9 +158,10 @@ const CertificatesPage: FC = () => {
       setSelectedCertificate(data);
     },
     onError: (error) => {
+      console.error("Certificate mutation error:", error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'An unknown error occurred',
         variant: 'destructive',
       });
     },
@@ -153,6 +169,19 @@ const CertificatesPage: FC = () => {
   
   // Submit form
   const onSubmit = (values: CertificateFormValues) => {
+    console.log("Certificate form submitted with values:", values);
+    // Check form validity
+    const errors = form.formState.errors;
+    if (Object.keys(errors).length > 0) {
+      console.error("Form validation errors:", errors);
+      toast({
+        title: 'Validation Error',
+        description: 'Please check the form for errors',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     createCertificateMutation.mutate(values);
   };
   
@@ -180,13 +209,15 @@ const CertificatesPage: FC = () => {
   
   // Handle print certificate
   const handlePrintCertificate = useReactToPrint({
-    content: () => certificatePrintRef.current,
+    documentTitle: 'Certificate',
     onAfterPrint: () => {
       toast({
         title: 'Success',
         description: 'Certificate has been printed successfully.',
       });
     },
+    // @ts-ignore - React-to-print typing issue
+    content: () => certificatePrintRef.current,
   });
   
   // Get student name
@@ -207,8 +238,15 @@ const CertificatesPage: FC = () => {
     return course?.name || 'Unknown Course';
   };
   
-  // Check if user is super admin
+  // Check user authentication status and permissions
   const isSuperAdmin = user?.role === 'superadmin';
+  
+  // Log authentication status for debugging
+  console.log("Auth status:", { 
+    isAuthenticated: !!user,
+    userDetails: user ? { id: user.id, role: user.role, username: user.username } : 'Not authenticated',
+    isSuperAdmin
+  });
   
   // Filter certificates based on search query
   const filteredCertificates = certificates?.filter(certificate => {
