@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -109,6 +109,15 @@ interface Student {
   studentId: string;
   fullName: string;
   courseId: number;
+}
+
+interface RegistrationCourse {
+  id: number;
+  studentId: number;
+  courseId: number;
+  price: string;
+  discount: string | null;
+  createdAt: string;
 }
 
 // Schedule form schema
@@ -353,26 +362,32 @@ const SchedulePage: FC = () => {
     return trainerCourses.includes(watchedCourseId.toString());
   });
   
-  // Fetch students by course ID
-  const { data: courseStudents, isLoading: courseStudentsLoading } = useQuery<Student[]>({
-    queryKey: ['/api/students/by-course', watchedCourseId],
-    queryFn: async () => {
-      if (!watchedCourseId) return [];
-      console.log(`Fetching students for course ID: ${watchedCourseId}`);
-      const res = await fetch(`/api/students/by-course/${watchedCourseId}`);
-      console.log(`Response status: ${res.status}`);
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error(`Error fetching students for course: ${errorText}`);
-        throw new Error('Failed to fetch students for this course');
-      }
-      const data = await res.json();
-      console.log(`Found ${data.length} students for course ID ${watchedCourseId}:`, data);
-      return data;
-    },
-    enabled: !!watchedCourseId,
-    staleTime: 30000, // 30 seconds
+  // Get registration courses for students
+  const { data: registrationCourses, isLoading: registrationCoursesLoading } = useQuery<RegistrationCourse[]>({
+    queryKey: ['/api/registration-courses'],
   });
+
+  // Filter students based on selected course ID
+  const courseStudents = useMemo(() => {
+    if (!watchedCourseId || !students || !registrationCourses) return [];
+    
+    console.log(`Finding students for course ID: ${watchedCourseId}`);
+    
+    // Find registration records for this course
+    const courseRegistrations = registrationCourses.filter(
+      rc => rc.courseId === Number(watchedCourseId)
+    );
+    
+    // Get student IDs from registrations
+    const studentIds = courseRegistrations.map(rc => rc.studentId);
+    console.log(`Found ${studentIds.length} registrations for course ID ${watchedCourseId}:`, studentIds);
+    
+    // Find students that match these IDs
+    const matchedStudents = students.filter(student => studentIds.includes(student.id));
+    console.log(`Found ${matchedStudents.length} students for course ID ${watchedCourseId}:`, matchedStudents);
+    
+    return matchedStudents;
+  }, [watchedCourseId, students, registrationCourses]);
   
   // Check if selected time slot is available for the trainer
   const isTrainerAvailable = () => {
