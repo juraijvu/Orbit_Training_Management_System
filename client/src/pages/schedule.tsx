@@ -1090,7 +1090,73 @@ const SchedulePage: FC = () => {
                         </div>
                       ) : courseStudents?.length === 0 ? (
                         <div className="text-center text-gray-500 py-4">
-                          No students found for this course
+                          <p>No students found for this course</p>
+                          <div className="mt-2">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                if (!watchedCourseId) return;
+                                
+                                // Open a dialog to select a student to register for this course
+                                const courseId = Number(watchedCourseId);
+                                const course = courses?.find(c => c.id === courseId);
+                                
+                                if (!course) {
+                                  toast({
+                                    title: 'Error',
+                                    description: 'Course not found',
+                                    variant: 'destructive',
+                                  });
+                                  return;
+                                }
+                                
+                                // Ask the user which student they want to register
+                                const student = window.prompt(
+                                  `Enter the ID of the student you want to register for "${course.name}":`,
+                                  ""
+                                );
+                                
+                                if (!student) return;
+                                
+                                const studentId = Number(student);
+                                
+                                if (isNaN(studentId)) {
+                                  toast({
+                                    title: 'Error',
+                                    description: 'Invalid student ID',
+                                    variant: 'destructive',
+                                  });
+                                  return;
+                                }
+                                
+                                // Register the student for the course
+                                apiRequest('POST', '/api/register-student-course', {
+                                  studentId,
+                                  courseId,
+                                  price: course.fee,
+                                }).then(() => {
+                                  toast({
+                                    title: 'Success',
+                                    description: `Student registered for ${course.name}`,
+                                  });
+                                  
+                                  // Refresh registration courses
+                                  queryClient.invalidateQueries({ queryKey: ['/api/registration-courses'] });
+                                }).catch((error) => {
+                                  toast({
+                                    title: 'Error',
+                                    description: 'Failed to register student for course',
+                                    variant: 'destructive',
+                                  });
+                                  console.error('Error registering student:', error);
+                                });
+                              }}
+                            >
+                              Register a Student for this Course
+                            </Button>
+                          </div>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">

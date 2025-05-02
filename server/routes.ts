@@ -221,6 +221,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Create a new registration course
+  app.post('/api/registration-courses', isAuthenticated, async (req, res) => {
+    try {
+      const courseData = req.body;
+      const registrationCourse = await storage.createRegistrationCourse(courseData);
+      res.status(201).json(registrationCourse);
+    } catch (error) {
+      console.error('Error creating registration course:', error);
+      res.status(500).json({ message: 'Failed to create registration course' });
+    }
+  });
+  
+  // Create registration course (simplified for schedule page)
+  app.post('/api/register-student-course', isAuthenticated, async (req, res) => {
+    try {
+      const { studentId, courseId, price } = req.body;
+      
+      if (!studentId || !courseId || !price) {
+        return res.status(400).json({ message: 'Student ID, Course ID, and Price are required' });
+      }
+      
+      const registrationCourse = await storage.createRegistrationCourse({
+        studentId,
+        courseId,
+        price,
+        discount: null,
+      });
+      
+      res.status(201).json(registrationCourse);
+    } catch (error) {
+      console.error('Error registering student for course:', error);
+      res.status(500).json({ message: 'Failed to register student for course' });
+    }
+  });
+  
   // Seed sample student data (for development purposes)
   app.post('/api/seed/students', isSuperAdmin, async (req, res) => {
     try {
