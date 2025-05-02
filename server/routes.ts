@@ -210,6 +210,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get all registration courses
+  app.get('/api/registration-courses', isAuthenticated, async (req, res) => {
+    try {
+      const registrationCourses = await storage.getRegistrationCourses();
+      res.json(registrationCourses);
+    } catch (error) {
+      console.error('Error fetching registration courses:', error);
+      res.status(500).json({ message: 'Failed to fetch registration courses' });
+    }
+  });
+  
   // Seed sample student data (for development purposes)
   app.post('/api/seed/students', isSuperAdmin, async (req, res) => {
     try {
