@@ -2656,15 +2656,32 @@ export class DatabaseStorage implements IStorage {
   
   // Registration Courses methods
   async getRegistrationCourses(studentId?: number): Promise<RegistrationCourse[]> {
-    if (studentId === undefined) {
-      const result = await db.select().from(registrationCourses)
-        .orderBy(desc(registrationCourses.createdAt));
-      return result;
-    } else {
-      const result = await db.select().from(registrationCourses)
-        .where(eq(registrationCourses.studentId, studentId))
-        .orderBy(desc(registrationCourses.createdAt));
-      return result;
+    try {
+      // Use raw SQL to directly query the database
+      let query = `SELECT * FROM registration_courses`;
+      let params = [];
+      
+      if (studentId !== undefined) {
+        query += ` WHERE student_id = $1`;
+        params.push(studentId);
+      }
+      
+      query += ` ORDER BY created_at DESC`;
+      
+      const { rows } = await pool.query(query, params);
+      
+      // Map the snake_case database columns to camelCase for the API
+      return rows.map(row => ({
+        id: row.id,
+        studentId: row.student_id,
+        courseId: row.course_id,
+        price: row.price,
+        discount: row.discount,
+        createdAt: row.created_at
+      }));
+    } catch (error) {
+      console.error('Error in getRegistrationCourses:', error);
+      return [];
     }
   }
   
