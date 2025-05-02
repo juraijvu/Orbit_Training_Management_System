@@ -389,6 +389,11 @@ const SchedulePage: FC = () => {
     return matchedStudents;
   }, [watchedCourseId, students, registrationCourses]);
   
+  // Check if there are any students registered for the selected course
+  const hasRegisteredStudents = useMemo(() => {
+    return courseStudents.length > 0;
+  }, [courseStudents]);
+  
   // Check if selected time slot is available for the trainer
   const isTrainerAvailable = () => {
     if (!watchedTrainerId || !watchedSelectedDate || !watchedStartTime || !watchedEndTime) {
@@ -1090,8 +1095,10 @@ const SchedulePage: FC = () => {
                         </div>
                       ) : courseStudents?.length === 0 ? (
                         <div className="text-center text-gray-500 py-4">
-                          <p>No students found for this course</p>
-                          <div className="mt-2">
+                          <p className="font-medium mb-2">No students registered for this course yet</p>
+                          <p className="text-sm mb-4">You can register students for this course or select from all available students.</p>
+                          
+                          <div className="mb-4">
                             <Button 
                               type="button" 
                               variant="outline" 
@@ -1156,6 +1163,77 @@ const SchedulePage: FC = () => {
                             >
                               Register a Student for this Course
                             </Button>
+                          </div>
+                          
+                          <div className="border-t pt-3 mt-3">
+                            <p className="text-sm font-medium mb-2">Select from all available students:</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 max-h-40 overflow-y-auto">
+                              {students?.map((student) => (
+                                <div key={student.id} className="flex items-center py-1">
+                                  <input
+                                    type="checkbox"
+                                    id={`student-${student.id}`}
+                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+                                    checked={form.getValues('selectedStudents')?.includes(student.id.toString())}
+                                    onChange={(e) => {
+                                      const currentStudents = form.getValues('selectedStudents') || [];
+                                      const studentId = student.id.toString();
+                                      
+                                      if (e.target.checked) {
+                                        // Register this student for the course when checked
+                                        const courseId = Number(watchedCourseId);
+                                        const course = courses?.find(c => c.id === courseId);
+                                        
+                                        if (course) {
+                                          apiRequest('POST', '/api/register-student-course', {
+                                            studentId: student.id,
+                                            courseId,
+                                            price: course.fee,
+                                          }).then(() => {
+                                            toast({
+                                              title: 'Success',
+                                              description: `${student.fullName} registered for ${course.name}`,
+                                            });
+                                            
+                                            // Add to selected students
+                                            form.setValue('selectedStudents', [...currentStudents, studentId]);
+                                            // Also update the studentIds string
+                                            form.setValue('studentIds', 
+                                              [...currentStudents, studentId].join(',') || ''
+                                            );
+                                            
+                                            // Refresh registration courses
+                                            queryClient.invalidateQueries({ queryKey: ['/api/registration-courses'] });
+                                          }).catch((error) => {
+                                            toast({
+                                              title: 'Error',
+                                              description: 'Failed to register student for course',
+                                              variant: 'destructive',
+                                            });
+                                            console.error('Error registering student:', error);
+                                          });
+                                        }
+                                      } else {
+                                        form.setValue('selectedStudents', 
+                                          currentStudents.filter(id => id !== studentId)
+                                        );
+                                        
+                                        // Also update the studentIds string
+                                        form.setValue('studentIds', 
+                                          currentStudents.filter(id => id !== studentId).join(',') || ''
+                                        );
+                                      }
+                                    }}
+                                  />
+                                  <label 
+                                    htmlFor={`student-${student.id}`}
+                                    className="ml-2 text-sm text-gray-700 truncate"
+                                  >
+                                    {student.fullName} ({student.studentId})
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       ) : (
