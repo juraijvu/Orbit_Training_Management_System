@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDefaultUsers } from "./dbInit";
 import createSessionTable from "./create-session-table";
+import fixedRoutes from "./fixed-routes";
 
 const app = express();
 app.use(express.json());
@@ -57,6 +58,9 @@ app.use((req, res, next) => {
     
     // Seed default users
     await seedDefaultUsers();
+    
+    // Add fixed routes for registration courses
+    app.use(fixedRoutes);
     
     const server = await registerRoutes(app);
 

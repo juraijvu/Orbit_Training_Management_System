@@ -27,6 +27,7 @@ import {
   whatsAppChats, WhatsAppChat, InsertWhatsAppChat,
   // Registration courses
   registrationCourses, RegistrationCourse, InsertRegistrationCourse,
+  
   // Chatbot related imports
   chatbotFlows, ChatbotFlow, InsertChatbotFlow,
   chatbotNodes, ChatbotNode, InsertChatbotNode,
@@ -34,7 +35,7 @@ import {
   chatbotActions, ChatbotAction, InsertChatbotAction,
   chatbotSessions, ChatbotSession, InsertChatbotSession,
   cannedResponses, CannedResponse, InsertCannedResponse
-} from "@shared/schema";
+} from '@shared/schema';
 import { db } from "./db";
 import { eq, and, asc, desc, gte, lte, lt, sql } from "drizzle-orm";
 import session from "express-session";
