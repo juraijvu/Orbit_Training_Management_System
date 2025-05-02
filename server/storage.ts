@@ -67,6 +67,7 @@ export interface IStorage {
   getStudent(id: number): Promise<Student | undefined>;
   getStudentByStudentId(studentId: string): Promise<Student | undefined>;
   getStudentByRegisterLink(token: string): Promise<Student | undefined>;
+  getStudentsByCourseId(courseId: number): Promise<Student[]>;
   createStudent(student: InsertStudent): Promise<Student>;
   updateStudent(id: number, student: Partial<Student>): Promise<Student | undefined>;
   

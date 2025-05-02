@@ -356,6 +356,14 @@ const SchedulePage: FC = () => {
   // Fetch students by course ID
   const { data: courseStudents, isLoading: courseStudentsLoading } = useQuery<Student[]>({
     queryKey: ['/api/students/by-course', watchedCourseId],
+    queryFn: async () => {
+      if (!watchedCourseId) return [];
+      const res = await fetch(`/api/students/by-course/${watchedCourseId}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch students for this course');
+      }
+      return res.json();
+    },
     enabled: !!watchedCourseId,
     staleTime: 30000, // 30 seconds
   });
