@@ -1818,12 +1818,18 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getStudentsByCourseId(courseId: number): Promise<Student[]> {
-    // In an actual implementation, this would use a proper relationship
-    // For now, we're checking if the courseId matches
-    const result = await db.select()
-      .from(students)
-      .where(eq(students.courseId, courseId));
-    return result;
+    // Get students enrolled in a specific course using the registrationCourses join table
+    try {
+      const result = await db.select({ student: students })
+        .from(registrationCourses)
+        .innerJoin(students, eq(students.id, registrationCourses.studentId))
+        .where(eq(registrationCourses.courseId, courseId));
+      
+      return result.map(row => row.student);
+    } catch (error) {
+      console.error("Error fetching students by course ID:", error);
+      return [];
+    }
   }
 
   async createStudent(student: InsertStudent): Promise<Student> {
