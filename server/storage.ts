@@ -72,7 +72,7 @@ export interface IStorage {
   updateStudent(id: number, student: Partial<Student>): Promise<Student | undefined>;
   
   // Registration Courses
-  getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]>;
+  getRegistrationCourses(studentId?: number): Promise<RegistrationCourse[]>;
   getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined>;
   createRegistrationCourse(course: InsertRegistrationCourse): Promise<RegistrationCourse>;
   deleteRegistrationCourse(id: number): Promise<boolean>;
@@ -263,7 +263,7 @@ export interface IStorage {
   createEmailHistory(email: InsertEmailHistory): Promise<EmailHistory>;
   
   // Registration Courses
-  getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]>;
+  getRegistrationCourses(studentId?: number): Promise<RegistrationCourse[]>;
   getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined>;
   createRegistrationCourse(course: InsertRegistrationCourse): Promise<RegistrationCourse>;
   deleteRegistrationCourse(id: number): Promise<boolean>;
@@ -646,9 +646,12 @@ export class MemStorage implements IStorage {
   }
   
   // Registration Courses methods
-  async getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]> {
-    return Array.from(this.registrationCoursesMap.values())
-      .filter(course => course.studentId === studentId);
+  async getRegistrationCourses(studentId?: number): Promise<RegistrationCourse[]> {
+    const allCourses = Array.from(this.registrationCoursesMap.values());
+    if (studentId === undefined) {
+      return allCourses;
+    }
+    return allCourses.filter(course => course.studentId === studentId);
   }
   
   async getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined> {
@@ -2627,11 +2630,17 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Registration Courses methods
-  async getRegistrationCourses(studentId: number): Promise<RegistrationCourse[]> {
-    const result = await db.select().from(registrationCourses)
-      .where(eq(registrationCourses.studentId, studentId))
-      .orderBy(desc(registrationCourses.createdAt));
-    return result;
+  async getRegistrationCourses(studentId?: number): Promise<RegistrationCourse[]> {
+    if (studentId === undefined) {
+      const result = await db.select().from(registrationCourses)
+        .orderBy(desc(registrationCourses.createdAt));
+      return result;
+    } else {
+      const result = await db.select().from(registrationCourses)
+        .where(eq(registrationCourses.studentId, studentId))
+        .orderBy(desc(registrationCourses.createdAt));
+      return result;
+    }
   }
   
   async getRegistrationCourse(id: number): Promise<RegistrationCourse | undefined> {
