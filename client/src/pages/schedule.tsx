@@ -362,49 +362,49 @@ const SchedulePage: FC = () => {
     return trainerCourses.includes(watchedCourseId.toString());
   });
   
-  // Get registration courses for students
+  // Get all registration courses (for reference)
   const { data: registrationCourses, isLoading: registrationCoursesLoading } = useQuery<RegistrationCourse[]>({
     queryKey: ['/api/registration-courses'],
-    // Add logging to see what data is being returned
     onSuccess: (data) => {
-      console.log('Registration courses loaded:', data);
+      console.log('All registration courses loaded:', data?.length);
     },
     onError: (error) => {
       console.error('Error loading registration courses:', error);
     },
   });
 
-  // Filter students based on selected course ID
-  const courseStudents = useMemo(() => {
-    if (!watchedCourseId || !students || !registrationCourses) return [];
-    
-    console.log(`Finding students for course ID: ${watchedCourseId}`);
-    
-    // Find registration records for this course
-    const courseRegistrations = registrationCourses.filter(
-      rc => rc.courseId === Number(watchedCourseId)
-    );
-    
-    // Get student IDs from registrations
-    const studentIds = courseRegistrations.map(rc => rc.studentId);
-    console.log(`Found ${studentIds.length} registrations for course ID ${watchedCourseId}:`, studentIds);
-    
-    // Find students that match these IDs - log detailed information for debugging
-    console.log('All students:', students.map(s => ({ id: s.id, studentId: s.studentId, name: s.fullName })));
-    
-    const matchedStudents = students.filter(student => {
-      // Check each student ID against the list of registered student IDs
-      const isMatch = studentIds.some(id => id === student.id);
-      if (isMatch) {
-        console.log(`Match found! Student ${student.fullName} (ID: ${student.id}) is registered for course ${watchedCourseId}`);
+  // Fetch students registered for the selected course directly from our new endpoint
+  const { 
+    data: courseRegistrationsWithStudents,
+    isLoading: courseRegistrationsLoading 
+  } = useQuery({
+    queryKey: ['/api/registration-courses/by-course', watchedCourseId],
+    queryFn: async () => {
+      if (!watchedCourseId) return [];
+      try {
+        const response = await fetch(`/api/registration-courses/by-course/${watchedCourseId}`);
+        if (!response.ok) throw new Error("Failed to fetch registered students");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching course registrations:", error);
+        return [];
       }
-      return isMatch;
-    });
+    },
+    enabled: !!watchedCourseId,
+    onSuccess: (data) => {
+      console.log(`Found ${data?.length} students registered for course ID ${watchedCourseId}:`, data);
+    },
+  });
+
+  // Extract students from course registrations
+  const courseStudents = useMemo(() => {
+    if (!watchedCourseId || courseRegistrationsLoading || !courseRegistrationsWithStudents?.length) {
+      return [];
+    }
     
-    console.log(`Found ${matchedStudents.length} students for course ID ${watchedCourseId}:`, matchedStudents);
-    
-    return matchedStudents;
-  }, [watchedCourseId, students, registrationCourses]);
+    // Map the registration data to student objects
+    return courseRegistrationsWithStudents.map(reg => reg.student);
+  }, [watchedCourseId, courseRegistrationsWithStudents, courseRegistrationsLoading]);
   
   // Check if there are any students registered for the selected course
   const hasRegisteredStudents = useMemo(() => {
