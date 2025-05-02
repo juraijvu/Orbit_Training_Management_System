@@ -382,8 +382,18 @@ const SchedulePage: FC = () => {
     const studentIds = courseRegistrations.map(rc => rc.studentId);
     console.log(`Found ${studentIds.length} registrations for course ID ${watchedCourseId}:`, studentIds);
     
-    // Find students that match these IDs
-    const matchedStudents = students.filter(student => studentIds.includes(student.id));
+    // Find students that match these IDs - log detailed information for debugging
+    console.log('All students:', students.map(s => ({ id: s.id, studentId: s.studentId, name: s.fullName })));
+    
+    const matchedStudents = students.filter(student => {
+      // Check each student ID against the list of registered student IDs
+      const isMatch = studentIds.some(id => id === student.id);
+      if (isMatch) {
+        console.log(`Match found! Student ${student.fullName} (ID: ${student.id}) is registered for course ${watchedCourseId}`);
+      }
+      return isMatch;
+    });
+    
     console.log(`Found ${matchedStudents.length} students for course ID ${watchedCourseId}:`, matchedStudents);
     
     return matchedStudents;
