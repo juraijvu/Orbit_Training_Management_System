@@ -358,11 +358,17 @@ const SchedulePage: FC = () => {
     queryKey: ['/api/students/by-course', watchedCourseId],
     queryFn: async () => {
       if (!watchedCourseId) return [];
+      console.log(`Fetching students for course ID: ${watchedCourseId}`);
       const res = await fetch(`/api/students/by-course/${watchedCourseId}`);
+      console.log(`Response status: ${res.status}`);
       if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`Error fetching students for course: ${errorText}`);
         throw new Error('Failed to fetch students for this course');
       }
-      return res.json();
+      const data = await res.json();
+      console.log(`Found ${data.length} students for course ID ${watchedCourseId}:`, data);
+      return data;
     },
     enabled: !!watchedCourseId,
     staleTime: 30000, // 30 seconds
