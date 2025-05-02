@@ -194,6 +194,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get students by course ID
+  app.get('/api/students/by-course/:courseId', isAuthenticated, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      if (isNaN(courseId)) {
+        return res.status(400).json({ message: 'Invalid course ID' });
+      }
+      
+      const students = await storage.getStudentsByCourseId(courseId);
+      res.json(students);
+    } catch (error) {
+      console.error('Error fetching students by course ID:', error);
+      res.status(500).json({ message: 'Failed to fetch students for this course', error: String(error) });
+    }
+  });
+  
   // Seed sample student data (for development purposes)
   app.post('/api/seed/students', isSuperAdmin, async (req, res) => {
     try {

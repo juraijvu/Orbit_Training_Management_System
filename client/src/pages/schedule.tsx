@@ -353,10 +353,11 @@ const SchedulePage: FC = () => {
     return trainerCourses.includes(watchedCourseId.toString());
   });
   
-  // Filter students based on selected course
-  const courseStudents = students?.filter(student => {
-    if (!watchedCourseId) return true;
-    return student.courseId === Number(watchedCourseId);
+  // Fetch students by course ID
+  const { data: courseStudents, isLoading: courseStudentsLoading } = useQuery<Student[]>({
+    queryKey: ['/api/students/by-course', watchedCourseId],
+    enabled: !!watchedCourseId,
+    staleTime: 30000, // 30 seconds
   });
   
   // Check if selected time slot is available for the trainer
