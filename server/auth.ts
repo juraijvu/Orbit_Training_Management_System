@@ -121,4 +121,50 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
+
+  // Add debug auth endpoint for troubleshooting
+  app.get("/api/auth/debug", (req, res) => {
+    res.json({
+      isAuthenticated: req.isAuthenticated(),
+      sessionID: req.sessionID,
+      user: req.user || null,
+      cookies: req.headers.cookie,
+    });
+  });
+
+  // Add direct login endpoint for testing purposes
+  app.post("/api/auth/debug-login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      const isPasswordValid = await comparePasswords(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed", error: err.message });
+        }
+        return res.status(200).json({ 
+          message: "Debug login successful", 
+          user,
+          sessionID: req.sessionID
+        });
+      });
+      
+    } catch (error) {
+      console.error("Debug login error:", error);
+      res.status(500).json({ message: "Login failed", error: String(error) });
+    }
+  });
 }
