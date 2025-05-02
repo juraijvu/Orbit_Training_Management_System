@@ -2025,22 +2025,47 @@ export class DatabaseStorage implements IStorage {
 
   // Schedules methods
   async getSchedules(): Promise<Schedule[]> {
-    return await db.select().from(schedules);
+    try {
+      console.log("Fetching schedules from database");
+      const results = await db.select().from(schedules);
+      console.log("Schedules fetched successfully:", results.length);
+      return results;
+    } catch (error) {
+      console.error("Error in getSchedules:", error);
+      // Return empty array in case of error to avoid breaking the app
+      return [];
+    }
   }
 
   async getSchedule(id: number): Promise<Schedule | undefined> {
-    const result = await db.select().from(schedules).where(eq(schedules.id, id));
-    return result[0];
+    try {
+      console.log(`Fetching schedule with ID: ${id}`);
+      const result = await db.select().from(schedules).where(eq(schedules.id, id));
+      return result[0];
+    } catch (error) {
+      console.error(`Error in getSchedule(${id}):`, error);
+      return undefined;
+    }
   }
 
   async createSchedule(schedule: InsertSchedule): Promise<Schedule> {
-    const scheduleWithDefaults = {
-      ...schedule,
-      createdAt: new Date(),
-      status: schedule.status || 'pending'
-    };
-    const result = await db.insert(schedules).values(scheduleWithDefaults).returning();
-    return result[0];
+    try {
+      console.log("Creating schedule with data:", schedule);
+      const scheduleWithDefaults = {
+        ...schedule,
+        createdAt: new Date(),
+        status: schedule.status || 'pending',
+        // Ensure required fields are present
+        sessionType: schedule.sessionType || 'one_to_one'
+      };
+      console.log("Schedule with defaults:", scheduleWithDefaults);
+      const result = await db.insert(schedules).values(scheduleWithDefaults).returning();
+      console.log("Schedule created:", result[0]);
+      return result[0];
+    } catch (error) {
+      console.error("Error in createSchedule:", error);
+      throw error;
+    }
   }
 
   async updateSchedule(id: number, schedule: Partial<Schedule>): Promise<Schedule | undefined> {
