@@ -365,6 +365,13 @@ const SchedulePage: FC = () => {
   // Get registration courses for students
   const { data: registrationCourses, isLoading: registrationCoursesLoading } = useQuery<RegistrationCourse[]>({
     queryKey: ['/api/registration-courses'],
+    // Add logging to see what data is being returned
+    onSuccess: (data) => {
+      console.log('Registration courses loaded:', data);
+    },
+    onError: (error) => {
+      console.error('Error loading registration courses:', error);
+    },
   });
 
   // Filter students based on selected course ID

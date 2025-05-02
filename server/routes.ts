@@ -213,7 +213,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all registration courses
   app.get('/api/registration-courses', isAuthenticated, async (req, res) => {
     try {
+      console.log('Fetching registration courses from database');
       const registrationCourses = await storage.getRegistrationCourses();
+      console.log(`Registration courses fetched successfully: ${registrationCourses.length}`);
+      console.log('Sample registration data:', registrationCourses.slice(0, 5));
       res.json(registrationCourses);
     } catch (error) {
       console.error('Error fetching registration courses:', error);
