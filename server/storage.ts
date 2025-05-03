@@ -734,6 +734,469 @@ export class MemStorage implements IStorage {
   async deleteRegistrationCourse(id: number): Promise<boolean> {
     return this.registrationCoursesMap.delete(id);
   }
+  
+  // Pipeline Stages methods
+  async getPipelineStages(): Promise<PipelineStage[]> {
+    return Array.from(this.pipelineStagesMap.values()).sort((a, b) => a.position - b.position);
+  }
+  
+  async getPipelineStage(id: number): Promise<PipelineStage | undefined> {
+    return this.pipelineStagesMap.get(id);
+  }
+  
+  async getPipelineStageByPosition(position: number): Promise<PipelineStage | undefined> {
+    return Array.from(this.pipelineStagesMap.values()).find(
+      (stage) => stage.position === position
+    );
+  }
+  
+  async getDefaultPipelineStage(): Promise<PipelineStage | undefined> {
+    return Array.from(this.pipelineStagesMap.values()).find(
+      (stage) => stage.isDefault === true
+    );
+  }
+  
+  async createPipelineStage(stage: InsertPipelineStage): Promise<PipelineStage> {
+    const id = this.pipelineStageId++;
+    // Calculate highest position if not provided
+    if (!stage.position) {
+      const stages = await this.getPipelineStages();
+      const maxPosition = stages.length > 0 
+        ? Math.max(...stages.map(s => s.position)) 
+        : 0;
+      stage.position = maxPosition + 1;
+    }
+    
+    // Set as default if it's the first stage
+    if ((await this.getPipelineStages()).length === 0) {
+      stage.isDefault = true;
+    } else if (stage.isDefault) {
+      // If this stage is set as default, unset any existing default
+      const currentDefault = await this.getDefaultPipelineStage();
+      if (currentDefault) {
+        await this.updatePipelineStage(currentDefault.id, { isDefault: false });
+      }
+    }
+    
+    const newStage: PipelineStage = { 
+      ...stage, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      color: stage.color || '#3498db' // Default blue color if not specified
+    };
+    
+    this.pipelineStagesMap.set(id, newStage);
+    return newStage;
+  }
+  
+  async updatePipelineStage(id: number, stage: Partial<PipelineStage>): Promise<PipelineStage | undefined> {
+    const existingStage = this.pipelineStagesMap.get(id);
+    if (!existingStage) return undefined;
+    
+    // Handle default stage logic
+    if (stage.isDefault && stage.isDefault !== existingStage.isDefault) {
+      const currentDefault = await this.getDefaultPipelineStage();
+      if (currentDefault && currentDefault.id !== id) {
+        await this.updatePipelineStage(currentDefault.id, { isDefault: false });
+      }
+    }
+    
+    const updatedStage = { 
+      ...existingStage, 
+      ...stage, 
+      updatedAt: new Date() 
+    };
+    
+    this.pipelineStagesMap.set(id, updatedStage);
+    return updatedStage;
+  }
+  
+  async deletePipelineStage(id: number): Promise<boolean> {
+    const stage = this.pipelineStagesMap.get(id);
+    if (!stage) return false;
+    
+    // Cannot delete default stage
+    if (stage.isDefault) return false;
+    
+    // Check if there are deals in this stage
+    const dealsInStage = Array.from(this.pipelineDealsMap.values()).filter(
+      deal => deal.stageId === id
+    );
+    
+    if (dealsInStage.length > 0) return false;
+    
+    // Remove the stage
+    return this.pipelineStagesMap.delete(id);
+  }
+  
+  // Pipeline Deals methods
+  async getPipelineDeals(): Promise<PipelineDeal[]> {
+    return Array.from(this.pipelineDealsMap.values()).sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
+  async getPipelineDealsByStage(stageId: number): Promise<PipelineDeal[]> {
+    return Array.from(this.pipelineDealsMap.values())
+      .filter(deal => deal.stageId === stageId)
+      .sort((a, b) => a.position - b.position);
+  }
+  
+  async getPipelineDealsByLead(leadId: number): Promise<PipelineDeal[]> {
+    return Array.from(this.pipelineDealsMap.values())
+      .filter(deal => deal.leadId === leadId)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
+  async getPipelineDealsByCorporateLead(corporateLeadId: number): Promise<PipelineDeal[]> {
+    return Array.from(this.pipelineDealsMap.values())
+      .filter(deal => deal.corporateLeadId === corporateLeadId)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
+  async getPipelineDealsByAssigned(userId: number): Promise<PipelineDeal[]> {
+    return Array.from(this.pipelineDealsMap.values())
+      .filter(deal => deal.assignedTo === userId)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
+  async getPipelineDealsByStatus(status: string): Promise<PipelineDeal[]> {
+    return Array.from(this.pipelineDealsMap.values())
+      .filter(deal => deal.status === status)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
+  async getPipelineDealsByPriority(priority: string): Promise<PipelineDeal[]> {
+    return Array.from(this.pipelineDealsMap.values())
+      .filter(deal => deal.priority === priority)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+  
+  async getPipelineDeal(id: number): Promise<PipelineDeal | undefined> {
+    return this.pipelineDealsMap.get(id);
+  }
+  
+  async createPipelineDeal(deal: InsertPipelineDeal): Promise<PipelineDeal> {
+    const id = this.pipelineDealId++;
+    
+    // Make sure the stage exists
+    const stage = await this.getPipelineStage(deal.stageId);
+    if (!stage) {
+      // If stage doesn't exist, use the default stage
+      const defaultStage = await this.getDefaultPipelineStage();
+      if (defaultStage) {
+        deal.stageId = defaultStage.id;
+      }
+    }
+    
+    // Calculate position within stage
+    const dealsInStage = await this.getPipelineDealsByStage(deal.stageId);
+    const maxPosition = dealsInStage.length > 0 
+      ? Math.max(...dealsInStage.map(d => d.position)) 
+      : 0;
+    
+    const now = new Date();
+    const newDeal: PipelineDeal = { 
+      ...deal, 
+      id, 
+      position: maxPosition + 1,
+      createdAt: now,
+      updatedAt: now,
+      status: deal.status || 'active',
+      priority: deal.priority || 'medium',
+      lastActivity: now
+    };
+    
+    this.pipelineDealsMap.set(id, newDeal);
+    
+    // Create a stage history record
+    await this.createPipelineStageHistory({
+      dealId: id,
+      stageId: deal.stageId,
+      userId: deal.createdBy,
+      notes: 'Deal created',
+      timestamp: now
+    });
+    
+    return newDeal;
+  }
+  
+  async updatePipelineDeal(id: number, deal: Partial<PipelineDeal>): Promise<PipelineDeal | undefined> {
+    const existingDeal = this.pipelineDealsMap.get(id);
+    if (!existingDeal) return undefined;
+    
+    const now = new Date();
+    const updatedDeal = { 
+      ...existingDeal, 
+      ...deal,
+      updatedAt: now,
+      lastActivity: deal.lastActivity || now
+    };
+    
+    this.pipelineDealsMap.set(id, updatedDeal);
+    return updatedDeal;
+  }
+  
+  async movePipelineDealToStage(id: number, stageId: number, notes: string, userId: number): Promise<PipelineDeal | undefined> {
+    const deal = this.pipelineDealsMap.get(id);
+    if (!deal) return undefined;
+    
+    const stage = this.pipelineStagesMap.get(stageId);
+    if (!stage) return undefined;
+    
+    // Skip if already in this stage
+    if (deal.stageId === stageId) return deal;
+    
+    const oldStageId = deal.stageId;
+    
+    // Calculate position within new stage
+    const dealsInStage = await this.getPipelineDealsByStage(stageId);
+    const maxPosition = dealsInStage.length > 0 
+      ? Math.max(...dealsInStage.map(d => d.position)) 
+      : 0;
+    
+    const now = new Date();
+    const updatedDeal = { 
+      ...deal, 
+      stageId,
+      position: maxPosition + 1,
+      updatedAt: now,
+      lastActivity: now
+    };
+    
+    this.pipelineDealsMap.set(id, updatedDeal);
+    
+    // Create stage history record
+    await this.createPipelineStageHistory({
+      dealId: id,
+      stageId,
+      previousStageId: oldStageId,
+      userId,
+      notes,
+      timestamp: now
+    });
+    
+    return updatedDeal;
+  }
+  
+  async deletePipelineDeal(id: number): Promise<boolean> {
+    // Check if deal exists
+    const deal = this.pipelineDealsMap.get(id);
+    if (!deal) return false;
+    
+    // Get all activities for this deal
+    const activities = Array.from(this.pipelineActivitiesMap.values()).filter(
+      activity => activity.dealId === id
+    );
+    
+    // Delete all activities first
+    for (const activity of activities) {
+      this.pipelineActivitiesMap.delete(activity.id);
+    }
+    
+    // Delete all stage history records
+    Array.from(this.pipelineStageHistoryMap.values())
+      .filter(history => history.dealId === id)
+      .forEach(history => this.pipelineStageHistoryMap.delete(history.id));
+    
+    // Delete the deal
+    return this.pipelineDealsMap.delete(id);
+  }
+  
+  // Pipeline Activities methods
+  async getPipelineActivities(): Promise<PipelineActivity[]> {
+    return Array.from(this.pipelineActivitiesMap.values())
+      .sort((a, b) => {
+        // Sort by due date, with overdue first
+        if (a.dueDate && b.dueDate) {
+          return a.dueDate.getTime() - b.dueDate.getTime();
+        } else if (a.dueDate) {
+          return -1; // a has dueDate, b doesn't, a comes first
+        } else if (b.dueDate) {
+          return 1; // b has dueDate, a doesn't, b comes first
+        } else {
+          return b.createdAt.getTime() - a.createdAt.getTime(); // Both have no dueDate, sort by created
+        }
+      });
+  }
+  
+  async getPipelineActivitiesByDeal(dealId: number): Promise<PipelineActivity[]> {
+    return Array.from(this.pipelineActivitiesMap.values())
+      .filter(activity => activity.dealId === dealId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getPipelineActivitiesByAssigned(userId: number): Promise<PipelineActivity[]> {
+    return Array.from(this.pipelineActivitiesMap.values())
+      .filter(activity => activity.assignedTo === userId)
+      .sort((a, b) => {
+        // Sort by due date, with overdue first
+        if (a.dueDate && b.dueDate) {
+          return a.dueDate.getTime() - b.dueDate.getTime();
+        } else if (a.dueDate) {
+          return -1; // a has dueDate, b doesn't, a comes first
+        } else if (b.dueDate) {
+          return 1; // b has dueDate, a doesn't, b comes first
+        } else {
+          return b.createdAt.getTime() - a.createdAt.getTime(); // Both have no dueDate, sort by created
+        }
+      });
+  }
+  
+  async getPipelineActivitiesByStatus(status: string): Promise<PipelineActivity[]> {
+    return Array.from(this.pipelineActivitiesMap.values())
+      .filter(activity => activity.status === status)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getPipelineActivitiesByType(type: string): Promise<PipelineActivity[]> {
+    return Array.from(this.pipelineActivitiesMap.values())
+      .filter(activity => activity.activityType === type)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getPipelineActivitiesDueToday(): Promise<PipelineActivity[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    return Array.from(this.pipelineActivitiesMap.values())
+      .filter(activity => {
+        if (!activity.dueDate) return false;
+        const dueDate = new Date(activity.dueDate);
+        return dueDate >= today && dueDate < tomorrow && activity.status !== 'completed';
+      })
+      .sort((a, b) => (a.dueDate as Date).getTime() - (b.dueDate as Date).getTime());
+  }
+  
+  async getPipelineActivitiesOverdue(): Promise<PipelineActivity[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return Array.from(this.pipelineActivitiesMap.values())
+      .filter(activity => {
+        if (!activity.dueDate) return false;
+        const dueDate = new Date(activity.dueDate);
+        return dueDate < today && activity.status !== 'completed';
+      })
+      .sort((a, b) => (a.dueDate as Date).getTime() - (b.dueDate as Date).getTime());
+  }
+  
+  async getPipelineActivity(id: number): Promise<PipelineActivity | undefined> {
+    return this.pipelineActivitiesMap.get(id);
+  }
+  
+  async createPipelineActivity(activity: InsertPipelineActivity): Promise<PipelineActivity> {
+    const id = this.pipelineActivityId++;
+    
+    const now = new Date();
+    const newActivity: PipelineActivity = { 
+      ...activity, 
+      id, 
+      createdAt: now,
+      updatedAt: now,
+      status: activity.status || 'pending',
+      outcome: activity.outcome || null
+    };
+    
+    this.pipelineActivitiesMap.set(id, newActivity);
+    
+    // Update the deal's lastActivity timestamp
+    if (activity.dealId) {
+      const deal = this.pipelineDealsMap.get(activity.dealId);
+      if (deal) {
+        await this.updatePipelineDeal(activity.dealId, { lastActivity: now });
+      }
+    }
+    
+    return newActivity;
+  }
+  
+  async updatePipelineActivity(id: number, activity: Partial<PipelineActivity>): Promise<PipelineActivity | undefined> {
+    const existingActivity = this.pipelineActivitiesMap.get(id);
+    if (!existingActivity) return undefined;
+    
+    const now = new Date();
+    const updatedActivity = { 
+      ...existingActivity, 
+      ...activity,
+      updatedAt: now
+    };
+    
+    this.pipelineActivitiesMap.set(id, updatedActivity);
+    
+    // Update the deal's lastActivity timestamp
+    if (existingActivity.dealId) {
+      const deal = this.pipelineDealsMap.get(existingActivity.dealId);
+      if (deal) {
+        await this.updatePipelineDeal(existingActivity.dealId, { lastActivity: now });
+      }
+    }
+    
+    return updatedActivity;
+  }
+  
+  async markPipelineActivityAsComplete(id: number, outcome: string): Promise<PipelineActivity | undefined> {
+    const activity = this.pipelineActivitiesMap.get(id);
+    if (!activity) return undefined;
+    
+    const now = new Date();
+    const updatedActivity = { 
+      ...activity, 
+      status: 'completed',
+      completedAt: now,
+      outcome,
+      updatedAt: now
+    };
+    
+    this.pipelineActivitiesMap.set(id, updatedActivity);
+    
+    // Update the deal's lastActivity timestamp
+    if (activity.dealId) {
+      const deal = this.pipelineDealsMap.get(activity.dealId);
+      if (deal) {
+        await this.updatePipelineDeal(activity.dealId, { lastActivity: now });
+      }
+    }
+    
+    return updatedActivity;
+  }
+  
+  async deletePipelineActivity(id: number): Promise<boolean> {
+    const activity = this.pipelineActivitiesMap.get(id);
+    if (!activity) return false;
+    
+    // Update the deal's lastActivity timestamp
+    if (activity.dealId) {
+      const deal = this.pipelineDealsMap.get(activity.dealId);
+      if (deal) {
+        await this.updatePipelineDeal(activity.dealId, { lastActivity: new Date() });
+      }
+    }
+    
+    return this.pipelineActivitiesMap.delete(id);
+  }
+  
+  // Pipeline Stage History methods
+  async getPipelineStageHistory(dealId: number): Promise<PipelineStageHistory[]> {
+    return Array.from(this.pipelineStageHistoryMap.values())
+      .filter(history => history.dealId === dealId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+  
+  async createPipelineStageHistory(history: InsertPipelineStageHistory): Promise<PipelineStageHistory> {
+    const id = this.pipelineStageHistoryId++;
+    
+    const newHistory: PipelineStageHistory = { 
+      ...history, 
+      id,
+      timestamp: history.timestamp || new Date()
+    };
+    
+    this.pipelineStageHistoryMap.set(id, newHistory);
+    return newHistory;
+  }
 
   async updateSchedule(id: number, schedule: Partial<Schedule>): Promise<Schedule | undefined> {
     const existingSchedule = this.schedulesMap.get(id);
