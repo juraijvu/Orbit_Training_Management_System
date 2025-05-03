@@ -1349,37 +1349,37 @@ const SchedulePage: FC = () => {
                       // Validate required fields
                       if (!values.title) {
                         toast({ title: "Missing Title", description: "Please enter a title for this schedule", variant: "destructive" });
-                        setIsPending(false);
+                        setSubmitting(false);
                         return;
                       }
                       
                       if (!values.courseId) {
                         toast({ title: "Missing Course", description: "Please select a course for this schedule", variant: "destructive" });
-                        setIsPending(false);
+                        setSubmitting(false);
                         return;
                       }
                       
                       if (!values.trainerId) {
                         toast({ title: "Missing Trainer", description: "Please select a trainer for this schedule", variant: "destructive" });
-                        setIsPending(false);
+                        setSubmitting(false);
                         return;
                       }
                       
                       if (!values.selectedStudents || values.selectedStudents.length === 0) {
                         toast({ title: "Missing Students", description: "Please select at least one student for this schedule", variant: "destructive" });
-                        setIsPending(false);
+                        setSubmitting(false);
                         return;
                       }
                       
                       if (!values.selectedDate) {
                         toast({ title: "Missing Date", description: "Please select a date for this schedule", variant: "destructive" });
-                        setIsPending(false);
+                        setSubmitting(false);
                         return;
                       }
                       
                       if (!values.selectedStartTime) {
                         toast({ title: "Missing Start Time", description: "Please set a start time for this schedule", variant: "destructive" });
-                        setIsPending(false);
+                        setSubmitting(false);
                         return;
                       }
                       
@@ -1462,7 +1462,7 @@ const SchedulePage: FC = () => {
                         variant: 'destructive',
                       });
                     } finally {
-                      setIsPending(false);
+                      setSubmitting(false);
                     }
                   }}
                 >
