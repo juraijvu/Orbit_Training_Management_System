@@ -1282,13 +1282,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received schedule data:', req.body);
       
+      // Process the data first to handle date strings properly
+      const processedData = {
+        ...req.body,
+        createdBy: req.user!.id
+      };
+      
+      // Convert date strings to Date objects if needed
+      if (typeof processedData.startTime === 'string') {
+        try {
+          const startDate = new Date(processedData.startTime);
+          if (isNaN(startDate.getTime())) {
+            return res.status(400).json({ message: "Invalid start time format" });
+          }
+          processedData.startTime = startDate;
+        } catch (e) {
+          return res.status(400).json({ message: "Invalid start time format" });
+        }
+      }
+      
+      if (typeof processedData.endTime === 'string') {
+        try {
+          const endDate = new Date(processedData.endTime);
+          if (isNaN(endDate.getTime())) {
+            return res.status(400).json({ message: "Invalid end time format" });
+          }
+          processedData.endTime = endDate;
+        } catch (e) {
+          return res.status(400).json({ message: "Invalid end time format" });
+        }
+      }
+      
+      console.log('Processed schedule data:', processedData);
+      
       // Ensure dates are properly formatted
       let scheduleData;
       try {
-        scheduleData = insertScheduleSchema.parse({
-          ...req.body,
-          createdBy: req.user!.id
-        });
+        scheduleData = insertScheduleSchema.parse(processedData);
       } catch (parseError) {
         console.error('Schedule validation error:', parseError);
         return res.status(400).json({ message: `Validation error: ${parseError.message}` });
