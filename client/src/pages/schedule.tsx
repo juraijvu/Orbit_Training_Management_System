@@ -201,49 +201,69 @@ const SchedulePage: FC = () => {
   // Create schedule mutation
   const createScheduleMutation = useMutation({
     mutationFn: async (data: ScheduleFormValues) => {
-      // Convert the form values to the format expected by the API
-      const selectedDate = data.selectedDate;
-      const startTime = parse(data.selectedStartTime, 'HH:mm', new Date());
-      const endTime = parse(data.selectedEndTime, 'HH:mm', new Date());
-      
-      // Set the date part of the time
-      const combinedStartTime = new Date(selectedDate);
-      combinedStartTime.setHours(startTime.getHours(), startTime.getMinutes());
-      
-      const combinedEndTime = new Date(selectedDate);
-      combinedEndTime.setHours(endTime.getHours(), endTime.getMinutes());
-      
-      // Calculate endTime based on startTime and duration
-      const durationMs = data.duration * 60 * 1000; // convert minutes to milliseconds
-      const calculatedEndTime = new Date(combinedStartTime.getTime() + durationMs);
-      
-      const schedule = {
-        title: data.title,
-        courseId: data.courseId,
-        trainerId: data.trainerId,
-        studentIds: data.selectedStudents.join(','),
-        sessionType: data.sessionType,
-        duration: data.duration,
-        occurrenceDays: data.selectedOccurrenceDays.join(','),
-        startTime: combinedStartTime.toISOString(),
-        endTime: calculatedEndTime.toISOString(), // Use calculated end time based on duration
-        status: data.status,
-        createdBy: data.createdBy,
-      };
-      
-      const res = await apiRequest('POST', '/api/schedules', schedule);
-      return await res.json();
+      try {
+        console.log('Preparing schedule data for API submission:', data);
+        
+        // Convert the form values to the format expected by the API
+        const selectedDate = data.selectedDate;
+        const startTime = parse(data.selectedStartTime, 'HH:mm', new Date());
+        
+        // Set the date part of the time
+        const combinedStartTime = new Date(selectedDate);
+        combinedStartTime.setHours(startTime.getHours(), startTime.getMinutes());
+        
+        // Calculate endTime based on startTime and duration
+        const durationMs = data.duration * 60 * 1000; // convert minutes to milliseconds
+        const calculatedEndTime = new Date(combinedStartTime.getTime() + durationMs);
+        
+        // Ensure all fields are properly formatted, with appropriate type conversions
+        const schedule = {
+          title: data.title,
+          courseId: Number(data.courseId),
+          trainerId: Number(data.trainerId),
+          studentIds: Array.isArray(data.selectedStudents) ? data.selectedStudents.join(',') : '',
+          sessionType: data.sessionType || SessionType.BATCH,
+          duration: Number(data.duration),
+          occurrenceDays: Array.isArray(data.selectedOccurrenceDays) ? data.selectedOccurrenceDays.join(',') : '',
+          startTime: combinedStartTime.toISOString(),
+          endTime: calculatedEndTime.toISOString(), // Use calculated end time based on duration
+          status: data.status || ScheduleStatus.CONFIRMED,
+          createdBy: data.createdBy || user?.id,
+        };
+        
+        console.log('Submitting schedule to API:', schedule);
+        
+        const res = await apiRequest('POST', '/api/schedules', schedule);
+        
+        if (!res.ok) {
+          const errorData = await res.text();
+          console.error('API response error:', errorData);
+          throw new Error(`API Error: ${res.status} ${errorData}`);
+        }
+        
+        const result = await res.json();
+        console.log('API response:', result);
+        return result;
+      } catch (error) {
+        console.error('Error in schedule creation:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Schedule created successfully:', data);
+      
+      // Update related queries
       queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/schedules'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/activities'] });
       
+      // Show success message
       toast({
         title: 'Success',
         description: 'Schedule has been created successfully',
       });
       
+      // Close dialog and reset form
       setIsDialogOpen(false);
       form.reset();
     },
@@ -501,25 +521,72 @@ const SchedulePage: FC = () => {
   
   // Submit form
   const onSubmit = (values: ScheduleFormValues) => {
-    if (!isTrainerAvailable()) {
+    try {
+      // Check for form validation errors
+      if (Object.keys(form.formState.errors).length > 0) {
+        console.log('Form validation errors:', form.formState.errors);
+        toast({
+          title: 'Form Validation Error',
+          description: 'Please fix all errors in the form before submitting.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Ensure required fields are present
+      if (!values.title || !values.courseId || !values.trainerId) {
+        console.log('Missing required fields:', { 
+          title: values.title, 
+          courseId: values.courseId, 
+          trainerId: values.trainerId 
+        });
+        toast({
+          title: 'Missing Fields',
+          description: 'Please fill in all required fields.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Make sure selected students are properly formatted
+      if (!values.selectedStudents || values.selectedStudents.length === 0) {
+        console.log('No students selected');
+        toast({
+          title: 'Warning',
+          description: 'Please select at least one student for this schedule.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!isTrainerAvailable()) {
+        toast({
+          title: 'Warning',
+          description: 'The selected trainer is not available at this time slot.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (hasSchedulingConflict()) {
+        toast({
+          title: 'Warning',
+          description: 'There is a scheduling conflict with another session.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      console.log('Submitting schedule form with values:', values);
+      createScheduleMutation.mutate(values);
+    } catch (error) {
+      console.error('Error in form submission:', error);
       toast({
-        title: 'Warning',
-        description: 'The selected trainer is not available at this time slot.',
+        title: 'Error',
+        description: 'An unexpected error occurred while submitting the form.',
         variant: 'destructive',
       });
-      return;
     }
-    
-    if (hasSchedulingConflict()) {
-      toast({
-        title: 'Warning',
-        description: 'There is a scheduling conflict with another session.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    createScheduleMutation.mutate(values);
   };
   
   // Open create schedule dialog
