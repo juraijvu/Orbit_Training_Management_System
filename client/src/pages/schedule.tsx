@@ -1406,7 +1406,7 @@ const SchedulePage: FC = () => {
                 )}
               />
               
-              <DialogFooter className="mt-6">
+              <div className="mt-6 flex justify-end gap-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -1419,11 +1419,48 @@ const SchedulePage: FC = () => {
                   Cancel
                 </Button>
                 <Button
-                  type="submit"
+                  type="button" 
                   disabled={isPending}
                   onClick={() => {
-                    console.log('Submit button clicked');
-                    form.handleSubmit(onSubmit)();
+                    console.log('Manual form submission triggered');
+                    
+                    // Manual form validation and submission
+                    const values = form.getValues();
+                    console.log('Form values:', values);
+                    
+                    // Validate required fields
+                    if (!values.title) {
+                      toast({ title: "Missing Title", description: "Please enter a title for this schedule", variant: "destructive" });
+                      return;
+                    }
+                    
+                    if (!values.courseId) {
+                      toast({ title: "Missing Course", description: "Please select a course for this schedule", variant: "destructive" });
+                      return;
+                    }
+                    
+                    if (!values.trainerId) {
+                      toast({ title: "Missing Trainer", description: "Please select a trainer for this schedule", variant: "destructive" });
+                      return;
+                    }
+                    
+                    if (!values.selectedStudents || values.selectedStudents.length === 0) {
+                      toast({ title: "Missing Students", description: "Please select at least one student for this schedule", variant: "destructive" });
+                      return;
+                    }
+                    
+                    if (!values.selectedDate) {
+                      toast({ title: "Missing Date", description: "Please select a date for this schedule", variant: "destructive" });
+                      return;
+                    }
+                    
+                    if (!values.selectedStartTime) {
+                      toast({ title: "Missing Start Time", description: "Please set a start time for this schedule", variant: "destructive" });
+                      return;
+                    }
+                    
+                    // All validations passed, proceed with submission
+                    onSubmit(values);
                   }}
                 >
                   {isPending ? (
@@ -1438,7 +1475,7 @@ const SchedulePage: FC = () => {
                     </>
                   )}
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           </Form>
         </DialogContent>
