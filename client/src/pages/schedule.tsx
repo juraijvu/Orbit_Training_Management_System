@@ -179,24 +179,38 @@ const SchedulePage: FC = () => {
   }, [user, form]);
   
   // Fetch schedules
-  const { data: schedules, isLoading: schedulesLoading } = useQuery<Schedule[]>({
+  const { data: schedules, isLoading: schedulesLoading, refetch: refetchSchedules } = useQuery<Schedule[]>({
     queryKey: ['/api/schedules'],
+    enabled: !!user, // Only run if user is authenticated
   });
   
   // Fetch courses
-  const { data: courses, isLoading: coursesLoading } = useQuery<Course[]>({
+  const { data: courses, isLoading: coursesLoading, refetch: refetchCourses } = useQuery<Course[]>({
     queryKey: ['/api/courses'],
+    enabled: !!user, // Only run if user is authenticated
   });
   
   // Fetch trainers
-  const { data: trainers, isLoading: trainersLoading } = useQuery<Trainer[]>({
+  const { data: trainers, isLoading: trainersLoading, refetch: refetchTrainers } = useQuery<Trainer[]>({
     queryKey: ['/api/trainers'],
+    enabled: !!user, // Only run if user is authenticated
   });
   
   // Fetch students
-  const { data: students, isLoading: studentsLoading } = useQuery<Student[]>({
+  const { data: students, isLoading: studentsLoading, refetch: refetchStudents } = useQuery<Student[]>({
     queryKey: ['/api/students'],
+    enabled: !!user, // Only run if user is authenticated
   });
+  
+  // Refetch data when user is authenticated
+  useEffect(() => {
+    if (user) {
+      refetchSchedules();
+      refetchCourses();
+      refetchTrainers();
+      refetchStudents();
+    }
+  }, [user, refetchSchedules, refetchCourses, refetchTrainers, refetchStudents]);
   
   // Create schedule mutation
   const createScheduleMutation = useMutation({
@@ -385,19 +399,21 @@ const SchedulePage: FC = () => {
   // Get all registration courses (for reference)
   const { data: registrationCourses, isLoading: registrationCoursesLoading } = useQuery<RegistrationCourse[]>({
     queryKey: ['/api/registration-courses'],
-    onSuccess: (data) => {
-      console.log('All registration courses loaded:', data?.length);
-    },
-    onError: (error) => {
-      console.error('Error loading registration courses:', error);
-    },
+    enabled: !!user, // Only run if user is authenticated
   });
+
+  // Log registration courses when they load
+  useEffect(() => {
+    if (registrationCourses?.length) {
+      console.log('All registration courses loaded:', registrationCourses.length);
+    }
+  }, [registrationCourses]);
 
   // Fetch students registered for the selected course directly from our new endpoint
   const { 
     data: courseRegistrationsWithStudents,
     isLoading: courseRegistrationsLoading 
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ['/api/registration-courses/by-course', watchedCourseId],
     queryFn: async () => {
       if (!watchedCourseId) return [];
@@ -410,11 +426,15 @@ const SchedulePage: FC = () => {
         return [];
       }
     },
-    enabled: !!watchedCourseId,
-    onSuccess: (data) => {
-      console.log(`Found ${data?.length} students registered for course ID ${watchedCourseId}:`, data);
-    },
+    enabled: !!watchedCourseId && !!user,
   });
+
+  // Log registration data when it loads
+  useEffect(() => {
+    if (courseRegistrationsWithStudents?.length) {
+      console.log(`Found ${courseRegistrationsWithStudents.length} students registered for course ID ${watchedCourseId}:`, courseRegistrationsWithStudents);
+    }
+  }, [courseRegistrationsWithStudents, watchedCourseId]);
 
   // Extract students from course registrations
   const courseStudents = useMemo(() => {
@@ -423,7 +443,7 @@ const SchedulePage: FC = () => {
     }
     
     // Map the registration data to student objects
-    return courseRegistrationsWithStudents.map(reg => reg.student);
+    return courseRegistrationsWithStudents.map((reg: any) => reg.student);
   }, [watchedCourseId, courseRegistrationsWithStudents, courseRegistrationsLoading]);
   
   // Check if there are any students registered for the selected course
