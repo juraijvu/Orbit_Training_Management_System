@@ -4136,6 +4136,333 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ================== End of Analytics API ==================
 
+  // ================== Sales Pipeline API ==================
+  
+  // Pipeline Stages routes
+  app.get("/api/pipeline/stages", isAuthenticated, async (req, res) => {
+    try {
+      const stages = await storage.getPipelineStages();
+      res.json(stages);
+    } catch (error) {
+      console.error("Error fetching pipeline stages:", error);
+      res.status(500).json({ message: "Failed to fetch pipeline stages" });
+    }
+  });
+  
+  app.get("/api/pipeline/stages/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const stage = await storage.getPipelineStage(id);
+      if (!stage) {
+        return res.status(404).json({ message: "Pipeline stage not found" });
+      }
+      res.json(stage);
+    } catch (error) {
+      console.error("Error fetching pipeline stage:", error);
+      res.status(500).json({ message: "Failed to fetch pipeline stage" });
+    }
+  });
+  
+  app.post("/api/pipeline/stages", isAdmin, async (req, res) => {
+    try {
+      const stage = await storage.createPipelineStage({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      res.status(201).json(stage);
+    } catch (error) {
+      console.error("Error creating pipeline stage:", error);
+      res.status(500).json({ message: "Failed to create pipeline stage" });
+    }
+  });
+  
+  app.put("/api/pipeline/stages/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const stage = await storage.updatePipelineStage(id, req.body);
+      if (!stage) {
+        return res.status(404).json({ message: "Pipeline stage not found" });
+      }
+      res.json(stage);
+    } catch (error) {
+      console.error("Error updating pipeline stage:", error);
+      res.status(500).json({ message: "Failed to update pipeline stage" });
+    }
+  });
+  
+  app.delete("/api/pipeline/stages/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const deleted = await storage.deletePipelineStage(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Pipeline stage not found or cannot be deleted" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting pipeline stage:", error);
+      res.status(500).json({ message: "Failed to delete pipeline stage" });
+    }
+  });
+  
+  // Pipeline Deals routes
+  app.get("/api/pipeline/deals", isAuthenticated, async (req, res) => {
+    try {
+      const deals = await storage.getPipelineDeals();
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching pipeline deals:", error);
+      res.status(500).json({ message: "Failed to fetch pipeline deals" });
+    }
+  });
+  
+  app.get("/api/pipeline/stages/:stageId/deals", isAuthenticated, async (req, res) => {
+    try {
+      const stageId = parseInt(req.params.stageId, 10);
+      const deals = await storage.getPipelineDealsByStage(stageId);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching deals for stage:", error);
+      res.status(500).json({ message: "Failed to fetch deals for stage" });
+    }
+  });
+  
+  app.get("/api/pipeline/leads/:leadId/deals", isAuthenticated, async (req, res) => {
+    try {
+      const leadId = parseInt(req.params.leadId, 10);
+      const deals = await storage.getPipelineDealsByLead(leadId);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching deals for lead:", error);
+      res.status(500).json({ message: "Failed to fetch deals for lead" });
+    }
+  });
+  
+  app.get("/api/pipeline/corporate-leads/:leadId/deals", isAuthenticated, async (req, res) => {
+    try {
+      const leadId = parseInt(req.params.leadId, 10);
+      const deals = await storage.getPipelineDealsByCorporateLead(leadId);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching deals for corporate lead:", error);
+      res.status(500).json({ message: "Failed to fetch deals for corporate lead" });
+    }
+  });
+  
+  app.get("/api/pipeline/deals/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const deal = await storage.getPipelineDeal(id);
+      if (!deal) {
+        return res.status(404).json({ message: "Pipeline deal not found" });
+      }
+      res.json(deal);
+    } catch (error) {
+      console.error("Error fetching pipeline deal:", error);
+      res.status(500).json({ message: "Failed to fetch pipeline deal" });
+    }
+  });
+  
+  app.post("/api/pipeline/deals", isAuthenticated, async (req, res) => {
+    try {
+      const deal = await storage.createPipelineDeal({
+        ...req.body,
+        createdBy: req.user!.id,
+        assignedTo: req.body.assignedTo || req.user!.id
+      });
+      res.status(201).json(deal);
+    } catch (error) {
+      console.error("Error creating pipeline deal:", error);
+      res.status(500).json({ message: "Failed to create pipeline deal" });
+    }
+  });
+  
+  app.put("/api/pipeline/deals/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const deal = await storage.updatePipelineDeal(id, req.body);
+      if (!deal) {
+        return res.status(404).json({ message: "Pipeline deal not found" });
+      }
+      res.json(deal);
+    } catch (error) {
+      console.error("Error updating pipeline deal:", error);
+      res.status(500).json({ message: "Failed to update pipeline deal" });
+    }
+  });
+  
+  app.post("/api/pipeline/deals/:id/move", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const { stageId, notes } = req.body;
+      
+      if (!stageId) {
+        return res.status(400).json({ message: "Stage ID is required" });
+      }
+      
+      const deal = await storage.movePipelineDealToStage(
+        id, 
+        parseInt(stageId, 10), 
+        notes || 'Moved to new stage', 
+        req.user!.id
+      );
+      
+      if (!deal) {
+        return res.status(404).json({ message: "Pipeline deal not found" });
+      }
+      
+      res.json(deal);
+    } catch (error) {
+      console.error("Error moving pipeline deal:", error);
+      res.status(500).json({ message: "Failed to move pipeline deal" });
+    }
+  });
+  
+  app.delete("/api/pipeline/deals/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const deleted = await storage.deletePipelineDeal(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Pipeline deal not found" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting pipeline deal:", error);
+      res.status(500).json({ message: "Failed to delete pipeline deal" });
+    }
+  });
+  
+  // Pipeline Activities routes
+  app.get("/api/pipeline/activities", isAuthenticated, async (req, res) => {
+    try {
+      const activities = await storage.getPipelineActivities();
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching pipeline activities:", error);
+      res.status(500).json({ message: "Failed to fetch pipeline activities" });
+    }
+  });
+  
+  app.get("/api/pipeline/deals/:dealId/activities", isAuthenticated, async (req, res) => {
+    try {
+      const dealId = parseInt(req.params.dealId, 10);
+      const activities = await storage.getPipelineActivitiesByDeal(dealId);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching activities for deal:", error);
+      res.status(500).json({ message: "Failed to fetch activities for deal" });
+    }
+  });
+  
+  app.get("/api/pipeline/activities/due-today", isAuthenticated, async (req, res) => {
+    try {
+      const activities = await storage.getPipelineActivitiesDueToday();
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching activities due today:", error);
+      res.status(500).json({ message: "Failed to fetch activities due today" });
+    }
+  });
+  
+  app.get("/api/pipeline/activities/overdue", isAuthenticated, async (req, res) => {
+    try {
+      const activities = await storage.getPipelineActivitiesOverdue();
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching overdue activities:", error);
+      res.status(500).json({ message: "Failed to fetch overdue activities" });
+    }
+  });
+  
+  app.get("/api/pipeline/activities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const activity = await storage.getPipelineActivity(id);
+      if (!activity) {
+        return res.status(404).json({ message: "Pipeline activity not found" });
+      }
+      res.json(activity);
+    } catch (error) {
+      console.error("Error fetching pipeline activity:", error);
+      res.status(500).json({ message: "Failed to fetch pipeline activity" });
+    }
+  });
+  
+  app.post("/api/pipeline/activities", isAuthenticated, async (req, res) => {
+    try {
+      const activity = await storage.createPipelineActivity({
+        ...req.body,
+        createdBy: req.user!.id,
+        assignedTo: req.body.assignedTo || req.user!.id
+      });
+      res.status(201).json(activity);
+    } catch (error) {
+      console.error("Error creating pipeline activity:", error);
+      res.status(500).json({ message: "Failed to create pipeline activity" });
+    }
+  });
+  
+  app.put("/api/pipeline/activities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const activity = await storage.updatePipelineActivity(id, req.body);
+      if (!activity) {
+        return res.status(404).json({ message: "Pipeline activity not found" });
+      }
+      res.json(activity);
+    } catch (error) {
+      console.error("Error updating pipeline activity:", error);
+      res.status(500).json({ message: "Failed to update pipeline activity" });
+    }
+  });
+  
+  app.post("/api/pipeline/activities/:id/complete", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const { outcome } = req.body;
+      
+      if (!outcome) {
+        return res.status(400).json({ message: "Outcome is required" });
+      }
+      
+      const activity = await storage.markPipelineActivityAsComplete(id, outcome);
+      if (!activity) {
+        return res.status(404).json({ message: "Pipeline activity not found" });
+      }
+      res.json(activity);
+    } catch (error) {
+      console.error("Error completing pipeline activity:", error);
+      res.status(500).json({ message: "Failed to complete pipeline activity" });
+    }
+  });
+  
+  app.delete("/api/pipeline/activities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const deleted = await storage.deletePipelineActivity(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Pipeline activity not found" });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting pipeline activity:", error);
+      res.status(500).json({ message: "Failed to delete pipeline activity" });
+    }
+  });
+  
+  // Pipeline Stage History routes
+  app.get("/api/pipeline/deals/:dealId/history", isAuthenticated, async (req, res) => {
+    try {
+      const dealId = parseInt(req.params.dealId, 10);
+      const history = await storage.getPipelineStageHistory(dealId);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching stage history for deal:", error);
+      res.status(500).json({ message: "Failed to fetch stage history for deal" });
+    }
+  });
+  
+  // ================== End of Sales Pipeline API ==================
+
   const httpServer = createServer(app);
   return httpServer;
 }
