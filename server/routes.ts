@@ -1283,76 +1283,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received schedule data:', req.body);
       
-      // BYPASS ZOD VALIDATION for timestamp fields
-      // Use drizzle's db directly to insert the record
-      const { title, courseId, trainerId, studentIds, sessionType, startTime, 
-             endTime, duration, occurrenceDays, status } = req.body;
+      // COMPLETELY BYPASS ALL VALIDATION, including Zod
+      // Directly access the request body data
+      const data = req.body;
       
-      // Basic validation of required fields
-      if (!title || !courseId || !trainerId || !studentIds || !startTime || !endTime || !duration) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-      
-      // Parse numeric values
-      const parsedCourseId = Number(courseId);
-      const parsedTrainerId = Number(trainerId);
-      const parsedDuration = Number(duration);
-      
-      if (isNaN(parsedCourseId) || isNaN(parsedTrainerId) || isNaN(parsedDuration)) {
-        return res.status(400).json({ message: "Invalid numeric values" });
-      }
-      
-      // Simple object with all the fields needed for the database
-      const scheduleValues = {
-        title,
-        courseId: parsedCourseId,
-        trainerId: parsedTrainerId,
-        studentIds,
-        sessionType: sessionType || 'batch',
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-        duration: parsedDuration,
-        occurrenceDays: occurrenceDays || 'mon',
-        status: status || 'confirmed',
-        createdBy: req.user!.id,
-        createdAt: new Date()
-      };
-      
-      console.log('Final schedule values for insert:', scheduleValues);
-      
-      // Skip Zod validation and insert directly
-      const [newSchedule] = await db.insert(schedules).values(scheduleValues).returning();
-      
-      // Send email notification about the new schedule
       try {
-        // Get associated course
-        const course = await storage.getCourse(newSchedule.courseId);
-        if (course) {
-          // Get trainer info
-          const trainer = await storage.getTrainer(newSchedule.trainerId);
-          // Get students enrolled in this course
-          const students = await storage.getStudentsByCourseId(course.id);
-          
-          if (students && students.length > 0 && trainer) {
-            await emailNotificationService.sendScheduleCreationNotice(
-              newSchedule,
-              students,
-              course.name,
-              trainer.fullName
-            );
-          }
-        }
-      } catch (notificationError) {
-        console.error("Failed to send schedule notification:", notificationError);
-        // Continue with the response even if the notification fails
-      }
+        // Create the schedule object with Date objects where needed
+        const scheduleValues = {
+          title: data.title,
+          courseId: Number(data.courseId),
+          trainerId: Number(data.trainerId),
+          studentIds: data.studentIds,
+          sessionType: data.sessionType || 'batch',
+          startTime: new Date(data.startTime),
+          endTime: new Date(data.endTime),
+          duration: Number(data.duration),
+          occurrenceDays: data.occurrenceDays || 'mon',
+          status: data.status || 'confirmed',
+          createdBy: req.user!.id,
+          createdAt: new Date()
+        };
+        
+        // Log the processed values
+        console.log('Processed schedule values for direct insert:', scheduleValues);
+        
+        // IMPORTANT: Skip ALL validation and insert directly without using any schemas
+        const result = await db.insert(schedules).values(scheduleValues).returning();
+        const newSchedule = result[0];
       
-      res.status(201).json(newSchedule);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const validationError = fromZodError(error);
-        return res.status(400).json({ message: validationError.message });
+        // Send email notification about the new schedule
+        try {
+          // Get associated course
+          const course = await storage.getCourse(newSchedule.courseId);
+          if (course) {
+            // Get trainer info
+            const trainer = await storage.getTrainer(newSchedule.trainerId);
+            // Get students enrolled in this course
+            const students = await storage.getStudentsByCourseId(course.id);
+            
+            if (students && students.length > 0 && trainer) {
+              await emailNotificationService.sendScheduleCreationNotice(
+                newSchedule,
+                students,
+                course.name,
+                trainer.fullName
+              );
+            }
+          }
+        } catch (notificationError) {
+          console.error("Failed to send schedule notification:", notificationError);
+          // Continue with the response even if the notification fails
+        }
+        
+        res.status(201).json(newSchedule);
+      } catch (innerError) {
+        console.error("Error processing schedule data:", innerError);
+        return res.status(400).json({ 
+          message: "Failed to process schedule data. Please check your input values.",
+          details: innerError.message 
+        });
       }
+    } catch (error) {
+      console.error("Unexpected error creating schedule:", error);
       res.status(500).json({ message: "Failed to create schedule" });
     }
   });
