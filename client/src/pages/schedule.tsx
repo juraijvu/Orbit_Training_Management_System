@@ -522,6 +522,16 @@ const SchedulePage: FC = () => {
   // Submit form
   const onSubmit = (values: ScheduleFormValues) => {
     try {
+      console.log('Schedule form submit called with values:', values);
+      
+      // Log form validation state
+      console.log('Form state:', {
+        isDirty: form.formState.isDirty,
+        isValid: form.formState.isValid,
+        errors: form.formState.errors,
+        isSubmitting: form.formState.isSubmitting,
+      });
+      
       // Check for form validation errors
       if (Object.keys(form.formState.errors).length > 0) {
         console.log('Form validation errors:', form.formState.errors);
@@ -534,15 +544,28 @@ const SchedulePage: FC = () => {
       }
 
       // Ensure required fields are present
-      if (!values.title || !values.courseId || !values.trainerId) {
-        console.log('Missing required fields:', { 
-          title: values.title, 
-          courseId: values.courseId, 
-          trainerId: values.trainerId 
-        });
+      if (!values.title) {
         toast({
-          title: 'Missing Fields',
-          description: 'Please fill in all required fields.',
+          title: 'Missing Field',
+          description: 'Please provide a title for this schedule.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!values.courseId) {
+        toast({
+          title: 'Missing Field',
+          description: 'Please select a course for this schedule.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!values.trainerId) {
+        toast({
+          title: 'Missing Field',
+          description: 'Please select a trainer for this schedule.',
           variant: 'destructive',
         });
         return;
@@ -552,7 +575,7 @@ const SchedulePage: FC = () => {
       if (!values.selectedStudents || values.selectedStudents.length === 0) {
         console.log('No students selected');
         toast({
-          title: 'Warning',
+          title: 'Missing Students',
           description: 'Please select at least one student for this schedule.',
           variant: 'destructive',
         });
@@ -561,7 +584,7 @@ const SchedulePage: FC = () => {
 
       if (!isTrainerAvailable()) {
         toast({
-          title: 'Warning',
+          title: 'Trainer Unavailable',
           description: 'The selected trainer is not available at this time slot.',
           variant: 'destructive',
         });
@@ -570,20 +593,20 @@ const SchedulePage: FC = () => {
       
       if (hasSchedulingConflict()) {
         toast({
-          title: 'Warning',
+          title: 'Scheduling Conflict',
           description: 'There is a scheduling conflict with another session.',
           variant: 'destructive',
         });
         return;
       }
       
-      console.log('Submitting schedule form with values:', values);
+      console.log('All validation passed, submitting schedule form with values:', values);
       createScheduleMutation.mutate(values);
     } catch (error) {
       console.error('Error in form submission:', error);
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred while submitting the form.',
+        description: 'An unexpected error occurred while submitting the form: ' + (error instanceof Error ? error.message : String(error)),
         variant: 'destructive',
       });
     }
@@ -1398,6 +1421,10 @@ const SchedulePage: FC = () => {
                 <Button
                   type="submit"
                   disabled={isPending}
+                  onClick={() => {
+                    console.log('Submit button clicked');
+                    form.handleSubmit(onSubmit)();
+                  }}
                 >
                   {isPending ? (
                     <>
