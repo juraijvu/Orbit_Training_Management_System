@@ -319,6 +319,47 @@ export interface IStorage {
   createCannedResponse(response: InsertCannedResponse): Promise<CannedResponse>;
   updateCannedResponse(id: number, response: Partial<CannedResponse>): Promise<CannedResponse | undefined>;
   deleteCannedResponse(id: number): Promise<boolean>;
+  
+  // Sales Pipeline Stages
+  getPipelineStages(): Promise<PipelineStage[]>;
+  getPipelineStage(id: number): Promise<PipelineStage | undefined>;
+  getPipelineStageByPosition(position: number): Promise<PipelineStage | undefined>;
+  getDefaultPipelineStage(): Promise<PipelineStage | undefined>;
+  createPipelineStage(stage: InsertPipelineStage): Promise<PipelineStage>;
+  updatePipelineStage(id: number, stage: Partial<PipelineStage>): Promise<PipelineStage | undefined>;
+  deletePipelineStage(id: number): Promise<boolean>;
+  
+  // Sales Pipeline Deals
+  getPipelineDeals(): Promise<PipelineDeal[]>;
+  getPipelineDealsByStage(stageId: number): Promise<PipelineDeal[]>;
+  getPipelineDealsByLead(leadId: number): Promise<PipelineDeal[]>;
+  getPipelineDealsByCorporateLead(corporateLeadId: number): Promise<PipelineDeal[]>;
+  getPipelineDealsByAssigned(userId: number): Promise<PipelineDeal[]>;
+  getPipelineDealsByStatus(status: string): Promise<PipelineDeal[]>;
+  getPipelineDealsByPriority(priority: string): Promise<PipelineDeal[]>;
+  getPipelineDeal(id: number): Promise<PipelineDeal | undefined>;
+  createPipelineDeal(deal: InsertPipelineDeal): Promise<PipelineDeal>;
+  updatePipelineDeal(id: number, deal: Partial<PipelineDeal>): Promise<PipelineDeal | undefined>;
+  movePipelineDealToStage(id: number, stageId: number, notes: string, userId: number): Promise<PipelineDeal | undefined>;
+  deletePipelineDeal(id: number): Promise<boolean>;
+  
+  // Sales Pipeline Activities
+  getPipelineActivities(): Promise<PipelineActivity[]>;
+  getPipelineActivitiesByDeal(dealId: number): Promise<PipelineActivity[]>;
+  getPipelineActivitiesByAssigned(userId: number): Promise<PipelineActivity[]>;
+  getPipelineActivitiesByStatus(status: string): Promise<PipelineActivity[]>;
+  getPipelineActivitiesByType(type: string): Promise<PipelineActivity[]>;
+  getPipelineActivitiesDueToday(): Promise<PipelineActivity[]>;
+  getPipelineActivitiesOverdue(): Promise<PipelineActivity[]>;
+  getPipelineActivity(id: number): Promise<PipelineActivity | undefined>;
+  createPipelineActivity(activity: InsertPipelineActivity): Promise<PipelineActivity>;
+  updatePipelineActivity(id: number, activity: Partial<PipelineActivity>): Promise<PipelineActivity | undefined>;
+  markPipelineActivityAsComplete(id: number, outcome: string): Promise<PipelineActivity | undefined>;
+  deletePipelineActivity(id: number): Promise<boolean>;
+  
+  // Sales Pipeline Stage History
+  getPipelineStageHistory(dealId: number): Promise<PipelineStageHistory[]>;
+  createPipelineStageHistory(history: InsertPipelineStageHistory): Promise<PipelineStageHistory>;
 }
 
 // Memory Storage implementation
@@ -358,6 +399,12 @@ export class MemStorage implements IStorage {
   private whatsAppTemplatesMap: Map<number, WhatsAppTemplate>;
   private whatsAppChatsMap: Map<number, WhatsAppChat>;
   
+  // Sales Pipeline
+  private pipelineStagesMap: Map<number, PipelineStage>;
+  private pipelineDealsMap: Map<number, PipelineDeal>;
+  private pipelineActivitiesMap: Map<number, PipelineActivity>;
+  private pipelineStageHistoryMap: Map<number, PipelineStageHistory>;
+  
   private userId: number = 1;
   private studentId: number = 1;
   private courseId: number = 1;
@@ -392,6 +439,12 @@ export class MemStorage implements IStorage {
   private whatsAppTemplateId: number = 1;
   private whatsAppChatId: number = 1;
   private registrationCourseId: number = 1;
+  
+  // Pipeline IDs
+  private pipelineStageId: number = 1;
+  private pipelineDealId: number = 1;
+  private pipelineActivityId: number = 1;
+  private pipelineStageHistoryId: number = 1;
   
   sessionStore: any;
 
@@ -430,6 +483,12 @@ export class MemStorage implements IStorage {
     this.crmPostsMap = new Map();
     this.whatsAppTemplatesMap = new Map();
     this.whatsAppChatsMap = new Map();
+    
+    // Initialize pipeline maps
+    this.pipelineStagesMap = new Map();
+    this.pipelineDealsMap = new Map();
+    this.pipelineActivitiesMap = new Map();
+    this.pipelineStageHistoryMap = new Map();
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
