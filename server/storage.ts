@@ -28,6 +28,12 @@ import {
   // Registration courses
   registrationCourses, RegistrationCourse, InsertRegistrationCourse,
   
+  // Sales Pipeline imports
+  pipelineStages, PipelineStage, InsertPipelineStage,
+  pipelineDeals, PipelineDeal, InsertPipelineDeal,
+  pipelineActivities, PipelineActivity, InsertPipelineActivity,
+  pipelineStageHistory, PipelineStageHistory, InsertPipelineStageHistory,
+  
   // Chatbot related imports
   chatbotFlows, ChatbotFlow, InsertChatbotFlow,
   chatbotNodes, ChatbotNode, InsertChatbotNode,

@@ -693,6 +693,7 @@ export const corporateLeads = pgTable("corporate_leads", {
   leadSource: text("lead_source"), // website, referral, event, etc.
   leadStatus: text("lead_status").notNull().default("new"), // new, contacted, qualified, proposal, converted, closed
   priority: text("priority").default("medium"), // low, medium, high
+  pipelineDealId: integer("pipeline_deal_id"), // Reference to a pipeline deal if this lead is in the sales pipeline
   notes: text("notes"),
   requirements: text("requirements"),
   budget: text("budget"),
@@ -838,3 +839,115 @@ export const insertWhatsAppChatSchema = createInsertSchema(whatsAppChats).omit({
 
 export type InsertWhatsAppChat = z.infer<typeof insertWhatsAppChatSchema>;
 export type WhatsAppChat = typeof whatsAppChats.$inferSelect;
+
+// Sales Pipeline Stages
+export const pipelineStages = pgTable("pipeline_stages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  position: integer("position").notNull(),
+  color: text("color").notNull(), // For UI display purposes
+  isDefault: boolean("is_default").default(false),
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPipelineStageSchema = createInsertSchema(pipelineStages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPipelineStage = z.infer<typeof insertPipelineStageSchema>;
+export type PipelineStage = typeof pipelineStages.$inferSelect;
+
+// Sales Pipeline Deals
+export const pipelineDeals = pgTable("pipeline_deals", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  value: numeric("value").notNull(), // Deal value in currency
+  currency: text("currency").notNull().default("AED"),
+  probability: integer("probability").default(50), // 0-100%
+  stageId: integer("stage_id").notNull(), // Current stage in the pipeline
+  leadId: integer("lead_id"), // Can be associated with a regular lead
+  corporateLeadId: integer("corporate_lead_id"), // Can be associated with a corporate lead
+  assignedTo: integer("assigned_to").notNull(), // User responsible for the deal
+  expectedCloseDate: date("expected_close_date"), // When the deal is expected to close
+  actualCloseDate: date("actual_close_date"), // When the deal actually closed
+  status: text("status").notNull().default("open"), // open, won, lost, on_hold
+  priority: text("priority").notNull().default("medium"), // low, medium, high
+  tags: text("tags").array(),
+  notes: text("notes"),
+  lossReason: text("loss_reason"), // If status is "lost"
+  source: text("source"), // How the deal originated
+  customFields: text("custom_fields"), // JSON string of additional fields
+  lastActivityDate: timestamp("last_activity_date"),
+  nextActivityDate: timestamp("next_activity_date"),
+  createdBy: integer("created_by").notNull(),
+  updatedBy: integer("updated_by"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPipelineDealSchema = createInsertSchema(pipelineDeals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPipelineDeal = z.infer<typeof insertPipelineDealSchema>;
+export type PipelineDeal = typeof pipelineDeals.$inferSelect;
+
+// Sales Pipeline Deal Activities
+export const pipelineActivities = pgTable("pipeline_activities", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  activityType: text("activity_type").notNull(), // call, email, meeting, note, task, etc.
+  title: text("title").notNull(),
+  description: text("description"),
+  outcome: text("outcome"), // Result or outcome of the activity
+  dueDate: timestamp("due_date"),
+  completedDate: timestamp("completed_date"),
+  reminderDate: timestamp("reminder_date"),
+  reminderSent: boolean("reminder_sent").default(false),
+  status: text("status").notNull().default("pending"), // pending, completed, cancelled
+  isPrivate: boolean("is_private").default(false), // Whether visible to all team members
+  assignedTo: integer("assigned_to").notNull(),
+  createdBy: integer("created_by").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPipelineActivitySchema = createInsertSchema(pipelineActivities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reminderSent: true,
+});
+
+export type InsertPipelineActivity = z.infer<typeof insertPipelineActivitySchema>;
+export type PipelineActivity = typeof pipelineActivities.$inferSelect;
+
+// Sales Pipeline Stage History (for tracking movement between stages)
+export const pipelineStageHistory = pgTable("pipeline_stage_history", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull(),
+  fromStageId: integer("from_stage_id"), // Null if it's the first stage
+  toStageId: integer("to_stage_id").notNull(),
+  movedAt: timestamp("moved_at").notNull().defaultNow(),
+  duration: integer("duration"), // Time spent in the previous stage (in hours)
+  notes: text("notes"),
+  movedBy: integer("moved_by").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPipelineStageHistorySchema = createInsertSchema(pipelineStageHistory).omit({
+  id: true,
+  createdAt: true,
+  duration: true, // Calculated automatically
+});
+
+export type InsertPipelineStageHistory = z.infer<typeof insertPipelineStageHistorySchema>;
+export type PipelineStageHistory = typeof pipelineStageHistory.$inferSelect;
