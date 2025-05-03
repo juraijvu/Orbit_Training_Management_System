@@ -1280,10 +1280,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create schedule
   app.post('/api/schedules', isAuthenticated, async (req, res) => {
     try {
-      const scheduleData = insertScheduleSchema.parse({
-        ...req.body,
-        createdBy: req.user!.id
-      });
+      console.log('Received schedule data:', req.body);
+      
+      // Ensure dates are properly formatted
+      let scheduleData;
+      try {
+        scheduleData = insertScheduleSchema.parse({
+          ...req.body,
+          createdBy: req.user!.id
+        });
+      } catch (parseError) {
+        console.error('Schedule validation error:', parseError);
+        return res.status(400).json({ message: `Validation error: ${parseError.message}` });
+      }
       
       const newSchedule = await storage.createSchedule(scheduleData);
       

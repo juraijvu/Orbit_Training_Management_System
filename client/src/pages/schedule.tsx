@@ -1390,11 +1390,18 @@ const SchedulePage: FC = () => {
                       
                       // Set the date part of the time
                       const combinedStartTime = new Date(selectedDate);
-                      combinedStartTime.setHours(startTime.getHours(), startTime.getMinutes());
+                      combinedStartTime.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
                       
                       // Calculate endTime based on startTime and duration
                       const durationMs = values.duration * 60 * 1000; // convert minutes to milliseconds
                       const combinedEndTime = new Date(combinedStartTime.getTime() + durationMs);
+                      
+                      console.log('Raw date objects:', {
+                        selectedDate,
+                        startTime,
+                        combinedStartTime,
+                        combinedEndTime
+                      });
                       
                       // Format student IDs as comma-separated string
                       const studentIds = Array.isArray(values.selectedStudents) 
@@ -1402,9 +1409,9 @@ const SchedulePage: FC = () => {
                         : '';
                         
                       // Format occurrence days as comma-separated string
-                      const occurrenceDays = Array.isArray(values.selectedOccurrenceDays) 
+                      const occurrenceDays = Array.isArray(values.selectedOccurrenceDays) && values.selectedOccurrenceDays.length > 0
                         ? values.selectedOccurrenceDays.join(',') 
-                        : '';
+                        : 'mon'; // Default to Monday if no days selected
                       
                       // Create API payload matching schedule schema
                       const scheduleData = {
