@@ -519,97 +519,10 @@ const SchedulePage: FC = () => {
     }) || false;
   };
   
-  // Submit form
+  // Submit form - replaced with direct fetch in button click handler
   const onSubmit = (values: ScheduleFormValues) => {
-    try {
-      console.log('Schedule form submit called with values:', values);
-      
-      // Log form validation state
-      console.log('Form state:', {
-        isDirty: form.formState.isDirty,
-        isValid: form.formState.isValid,
-        errors: form.formState.errors,
-        isSubmitting: form.formState.isSubmitting,
-      });
-      
-      // Check for form validation errors
-      if (Object.keys(form.formState.errors).length > 0) {
-        console.log('Form validation errors:', form.formState.errors);
-        toast({
-          title: 'Form Validation Error',
-          description: 'Please fix all errors in the form before submitting.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Ensure required fields are present
-      if (!values.title) {
-        toast({
-          title: 'Missing Field',
-          description: 'Please provide a title for this schedule.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!values.courseId) {
-        toast({
-          title: 'Missing Field',
-          description: 'Please select a course for this schedule.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (!values.trainerId) {
-        toast({
-          title: 'Missing Field',
-          description: 'Please select a trainer for this schedule.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Make sure selected students are properly formatted
-      if (!values.selectedStudents || values.selectedStudents.length === 0) {
-        console.log('No students selected');
-        toast({
-          title: 'Missing Students',
-          description: 'Please select at least one student for this schedule.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (!isTrainerAvailable()) {
-        toast({
-          title: 'Trainer Unavailable',
-          description: 'The selected trainer is not available at this time slot.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      if (hasSchedulingConflict()) {
-        toast({
-          title: 'Scheduling Conflict',
-          description: 'There is a scheduling conflict with another session.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      console.log('All validation passed, submitting schedule form with values:', values);
-      createScheduleMutation.mutate(values);
-    } catch (error) {
-      console.error('Error in form submission:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred while submitting the form: ' + (error instanceof Error ? error.message : String(error)),
-        variant: 'destructive',
-      });
-    }
+    console.log('This form submission method is no longer used.');
+    // Implementation moved to the button click handler for direct API call
   };
   
   // Open create schedule dialog
@@ -710,9 +623,10 @@ const SchedulePage: FC = () => {
     return acc;
   }, {} as Record<string, Schedule[]>);
   
-  // Check if loading
+  // Set up loading and pending states
+  const [submitting, setSubmitting] = useState(false);
   const isLoading = schedulesLoading || coursesLoading || trainersLoading || studentsLoading;
-  const isPending = createScheduleMutation.isPending || updateScheduleMutation.isPending || deleteScheduleMutation.isPending;
+  const isPending = createScheduleMutation.isPending || updateScheduleMutation.isPending || deleteScheduleMutation.isPending || submitting;
 
   return (
     <AppLayout>
@@ -1421,46 +1335,135 @@ const SchedulePage: FC = () => {
                 <Button
                   type="button" 
                   disabled={isPending}
-                  onClick={() => {
-                    console.log('Manual form submission triggered');
-                    
-                    // Manual form validation and submission
-                    const values = form.getValues();
-                    console.log('Form values:', values);
-                    
-                    // Validate required fields
-                    if (!values.title) {
-                      toast({ title: "Missing Title", description: "Please enter a title for this schedule", variant: "destructive" });
-                      return;
+                  onClick={async () => {
+                    try {
+                      console.log('Direct form submission triggered');
+                      
+                      // Set submitting state
+                      setSubmitting(true);
+                      
+                      // Get form values
+                      const values = form.getValues();
+                      console.log('Raw form values:', values);
+                      
+                      // Validate required fields
+                      if (!values.title) {
+                        toast({ title: "Missing Title", description: "Please enter a title for this schedule", variant: "destructive" });
+                        setIsPending(false);
+                        return;
+                      }
+                      
+                      if (!values.courseId) {
+                        toast({ title: "Missing Course", description: "Please select a course for this schedule", variant: "destructive" });
+                        setIsPending(false);
+                        return;
+                      }
+                      
+                      if (!values.trainerId) {
+                        toast({ title: "Missing Trainer", description: "Please select a trainer for this schedule", variant: "destructive" });
+                        setIsPending(false);
+                        return;
+                      }
+                      
+                      if (!values.selectedStudents || values.selectedStudents.length === 0) {
+                        toast({ title: "Missing Students", description: "Please select at least one student for this schedule", variant: "destructive" });
+                        setIsPending(false);
+                        return;
+                      }
+                      
+                      if (!values.selectedDate) {
+                        toast({ title: "Missing Date", description: "Please select a date for this schedule", variant: "destructive" });
+                        setIsPending(false);
+                        return;
+                      }
+                      
+                      if (!values.selectedStartTime) {
+                        toast({ title: "Missing Start Time", description: "Please set a start time for this schedule", variant: "destructive" });
+                        setIsPending(false);
+                        return;
+                      }
+                      
+                      // Prepare data for API
+                      // Convert date and time fields to proper format
+                      const selectedDate = values.selectedDate;
+                      const startTime = parse(values.selectedStartTime, 'HH:mm', new Date());
+                      
+                      // Set the date part of the time
+                      const combinedStartTime = new Date(selectedDate);
+                      combinedStartTime.setHours(startTime.getHours(), startTime.getMinutes());
+                      
+                      // Calculate endTime based on startTime and duration
+                      const durationMs = values.duration * 60 * 1000; // convert minutes to milliseconds
+                      const combinedEndTime = new Date(combinedStartTime.getTime() + durationMs);
+                      
+                      // Format student IDs as comma-separated string
+                      const studentIds = Array.isArray(values.selectedStudents) 
+                        ? values.selectedStudents.join(',') 
+                        : '';
+                        
+                      // Format occurrence days as comma-separated string
+                      const occurrenceDays = Array.isArray(values.selectedOccurrenceDays) 
+                        ? values.selectedOccurrenceDays.join(',') 
+                        : '';
+                      
+                      // Create API payload matching schedule schema
+                      const scheduleData = {
+                        title: values.title,
+                        courseId: Number(values.courseId),
+                        trainerId: Number(values.trainerId),
+                        studentIds,
+                        sessionType: values.sessionType || SessionType.BATCH,
+                        startTime: combinedStartTime.toISOString(),
+                        endTime: combinedEndTime.toISOString(),
+                        duration: Number(values.duration),
+                        occurrenceDays,
+                        status: values.status || ScheduleStatus.CONFIRMED,
+                        createdBy: values.createdBy || user?.id,
+                      };
+                      
+                      console.log('Formatted schedule data for API:', scheduleData);
+                      
+                      // Use direct fetch instead of tanstack mutation
+                      const response = await fetch('/api/schedules', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(scheduleData),
+                      });
+                      
+                      if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`API error: ${response.status} - ${errorText}`);
+                      }
+                      
+                      const result = await response.json();
+                      console.log('Schedule created successfully:', result);
+                      
+                      // Show success message
+                      toast({
+                        title: 'Success',
+                        description: 'Schedule has been created successfully',
+                      });
+                      
+                      // Refresh schedule data
+                      queryClient.invalidateQueries({ queryKey: ['/api/schedules'] });
+                      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/schedules'] });
+                      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/activities'] });
+                      
+                      // Close dialog and reset form
+                      setIsDialogOpen(false);
+                      form.reset();
+                    } catch (error) {
+                      console.error('Error creating schedule:', error);
+                      toast({
+                        title: 'Error',
+                        description: error instanceof Error ? error.message : 'Failed to create schedule',
+                        variant: 'destructive',
+                      });
+                    } finally {
+                      setIsPending(false);
                     }
-                    
-                    if (!values.courseId) {
-                      toast({ title: "Missing Course", description: "Please select a course for this schedule", variant: "destructive" });
-                      return;
-                    }
-                    
-                    if (!values.trainerId) {
-                      toast({ title: "Missing Trainer", description: "Please select a trainer for this schedule", variant: "destructive" });
-                      return;
-                    }
-                    
-                    if (!values.selectedStudents || values.selectedStudents.length === 0) {
-                      toast({ title: "Missing Students", description: "Please select at least one student for this schedule", variant: "destructive" });
-                      return;
-                    }
-                    
-                    if (!values.selectedDate) {
-                      toast({ title: "Missing Date", description: "Please select a date for this schedule", variant: "destructive" });
-                      return;
-                    }
-                    
-                    if (!values.selectedStartTime) {
-                      toast({ title: "Missing Start Time", description: "Please set a start time for this schedule", variant: "destructive" });
-                      return;
-                    }
-                    
-                    // All validations passed, proceed with submission
-                    onSubmit(values);
                   }}
                 >
                   {isPending ? (
