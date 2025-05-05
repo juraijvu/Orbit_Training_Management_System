@@ -150,31 +150,48 @@ const CertificatesPage: FC = () => {
       
       console.log("Submitting certificate data:", formData);
       
+      // Use direct fetch for more control and debugging
       try {
-        const res = await apiRequest('POST', '/api/certificates', formData);
-        console.log("Certificate API response status:", res.status);
+        // Create the request manually for better debugging
+        const response = await fetch('/api/certificates', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+          credentials: 'include',
+        });
+        
+        console.log("Certificate API response status:", response.status);
+        console.log("Certificate API response headers:", Object.fromEntries([...response.headers.entries()]));
+        
+        // Debug response
+        const responseText = await response.text();
+        console.log("Raw API response:", responseText);
+        
+        let responseData;
+        try {
+          // Try to parse the response as JSON
+          responseData = JSON.parse(responseText);
+        } catch (e) {
+          console.error("Failed to parse response as JSON:", e);
+          throw new Error(`Server returned invalid JSON: ${responseText}`);
+        }
         
         // Check for specific status codes
-        if (res.status === 401) {
+        if (response.status === 401) {
           console.error("Authentication error - User not logged in");
           throw new Error('You need to be logged in to create certificates');
-        } else if (res.status === 403) {
+        } else if (response.status === 403) {
           console.error("Authorization error - User lacks superadmin privileges");
           throw new Error('Only superadmins can create certificates');
-        } else if (!res.ok) {
+        } else if (!response.ok) {
           // For other errors
-          let errorMessage = 'Failed to create certificate';
-          try {
-            const errorData = await res.json();
-            console.error("Certificate creation failed:", errorData);
-            errorMessage = errorData.message || errorMessage;
-          } catch (e) {
-            console.error("Could not parse error response:", e);
-          }
+          const errorMessage = responseData?.message || 'Failed to create certificate';
+          console.error("Certificate creation failed:", responseData);
           throw new Error(errorMessage);
         }
         
-        const responseData = await res.json();
         console.log("Certificate created successfully:", responseData);
         return responseData;
       } catch (err) {
@@ -210,11 +227,21 @@ const CertificatesPage: FC = () => {
   });
   
   // Submit form
-  const onSubmit = (values: CertificateFormValues) => {
+  const onSubmit = (values: CertificateFormValues, event?: React.BaseSyntheticEvent) => {
+    // Add debug for the event
+    console.log("Form submit event:", event);
     console.log("Certificate form submitted with values:", values);
+    console.log("Form state:", form.formState);
+    
+    // Prevent default form behavior if event exists
+    if (event) {
+      event.preventDefault();
+      console.log("Prevented default form submission");
+    }
     
     // We need to make sure we have all the required values
     if (!values.studentId) {
+      console.error("Missing studentId");
       toast({
         title: 'Missing Information',
         description: 'Please select a student',
@@ -224,6 +251,7 @@ const CertificatesPage: FC = () => {
     }
     
     if (!values.courseId) {
+      console.error("Missing courseId");
       toast({
         title: 'Missing Information',
         description: 'Please select a course',
@@ -233,6 +261,7 @@ const CertificatesPage: FC = () => {
     }
     
     if (!values.issueDate) {
+      console.error("Missing issueDate");
       toast({
         title: 'Missing Information',
         description: 'Please select an issue date',
@@ -241,6 +270,7 @@ const CertificatesPage: FC = () => {
       return;
     }
     
+    // Log values that will be submitted
     console.log("Submitting certificate form with:", { 
       studentId: values.studentId, 
       courseId: values.courseId,
@@ -250,11 +280,16 @@ const CertificatesPage: FC = () => {
     
     // Try to create the certificate
     try {
-      createCertificateMutation.mutate({
+      console.log("Calling mutation with data");
+      const data = {
         ...values,
         // Make sure issuedBy is set properly
         issuedBy: user?.id as number
-      });
+      };
+      console.log("Final data for API:", data);
+      
+      // Call the mutation
+      createCertificateMutation.mutate(data);
     } catch (error) {
       console.error("Error during mutation:", error);
       toast({
@@ -600,8 +635,20 @@ const CertificatesPage: FC = () => {
                   Cancel
                 </Button>
                 <Button
-                  type="submit"
+                  type="button" // Changed to button type
                   disabled={isPending}
+                  onClick={() => {
+                    console.log("Submit button clicked");
+                    const values = form.getValues();
+                    console.log("Form values on click:", values);
+                    
+                    // Manual validation
+                    const formIsValid = form.trigger();
+                    console.log("Form validation result:", formIsValid);
+                    
+                    // Process submission
+                    onSubmit(values);
+                  }}
                 >
                   {isPending ? (
                     <>
