@@ -295,7 +295,7 @@ const QuotationsPage: FC = () => {
   
   // Handle print quotation
   const handlePrintQuotation = useReactToPrint({
-    content: () => quotationPrintRef.current,
+    contentRef: quotationPrintRef,
     onAfterPrint: () => {
       toast({
         title: 'Success',
@@ -308,15 +308,38 @@ const QuotationsPage: FC = () => {
   const handleDownloadPdf = async () => {
     if (viewQuotation) {
       try {
-        const pdfBlob = await generateQuotationPdf(viewQuotation);
-        const url = URL.createObjectURL(pdfBlob);
+        // Format data for PDF generation
+        const pdfData = {
+          id: viewQuotation.id,
+          companyName: viewQuotation.companyName,
+          contactPerson: viewQuotation.contactPerson,
+          email: viewQuotation.email,
+          phone: viewQuotation.phone,
+          quotationNumber: viewQuotation.quotationNumber,
+          date: format(new Date(viewQuotation.createdAt), 'dd/MM/yyyy'),
+          validity: viewQuotation.validity,
+          totalAmount: parseFloat(viewQuotation.totalAmount.toString()),
+          discount: parseFloat(viewQuotation.discount.toString()),
+          finalAmount: parseFloat(viewQuotation.finalAmount.toString()),
+          status: viewQuotation.status,
+          items: viewQuotation.items || [],
+          courseName: '', // Will be populated from items
+          participants: 0, // Will be populated from items
+        };
+        
+        const pdfBlob = await generateQuotationPdf(pdfData);
+        
+        // Create download link
+        const url = window.URL.createObjectURL(new Blob([pdfBlob]));
         const a = document.createElement('a');
         a.href = url;
         a.download = `Quotation-${viewQuotation.quotationNumber}.pdf`;
         document.body.appendChild(a);
         a.click();
-        a.remove();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
       } catch (error) {
+        console.error('PDF generation error:', error);
         toast({
           title: 'Error',
           description: 'Failed to generate PDF',
@@ -414,7 +437,12 @@ const QuotationsPage: FC = () => {
                             size="icon"
                             onClick={() => {
                               setViewQuotation(quotation);
-                              setTimeout(() => handlePrintQuotation(), 100);
+                              // Use a setTimeout to ensure the PDF view is rendered before printing
+                              setTimeout(() => {
+                                if (handlePrintQuotation) {
+                                  handlePrintQuotation();
+                                }
+                              }, 300);
                             }}
                             title="Print"
                           >
