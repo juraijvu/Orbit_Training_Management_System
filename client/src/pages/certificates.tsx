@@ -55,6 +55,7 @@ import {
 import PrintTemplate from '@/components/print/print-template';
 import { generateCertificatePdf } from '@/lib/pdf-templates';
 import { useReactToPrint } from 'react-to-print';
+import { jsPDF } from 'jspdf';
 
 interface Certificate {
   id: number;
@@ -360,9 +361,97 @@ const CertificatesPage: FC = () => {
         description: 'Certificate has been printed successfully.',
       });
     },
-    // @ts-ignore - React-to-print typing issue
     content: () => certificatePrintRef.current,
   });
+  
+  // Handle download PDF
+  const handleDownloadPdf = () => {
+    if (!selectedCertificate) return;
+    
+    try {
+      // Create a new PDF
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Add certificate content
+      const student = students?.find(s => s.id === selectedCertificate.studentId);
+      const course = courses?.find(c => c.id === selectedCertificate.courseId);
+      
+      if (!student || !course) {
+        toast({
+          title: 'Error',
+          description: 'Could not generate PDF: Missing student or course information',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Add certificate title
+      doc.setFontSize(24);
+      doc.setTextColor(59, 130, 246); // Primary blue color
+      doc.text('CERTIFICATE OF COMPLETION', 150, 30, { align: 'center' });
+      
+      // Add Orbit Institute
+      doc.setFontSize(16);
+      doc.setTextColor(75, 85, 99); // Gray text
+      doc.text('Orbit Institute', 150, 45, { align: 'center' });
+      
+      // Add certificate text
+      doc.setFontSize(12);
+      doc.setTextColor(55, 65, 81); // Dark gray text
+      doc.text('This is to certify that', 150, 65, { align: 'center' });
+      
+      // Add student name
+      doc.setFontSize(18);
+      doc.setTextColor(30, 64, 175); // Dark blue
+      doc.text(`${student.firstName} ${student.lastName}`, 150, 75, { align: 'center' });
+      
+      // Add certificate text
+      doc.setFontSize(12);
+      doc.setTextColor(55, 65, 81); // Dark gray text
+      doc.text('has successfully completed the course', 150, 85, { align: 'center' });
+      
+      // Add course name
+      doc.setFontSize(16);
+      doc.setTextColor(30, 64, 175); // Dark blue
+      doc.text(course.name, 150, 95, { align: 'center' });
+      
+      // Add date
+      doc.setFontSize(12);
+      doc.setTextColor(55, 65, 81); // Dark gray text
+      doc.text('on', 150, 105, { align: 'center' });
+      doc.setFontSize(14);
+      doc.text(format(new Date(selectedCertificate.issueDate), 'MMMM dd, yyyy'), 150, 115, { align: 'center' });
+      
+      // Add signature line
+      doc.setDrawColor(55, 65, 81); // Gray line
+      doc.line(190, 140, 240, 140); // Signature line
+      doc.setFontSize(10);
+      doc.text("Director's Signature", 215, 145, { align: 'center' });
+      
+      // Add certificate number
+      doc.setFontSize(8);
+      doc.text(`Certificate No: ${selectedCertificate.certificateNumber}`, 40, 150);
+      
+      // Save PDF
+      doc.save(`Certificate-${selectedCertificate.certificateNumber}.pdf`);
+      
+      toast({
+        title: 'Success',
+        description: 'Certificate PDF has been downloaded.',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF certificate',
+        variant: 'destructive',
+      });
+    }
+  };
   
   // Get student name
   const getStudentName = (studentId: number) => {
