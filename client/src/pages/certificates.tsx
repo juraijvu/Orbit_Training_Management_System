@@ -124,8 +124,36 @@ const CertificatesPage: FC = () => {
   const createCertificateMutation = useMutation({
     mutationFn: async (data: CertificateFormValues) => {
       console.log("Attempting to create certificate with data:", data);
+      
+      // Make sure we have the required fields
+      if (!data.studentId) {
+        throw new Error('Student selection is required');
+      }
+      
+      if (!data.courseId) {
+        throw new Error('Course selection is required');
+      }
+      
+      if (!data.issueDate) {
+        throw new Error('Issue date is required');
+      }
+      
+      if (!user?.id) {
+        throw new Error('User information is missing');
+      }
+      
+      // Ensure issuedBy is set
+      const formData = {
+        ...data,
+        issuedBy: user.id,
+      };
+      
+      console.log("Submitting certificate data:", formData);
+      
       try {
-        const res = await apiRequest('POST', '/api/certificates', data);
+        const res = await apiRequest('POST', '/api/certificates', formData);
+        console.log("Certificate API response status:", res.status);
+        
         // Check for specific status codes
         if (res.status === 401) {
           console.error("Authentication error - User not logged in");
@@ -135,10 +163,17 @@ const CertificatesPage: FC = () => {
           throw new Error('Only superadmins can create certificates');
         } else if (!res.ok) {
           // For other errors
-          const errorData = await res.json();
-          console.error("Certificate creation failed:", errorData);
-          throw new Error(errorData.message || 'Failed to create certificate');
+          let errorMessage = 'Failed to create certificate';
+          try {
+            const errorData = await res.json();
+            console.error("Certificate creation failed:", errorData);
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            console.error("Could not parse error response:", e);
+          }
+          throw new Error(errorMessage);
         }
+        
         const responseData = await res.json();
         console.log("Certificate created successfully:", responseData);
         return responseData;
@@ -177,19 +212,57 @@ const CertificatesPage: FC = () => {
   // Submit form
   const onSubmit = (values: CertificateFormValues) => {
     console.log("Certificate form submitted with values:", values);
-    // Check form validity
-    const errors = form.formState.errors;
-    if (Object.keys(errors).length > 0) {
-      console.error("Form validation errors:", errors);
+    
+    // We need to make sure we have all the required values
+    if (!values.studentId) {
       toast({
-        title: 'Validation Error',
-        description: 'Please check the form for errors',
+        title: 'Missing Information',
+        description: 'Please select a student',
         variant: 'destructive',
       });
       return;
     }
     
-    createCertificateMutation.mutate(values);
+    if (!values.courseId) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please select a course',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!values.issueDate) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please select an issue date',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    console.log("Submitting certificate form with:", { 
+      studentId: values.studentId, 
+      courseId: values.courseId,
+      issueDate: values.issueDate,
+      issuedBy: user?.id
+    });
+    
+    // Try to create the certificate
+    try {
+      createCertificateMutation.mutate({
+        ...values,
+        // Make sure issuedBy is set properly
+        issuedBy: user?.id as number
+      });
+    } catch (error) {
+      console.error("Error during mutation:", error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    }
   };
   
   // Open create certificate dialog
@@ -438,7 +511,12 @@ const CertificatesPage: FC = () => {
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form 
+              method="post" 
+              action="#" 
+              onSubmit={form.handleSubmit(onSubmit)} 
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="studentId"
