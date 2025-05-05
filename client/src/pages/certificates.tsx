@@ -361,9 +361,8 @@ const CertificatesPage: FC = () => {
         description: 'Certificate has been printed successfully.',
       });
     },
-    // The content prop is properly typed in the latest version of react-to-print
-    // but TypeScript is showing an error. We can cast the function to any to silence it.
-    content: (() => certificatePrintRef.current) as any,
+    // Fix the contentRef issue by providing a proper reference getter function
+    contentRef: certificatePrintRef,
   });
   
   // Handle download PDF
