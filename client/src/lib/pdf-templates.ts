@@ -204,39 +204,67 @@ export const generateInvoicePdf = (data: InvoicePdfData): string => {
   `;
 };
 
-// Function to generate the certificate PDF content using SVG template
+// Function to generate the certificate PDF content to match the company style
 export const generateCertificatePdf = (data: CertificatePdfData): string => {
-  // Basic SVG certificate template as a placeholder
-  // In a real application, this would be replaced with a proper SVG template
   return `
     <div class="print-a4-landscape">
-      <svg width="100%" height="100%" viewBox="0 0 1123 794" xmlns="http://www.w3.org/2000/svg">
-        <rect width="1123" height="794" fill="#f8f9fa" />
-        <path d="M50,50 H1073 V744 H50 Z" fill="none" stroke="#3B82F6" stroke-width="10" />
-        <path d="M70,70 H1053 V724 H70 Z" fill="none" stroke="#3B82F6" stroke-width="2" />
+      <div class="certificate-container" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; position: relative; overflow: hidden; padding: 20px;">
+        <!-- Gold header border -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 40px; background-color: #d4af37;"></div>
         
-        <text x="561.5" y="150" font-family="Arial" font-size="50" font-weight="bold" text-anchor="middle" fill="#1E3A8A">CERTIFICATE OF COMPLETION</text>
+        <!-- Dotted line -->
+        <div style="position: absolute; top: 55px; left: 0; right: 0; height: 2px; display: flex;">
+          ${Array(50).fill('<span style="display: inline-block; width: 10px; height: 2px; background-color: #d4af37; margin-right: 5px;"></span>').join('')}
+        </div>
         
-        <text x="561.5" y="220" font-family="Arial" font-size="24" text-anchor="middle" fill="#4B5563">This is to certify that</text>
+        <!-- Logo and Institute Name -->
+        <div style="text-align: center; margin-top: 80px; margin-bottom: 30px;">
+          <div style="background-color: #f5f5f5; width: 120px; height: 120px; border-radius: 60px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+            <div style="font-size: 28px; font-weight: bold; color: #333;">ORBIT</div>
+          </div>
+          <div style="font-size: 22px; margin-top: 5px; color: #333;">INSTITUTE</div>
+        </div>
         
-        <text x="561.5" y="300" font-family="Arial" font-size="48" font-weight="bold" text-anchor="middle" fill="#1E40AF">${data.studentName}</text>
+        <!-- Certificate Title -->
+        <h1 style="font-size: 42px; font-weight: bold; color: #333; margin-bottom: 10px; text-align: center;">Certificate of Achievement</h1>
         
-        <line x1="300" y1="320" x2="823" y2="320" stroke="#3B82F6" stroke-width="2" />
+        <!-- Golden underline -->
+        <div style="width: 70%; height: 2px; background-color: #d4af37; margin-bottom: 40px;"></div>
         
-        <text x="561.5" y="380" font-family="Arial" font-size="24" text-anchor="middle" fill="#4B5563">has successfully completed the course</text>
+        <!-- Certificate Text -->
+        <div style="font-size: 20px; color: #333; margin-bottom: 20px;">This is to certify that</div>
         
-        <text x="561.5" y="450" font-family="Arial" font-size="36" font-weight="bold" text-anchor="middle" fill="#1E40AF">${data.courseName}</text>
+        <!-- Student Name -->
+        <div style="font-size: 36px; font-style: italic; color: #333; margin-bottom: 20px;">${data.studentName}</div>
         
-        <text x="561.5" y="520" font-family="Arial" font-size="24" text-anchor="middle" fill="#4B5563">on</text>
+        <!-- Course Text -->
+        <div style="font-size: 20px; color: #333; margin-bottom: 20px;">has successfully completed the course</div>
         
-        <text x="561.5" y="570" font-family="Arial" font-size="28" font-weight="bold" text-anchor="middle" fill="#1E40AF">${data.issueDate}</text>
+        <!-- Course Name -->
+        <div style="font-size: 32px; font-weight: bold; color: #333; margin-bottom: 20px;">${data.courseName}</div>
         
-        <text x="280" y="670" font-family="Arial" font-size="20" text-anchor="middle" fill="#4B5563">Certificate No: ${data.certificateNumber}</text>
+        <!-- Additional Text -->
+        <div style="font-size: 20px; color: #333; margin-bottom: 30px;">with excellence and dedication</div>
         
-        <text x="843" y="670" font-family="Arial" font-size="20" text-anchor="middle" fill="#4B5563">Director's Signature</text>
+        <!-- Date -->
+        <div style="font-size: 18px; color: #333; margin-bottom: 40px;">${data.issueDate}</div>
         
-        <path d="M743,650 H943" stroke="#000000" stroke-width="1" />
-      </svg>
+        <!-- Signature Section -->
+        <div style="display: flex; justify-content: space-around; width: 80%; margin-top: 20px;">
+          <div style="text-align: center; width: 200px;">
+            <div style="border-top: 1px solid #333; padding-top: 10px;">Director</div>
+          </div>
+          
+          <div style="text-align: center; width: 200px;">
+            <div style="border-top: 1px solid #333; padding-top: 10px;">Training Manager</div>
+          </div>
+        </div>
+        
+        <!-- Certificate Number -->
+        <div style="position: absolute; bottom: 30px; left: 30px; font-size: 12px; color: #666;">
+          Certificate No: ${data.certificateNumber}
+        </div>
+      </div>
     </div>
   `;
 };

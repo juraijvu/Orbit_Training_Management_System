@@ -390,52 +390,77 @@ const CertificatesPage: FC = () => {
         return;
       }
       
-      // Add certificate title
-      doc.setFontSize(24);
-      doc.setTextColor(59, 130, 246); // Primary blue color
-      doc.text('CERTIFICATE OF COMPLETION', 150, 30, { align: 'center' });
+      // Set the background colors
+      // Top gold border
+      doc.setFillColor(212, 175, 55); // Gold color
+      doc.rect(0, 0, 297, 15, 'F');
       
-      // Add Orbit Institute
+      // Add dotted line
+      doc.setDrawColor(212, 175, 55); // Gold color
+      doc.setLineWidth(0.5);
+      for (let i = 0; i < 297; i += 5) {
+        doc.line(i, 22, i + 3, 22);
+      }
+      
+      // Add Orbit Institute logo and name
+      doc.setFontSize(24);
+      doc.setTextColor(50, 50, 50); // Dark gray text
+      doc.text('ORBIT', 148.5, 40, { align: 'center' });
       doc.setFontSize(16);
-      doc.setTextColor(75, 85, 99); // Gray text
-      doc.text('Orbit Institute', 150, 45, { align: 'center' });
+      doc.text('INSTITUTE', 148.5, 48, { align: 'center' });
+      
+      // Add certificate title with gold underline
+      doc.setFontSize(36);
+      doc.setTextColor(50, 50, 50); // Dark gray text
+      doc.text('Certificate of Achievement', 148.5, 80, { align: 'center' });
+      
+      // Add gold underline
+      doc.setDrawColor(212, 175, 55); // Gold color
+      doc.setLineWidth(1);
+      doc.line(60, 85, 237, 85);
       
       // Add certificate text
-      doc.setFontSize(12);
-      doc.setTextColor(55, 65, 81); // Dark gray text
-      doc.text('This is to certify that', 150, 65, { align: 'center' });
+      doc.setFontSize(16);
+      doc.setTextColor(50, 50, 50); // Dark gray text
+      doc.text('This is to certify that', 148.5, 110, { align: 'center' });
       
       // Add student name
-      doc.setFontSize(18);
-      doc.setTextColor(30, 64, 175); // Dark blue
-      doc.text(`${student.firstName} ${student.lastName}`, 150, 75, { align: 'center' });
+      doc.setFontSize(28);
+      doc.setFont('times', 'italic');
+      doc.text(`${student.firstName} ${student.lastName}`, 148.5, 125, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
       
       // Add certificate text
-      doc.setFontSize(12);
-      doc.setTextColor(55, 65, 81); // Dark gray text
-      doc.text('has successfully completed the course', 150, 85, { align: 'center' });
+      doc.setFontSize(16);
+      doc.setTextColor(50, 50, 50); // Dark gray text
+      doc.text('has successfully completed the course', 148.5, 145, { align: 'center' });
       
       // Add course name
+      doc.setFontSize(28);
+      doc.setFont('helvetica', 'bold');
+      doc.text(course.name, 148.5, 165, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      
+      // Add additional text
       doc.setFontSize(16);
-      doc.setTextColor(30, 64, 175); // Dark blue
-      doc.text(course.name, 150, 95, { align: 'center' });
+      doc.text('with excellence and dedication', 148.5, 185, { align: 'center' });
       
       // Add date
       doc.setFontSize(12);
-      doc.setTextColor(55, 65, 81); // Dark gray text
-      doc.text('on', 150, 105, { align: 'center' });
-      doc.setFontSize(14);
-      doc.text(format(new Date(selectedCertificate.issueDate), 'MMMM dd, yyyy'), 150, 115, { align: 'center' });
+      doc.text(format(new Date(selectedCertificate.issueDate), 'MMMM dd, yyyy'), 148.5, 205, { align: 'center' });
       
-      // Add signature line
-      doc.setDrawColor(55, 65, 81); // Gray line
-      doc.line(190, 140, 240, 140); // Signature line
-      doc.setFontSize(10);
-      doc.text("Director's Signature", 215, 145, { align: 'center' });
+      // Add signature lines
+      doc.setDrawColor(50, 50, 50); // Dark gray
+      doc.line(80, 215, 140, 215); // Left signature line
+      doc.line(170, 215, 230, 215); // Right signature line
       
-      // Add certificate number
+      doc.setFontSize(12);
+      doc.text("Director", 110, 225, { align: 'center' });
+      doc.text("Training Manager", 200, 225, { align: 'center' });
+      
+      // Add certificate number at the bottom
       doc.setFontSize(8);
-      doc.text(`Certificate No: ${selectedCertificate.certificateNumber}`, 40, 150);
+      doc.text(`Certificate No: ${selectedCertificate.certificateNumber}`, 20, 200);
       
       // Save PDF
       doc.save(`Certificate-${selectedCertificate.certificateNumber}.pdf`);
