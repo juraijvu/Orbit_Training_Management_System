@@ -39,6 +39,16 @@ import {
 import { z } from "zod";
 import { format } from "date-fns";
 
+// Define quotation item schema since it's missing from the imports
+const insertQuotationItemSchema = z.object({
+  quotationId: z.number(),
+  courseId: z.number(),
+  duration: z.string(),
+  numberOfPersons: z.number(),
+  rate: z.string(),
+  total: z.string()
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded files statically
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -1580,24 +1590,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create quotation with items
   app.post('/api/quotations', isAuthenticated, async (req, res) => {
     try {
-      const { quotation, items } = req.body;
+      // The client now sends the entire form data directly
+      const quotationData = {
+        ...req.body,
+        createdBy: req.user!.id
+      };
+      
+      delete quotationData.items; // Remove items to validate just the quotation data
       
       // Validate quotation data
-      const quotationData = insertQuotationSchema.parse({
-        ...quotation,
-        createdBy: req.user!.id
-      });
+      const validatedQuotationData = insertQuotationSchema.parse(quotationData);
       
       // Generate quotation number
       const quotations = await storage.getQuotations();
       const quotationNumber = generateId('QUOT', quotations.length + 1);
       
       // Create quotation
-      const newQuotation = await storage.createQuotation({ ...quotationData, quotationNumber });
+      const newQuotation = await storage.createQuotation({ 
+        ...validatedQuotationData, 
+        quotationNumber 
+      });
       
       // Create quotation items
-      if (Array.isArray(items) && items.length > 0) {
-        for (const item of items) {
+      if (Array.isArray(req.body.items) && req.body.items.length > 0) {
+        for (const item of req.body.items) {
           const itemData = insertQuotationItemSchema.parse({
             ...item,
             quotationId: newQuotation.id

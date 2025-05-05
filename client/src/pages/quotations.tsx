@@ -276,7 +276,21 @@ const QuotationsPage: FC = () => {
   
   // Submit form
   const onSubmit = (values: QuotationFormValues) => {
-    createQuotationMutation.mutate(values);
+    // Convert numeric fields to strings for API compatibility
+    const formattedValues = {
+      ...values,
+      totalAmount: values.totalAmount.toString(),
+      discount: values.discount.toString(),
+      finalAmount: values.finalAmount.toString(),
+      items: values.items.map(item => ({
+        ...item,
+        rate: item.rate.toString(),
+        total: item.total.toString(),
+        numberOfPersons: item.numberOfPersons
+      }))
+    };
+    
+    createQuotationMutation.mutate(formattedValues as any);
   };
   
   // Handle print quotation
