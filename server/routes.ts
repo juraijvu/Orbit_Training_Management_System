@@ -1499,9 +1499,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Validating certificate data:", data);
       const certificateData = insertCertificateSchema.parse(data);
       
-      // Generate certificate number
+      // Generate unique certificate number
       const certificates = await storage.getCertificates();
-      const certificateNumber = generateId('CERT', certificates.length + 1);
+      
+      // Create a function to ensure certificate number uniqueness
+      const generateUniqueCertificateNumber = async () => {
+        // Get the current year
+        const currentYear = new Date().getFullYear();
+        
+        // Get the highest certificate number for this year
+        const regex = new RegExp(`CERT-${currentYear}-\\d+`);
+        const thisCertificates = certificates.filter(cert => regex.test(cert.certificateNumber));
+        
+        // Find the highest number
+        let maxNumber = 0;
+        thisCertificates.forEach(cert => {
+          const parts = cert.certificateNumber.split('-');
+          const num = parseInt(parts[2], 10);
+          if (!isNaN(num) && num > maxNumber) {
+            maxNumber = num;
+          }
+        });
+        
+        // Generate new ID with padded zeros
+        const padding = 3; // e.g., 001, 002, etc.
+        const nextNumber = maxNumber + 1;
+        const paddedNumber = nextNumber.toString().padStart(padding, '0');
+        return `CERT-${currentYear}-${paddedNumber}`;
+      };
+      
+      const certificateNumber = await generateUniqueCertificateNumber();
       
       const newCertificate = await storage.createCertificate({ ...certificateData, certificateNumber });
       console.log("Certificate created successfully:", newCertificate);

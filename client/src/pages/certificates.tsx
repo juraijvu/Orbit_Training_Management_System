@@ -69,8 +69,14 @@ interface Certificate {
 interface Student {
   id: number;
   studentId: string;
-  fullName: string;
-  courseId: number;
+  firstName: string;
+  lastName: string;
+  registrationNumber: string | null;
+  email: string;
+  phoneNo: string;
+  alternativeNo: string | null;
+  dateOfBirth: string;
+  // Add other fields as needed
 }
 
 interface Course {
@@ -340,11 +346,9 @@ const CertificatesPage: FC = () => {
   const handleStudentChange = (studentId: number) => {
     form.setValue('studentId', studentId);
     
-    // Auto-select the student's course
-    const student = students?.find(s => s.id === studentId);
-    if (student) {
-      form.setValue('courseId', student.courseId);
-    }
+    // We don't auto-select course here anymore since the student 
+    // might be registered for multiple courses
+    // The user needs to select the course for which they want to issue a certificate
   };
   
   // Handle print certificate
@@ -363,20 +367,19 @@ const CertificatesPage: FC = () => {
   // Get student name
   const getStudentName = (studentId: number) => {
     console.log("Looking for student with ID:", studentId);
-    console.log("Available students:", students);
     
     // First try by id
     const student = students?.find(s => s.id === studentId);
     
     if (student) {
       console.log("Found student by ID:", student);
-      // Return full name if available, otherwise try to combine first and last name
-      if (student.fullName) {
-        return student.fullName;
-      } else if (student.firstName && student.lastName) {
+      // Combine first and last name
+      if (student.firstName && student.lastName) {
         return `${student.firstName} ${student.lastName}`;
       } else if (student.firstName) {
         return student.firstName;
+      } else if (student.lastName) {
+        return student.lastName;
       }
     }
     
@@ -390,14 +393,14 @@ const CertificatesPage: FC = () => {
     const student = students?.find(s => s.id === studentId);
     
     if (student) {
-      // Return the studentId field if available
-      if (student.studentId) {
-        return student.studentId;
+      // Return the registration number if available (ORB format)
+      if (student.registrationNumber) {
+        return student.registrationNumber;
       }
       
-      // Or try orb_number if that exists instead
-      if (student.orbNumber) {
-        return student.orbNumber;
+      // Or try student ID if that exists instead (ST format)
+      if (student.studentId) {
+        return student.studentId;
       }
     }
     
