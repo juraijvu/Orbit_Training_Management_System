@@ -362,14 +362,47 @@ const CertificatesPage: FC = () => {
   
   // Get student name
   const getStudentName = (studentId: number) => {
+    console.log("Looking for student with ID:", studentId);
+    console.log("Available students:", students);
+    
+    // First try by id
     const student = students?.find(s => s.id === studentId);
-    return student?.fullName || 'Unknown Student';
+    
+    if (student) {
+      console.log("Found student by ID:", student);
+      // Return full name if available, otherwise try to combine first and last name
+      if (student.fullName) {
+        return student.fullName;
+      } else if (student.firstName && student.lastName) {
+        return `${student.firstName} ${student.lastName}`;
+      } else if (student.firstName) {
+        return student.firstName;
+      }
+    }
+    
+    // If we get here, we couldn't find the student or their name
+    return 'Unknown Student';
   };
   
   // Get student ID
   const getStudentIdentifier = (studentId: number) => {
+    // First try by id
     const student = students?.find(s => s.id === studentId);
-    return student?.studentId || `#${studentId}`;
+    
+    if (student) {
+      // Return the studentId field if available
+      if (student.studentId) {
+        return student.studentId;
+      }
+      
+      // Or try orb_number if that exists instead
+      if (student.orbNumber) {
+        return student.orbNumber;
+      }
+    }
+    
+    // Default to showing the database ID if nothing else is available
+    return `#${studentId}`;
   };
   
   // Get course name
@@ -595,7 +628,7 @@ const CertificatesPage: FC = () => {
                       <SelectContent>
                         {students?.map((student) => (
                           <SelectItem key={student.id} value={student.id.toString()}>
-                            {student.fullName} ({student.studentId})
+                            {student.firstName} {student.lastName} ({student.registrationNumber || student.studentId})
                           </SelectItem>
                         ))}
                       </SelectContent>
