@@ -1479,18 +1479,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create certificate
   app.post('/api/certificates', isSuperAdmin, async (req, res) => {
     try {
-      const certificateData = insertCertificateSchema.parse({
-        ...req.body,
-        issuedBy: req.user!.id
-      });
+      // Handle date conversion before validation
+      let data = { ...req.body };
+      
+      // Convert issueDate string to proper Date object if it's a string
+      if (data.issueDate && typeof data.issueDate === 'string') {
+        try {
+          data.issueDate = new Date(data.issueDate);
+        } catch (e) {
+          console.error("Failed to parse date:", e);
+          return res.status(400).json({ message: "Invalid date format for issueDate" });
+        }
+      }
+      
+      // Make sure issuedBy comes from authenticated user
+      data.issuedBy = req.user!.id;
+      
+      // Now validate
+      console.log("Validating certificate data:", data);
+      const certificateData = insertCertificateSchema.parse(data);
       
       // Generate certificate number
       const certificates = await storage.getCertificates();
       const certificateNumber = generateId('CERT', certificates.length + 1);
       
       const newCertificate = await storage.createCertificate({ ...certificateData, certificateNumber });
+      console.log("Certificate created successfully:", newCertificate);
       res.status(201).json(newCertificate);
     } catch (error) {
+      console.error("Certificate creation error:", error);
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });

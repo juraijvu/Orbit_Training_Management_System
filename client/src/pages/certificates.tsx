@@ -152,16 +152,21 @@ const CertificatesPage: FC = () => {
       
       // Use direct fetch for more control and debugging
       try {
-        // Format the data properly for the API
-        // Note: The certificateNumber should be generated on the server, 
-        // but we're including a placeholder to satisfy validation
-        // Convert issueDate from string to Date object
+        // Try a different approach for formatting the data
+        // We know the server is still seeing the date as a string
+        // Let's try to modify the backend route instead
+        
+        // For now, let's keep trying different formats
+        const issueDate = new Date(formData.issueDate);
+        
         const formattedData = {
-          ...formData,
+          studentId: formData.studentId,
+          courseId: formData.courseId,
+          issuedBy: formData.issuedBy,
           // The server should generate or override this, but we need to provide it
-          certificateNumber: 'TEMP-' + Date.now(), 
-          // Convert string date to proper date object
-          issueDate: new Date(formData.issueDate)
+          certificateNumber: 'TEMP-' + Date.now(),
+          // Try sending in ISO format
+          issueDate: issueDate.toISOString()
         };
         
         console.log("Formatted data for API:", formattedData);
