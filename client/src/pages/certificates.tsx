@@ -152,18 +152,38 @@ const CertificatesPage: FC = () => {
       
       // Use direct fetch for more control and debugging
       try {
+        // Format the data properly for the API
+        // Note: The certificateNumber should be generated on the server, 
+        // but we're including a placeholder to satisfy validation
+        // Convert issueDate from string to Date object
+        const formattedData = {
+          ...formData,
+          // The server should generate or override this, but we need to provide it
+          certificateNumber: 'TEMP-' + Date.now(), 
+          // Convert string date to proper date object
+          issueDate: new Date(formData.issueDate)
+        };
+        
+        console.log("Formatted data for API:", formattedData);
+        
         // Create the request manually for better debugging
         const response = await fetch('/api/certificates', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(formattedData),
           credentials: 'include',
         });
         
         console.log("Certificate API response status:", response.status);
-        console.log("Certificate API response headers:", Object.fromEntries([...response.headers.entries()]));
+        
+        // Log selected important headers
+        const headers: Record<string, string> = {};
+        response.headers.forEach((value, key) => {
+          headers[key] = value;
+        });
+        console.log("Certificate API response headers:", headers);
         
         // Debug response
         const responseText = await response.text();
