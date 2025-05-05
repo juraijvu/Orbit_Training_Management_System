@@ -696,6 +696,10 @@ const CertificatesPage: FC = () => {
                           <Button 
                             variant="ghost" 
                             size="icon"
+                            onClick={() => {
+                              setSelectedCertificate(certificate);
+                              setTimeout(() => handleDownloadPdf(), 100);
+                            }}
                             title="Download"
                           >
                             <Download className="h-4 w-4" />
