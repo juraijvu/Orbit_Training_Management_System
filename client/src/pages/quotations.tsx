@@ -346,6 +346,7 @@ const QuotationsPage: FC = () => {
         validity: values.validity,
         status: values.status || QuotationStatus.PENDING,
         createdBy: user.id, // This is required by the database schema
+        // Note: quotationNumber is generated on the server side
         
         // Add the courseId and participants from the first item
         // These are stored directly in the quotations table

@@ -180,6 +180,7 @@ export const quotations = pgTable("quotations", {
 export const insertQuotationSchema = createInsertSchema(quotations).omit({
   id: true,
   createdAt: true,
+  quotationNumber: true, // This is generated on the server
 });
 
 // Quotation Items Table
