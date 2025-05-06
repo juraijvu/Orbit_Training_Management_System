@@ -734,9 +734,9 @@ const QuotationsPage: FC = () => {
                       onClick={() => append({
                         courseId: 0,
                         duration: '',
-                        numberOfPersons: 1,
-                        rate: 0,
-                        total: 0
+                        numberOfPersons: '1',
+                        rate: '0',
+                        total: '0'
                       })}
                       className="ml-auto"
                     >
@@ -878,7 +878,7 @@ const QuotationsPage: FC = () => {
                     ) : (
                       <>
                         <Check className="mr-2 h-4 w-4" />
-                        Create Course
+                        Create Quotation
                       </>
                     )}
                   </Button>
