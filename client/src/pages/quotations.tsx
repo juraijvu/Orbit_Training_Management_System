@@ -357,7 +357,7 @@ const QuotationsPage: FC = () => {
         items: values.items.map(item => ({
           courseId: Number(item.courseId),
           duration: item.duration || "",
-          numberOfPersons: Number(item.numberOfPersons), 
+          numberOfPersons: String(item.numberOfPersons), // Convert back to string to satisfy the type
           rate: String(item.rate),
           total: String(item.total)
         }))

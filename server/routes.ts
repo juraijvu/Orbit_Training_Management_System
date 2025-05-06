@@ -1672,7 +1672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             quotation_id: newQuotation.id,
             course_id: Number(item.courseId),
             duration: item.duration || "",
-            number_of_persons: Number(item.numberOfPersons),
+            number_of_persons: Number(item.numberOfPersons), // Convert to number for database
             rate: item.rate,
             total: item.total,
             created_at: new Date()
