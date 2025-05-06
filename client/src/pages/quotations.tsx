@@ -280,17 +280,20 @@ const QuotationsPage: FC = () => {
     const formattedValues = {
       ...values,
       totalAmount: values.totalAmount.toString(),
-      discount: values.discount.toString(),
+      discount: values.discount !== null && values.discount !== undefined ? values.discount.toString() : "0",
       finalAmount: values.finalAmount.toString(),
+      validity: values.validity.toString(),
       items: values.items.map(item => ({
         ...item,
+        courseId: Number(item.courseId), // Keep courseId as number for reference
         rate: item.rate.toString(),
         total: item.total.toString(),
-        numberOfPersons: item.numberOfPersons
+        numberOfPersons: item.numberOfPersons.toString() // Convert to string
       }))
     };
     
-    createQuotationMutation.mutate(formattedValues as any);
+    console.log("Submitting quotation with formatted data:", formattedValues);
+    createQuotationMutation.mutate(formattedValues);
   };
   
   // Handle print quotation
