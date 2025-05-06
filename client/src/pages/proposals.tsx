@@ -56,7 +56,24 @@ import { z } from 'zod';
 import { format } from 'date-fns';
 
 // Define proposal form type
+// Custom Zod schema to handle numeric-to-string conversions
 const proposalFormSchema = insertProposalSchema.extend({
+  // Fix for numeric fields - convert to string for backend
+  totalAmount: z.union([
+    z.string(),
+    z.number().transform(val => String(val))
+  ]).pipe(z.string()),
+  
+  discount: z.union([
+    z.string(),
+    z.number().transform(val => String(val))
+  ]).pipe(z.string().default("0")),
+  
+  finalAmount: z.union([
+    z.string(),
+    z.number().transform(val => String(val))
+  ]).pipe(z.string()),
+
   date: z.string().refine(val => {
     try {
       const date = new Date(val);
@@ -67,6 +84,7 @@ const proposalFormSchema = insertProposalSchema.extend({
   }, {
     message: "Please enter a valid date",
   }),
+  
   // Logo handling
   logo: z.any().optional(), // To handle file upload
   applyWhiteFilter: z.boolean().default(true), // Option to apply white filter to logo
