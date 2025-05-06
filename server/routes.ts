@@ -1557,9 +1557,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all quotations
   app.get('/api/quotations', isAuthenticated, async (req, res) => {
     try {
+      console.log("Fetching quotations...");
       const quotations = await storage.getQuotations();
+      console.log("Quotations fetched:", quotations);
       res.json(quotations);
     } catch (error) {
+      console.error("Error fetching quotations:", error);
       res.status(500).json({ message: "Failed to fetch quotations" });
     }
   });
