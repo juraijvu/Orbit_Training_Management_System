@@ -182,13 +182,6 @@ const QuotationsPage: FC = () => {
       validity: format(addDays(new Date(), 30), 'yyyy-MM-dd'),
       status: QuotationStatus.PENDING,
       createdBy: user?.id,
-      clientName: '',
-      schedule: '',
-      trainingVenue: '',
-      consultantName: '',
-      consultantEmail: '',
-      consultantNumber: '',
-      position: '',
       items: [
         {
           courseId: 0,
@@ -311,25 +304,44 @@ const QuotationsPage: FC = () => {
   
   // Submit form
   const onSubmit = (values: QuotationFormValues) => {
-    // Create a proper formatted object that matches database expectations
-    const formattedValues = {
-      ...values,
-      // Ensure all numeric values are converted to strings
-      totalAmount: String(values.totalAmount),
-      discount: values.discount !== null && values.discount !== undefined ? String(values.discount) : "0",
-      finalAmount: String(values.finalAmount),
-      validity: values.validity.toString(),
-      items: values.items.map(item => ({
-        ...item,
-        courseId: Number(item.courseId), // Keep courseId as number for the database
-        numberOfPersons: Number(item.numberOfPersons), // Convert back to number for the database schema
-        rate: String(item.rate), // Convert to string for the database
-        total: String(item.total) // Convert to string for the database
-      }))
-    };
-    
-    console.log("Submitting quotation with formatted data:", formattedValues);
-    createQuotationMutation.mutate(formattedValues as any); // Using any to bypass TypeScript checks as we know our data is correct
+    try {
+      console.log("Original form values:", values);
+      
+      // Create a proper formatted object that matches the updated database schema
+      const formattedValues = {
+        companyName: values.companyName,
+        contactPerson: values.contactPerson,
+        email: values.email,
+        phone: values.phone,
+        totalAmount: String(values.totalAmount),
+        discount: values.discount !== null && values.discount !== undefined ? String(values.discount) : "0",
+        finalAmount: String(values.finalAmount),
+        validity: values.validity.toString(),
+        status: values.status,
+        createdBy: user?.id,
+        // Add course ID from the first item if present
+        courseId: values.items[0]?.courseId ? Number(values.items[0].courseId) : null,
+        // Add participants from the first item if present
+        participants: values.items[0]?.numberOfPersons ? Number(values.items[0].numberOfPersons) : null,
+        items: values.items.map(item => ({
+          courseId: Number(item.courseId),
+          duration: item.duration,
+          numberOfPersons: Number(item.numberOfPersons),
+          rate: String(item.rate),
+          total: String(item.total)
+        }))
+      };
+      
+      console.log("Submitting quotation with formatted data:", formattedValues);
+      createQuotationMutation.mutate(formattedValues as any);
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      toast({
+        title: 'Error',
+        description: 'There was an error submitting the form. Please check the console for details.',
+        variant: 'destructive',
+      });
+    }
   };
   
   // Handle print quotation
