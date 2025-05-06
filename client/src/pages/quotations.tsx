@@ -139,20 +139,37 @@ const quotationItemSchema = z.object({
 });
 
 // Quotation form schema
-const quotationFormSchema = insertQuotationSchema.extend({
-  validity: z.string().min(1, "Validity date is required"),
+const quotationFormSchema = z.object({
+  // Required fields
+  companyName: z.string().min(1, "Company name is required"),
+  contactPerson: z.string().min(1, "Contact person is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(1, "Phone number is required"),
+  
+  // Numeric fields with string conversion
   totalAmount: z.union([
     z.string(),
-    z.number().transform(val => String(val)) // Convert numbers to string
+    z.number().transform(val => String(val))
   ]).pipe(z.string()),
+  
   discount: z.union([
     z.string(),
-    z.number().transform(val => String(val)) // Convert numbers to string
+    z.number().transform(val => String(val))
   ]).pipe(z.string().default("0")),
+  
   finalAmount: z.union([
     z.string(),
-    z.number().transform(val => String(val)) // Convert numbers to string
+    z.number().transform(val => String(val))
   ]).pipe(z.string()),
+  
+  // Date field
+  validity: z.string().min(1, "Validity date is required"),
+  
+  // Optional fields
+  status: z.string().optional().default(QuotationStatus.PENDING),
+  createdBy: z.number().optional(),
+  
+  // Items array
   items: z.array(quotationItemSchema).min(1, "At least one course item is required"),
 });
 
@@ -307,33 +324,46 @@ const QuotationsPage: FC = () => {
     try {
       console.log("Original form values:", values);
       
-      // Create a proper formatted object that matches the updated database schema
+      if (!user?.id) {
+        toast({
+          title: 'Error',
+          description: 'User information is not available. Please try logging in again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Create a proper formatted object that exactly matches the database schema
       const formattedValues = {
+        // Main quotation fields
         companyName: values.companyName,
         contactPerson: values.contactPerson,
         email: values.email,
         phone: values.phone,
-        totalAmount: String(values.totalAmount),
-        discount: values.discount !== null && values.discount !== undefined ? String(values.discount) : "0",
-        finalAmount: String(values.finalAmount),
-        validity: values.validity.toString(),
-        status: values.status,
-        createdBy: user?.id,
-        // Add course ID from the first item if present
-        courseId: values.items[0]?.courseId ? Number(values.items[0].courseId) : null,
-        // Add participants from the first item if present
-        participants: values.items[0]?.numberOfPersons ? Number(values.items[0].numberOfPersons) : null,
+        totalAmount: values.totalAmount,
+        discount: values.discount || "0",
+        finalAmount: values.finalAmount,
+        validity: values.validity,
+        status: values.status || QuotationStatus.PENDING,
+        createdBy: user.id, // This is required by the database schema
+        
+        // Add the courseId and participants from the first item
+        // These are stored directly in the quotations table
+        courseId: values.items[0]?.courseId ? Number(values.items[0].courseId) : undefined,
+        participants: values.items[0]?.numberOfPersons ? Number(values.items[0].numberOfPersons) : undefined,
+        
+        // Items array for quotation_items table
         items: values.items.map(item => ({
           courseId: Number(item.courseId),
-          duration: item.duration,
-          numberOfPersons: Number(item.numberOfPersons),
-          rate: String(item.rate),
-          total: String(item.total)
+          duration: item.duration || "",
+          numberOfPersons: String(item.numberOfPersons), // Ensure this is a string to match the form schema
+          rate: item.rate,
+          total: item.total
         }))
       };
       
       console.log("Submitting quotation with formatted data:", formattedValues);
-      createQuotationMutation.mutate(formattedValues as any);
+      createQuotationMutation.mutate(formattedValues);
     } catch (error) {
       console.error("Error in form submission:", error);
       toast({
