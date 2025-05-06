@@ -154,10 +154,12 @@ const ProposalsPage: FC = () => {
       contactPerson: '',
       email: '',
       phone: '',
+      courseIds: '',
       courses: [],
-      totalAmount: 0,
-      discount: 0,
-      finalAmount: 0,
+      // Note the conversion to strings for numerical fields
+      totalAmount: '0',
+      discount: '0',
+      finalAmount: '0',
       coverPage: 'Professional Training Proposal',
       content: JSON.stringify([
         { title: 'Introduction', text: 'This proposal outlines the training services offered by Orbit Institute...' },
@@ -253,14 +255,42 @@ const ProposalsPage: FC = () => {
   // Handle form submission
   const onSubmit = async (values: ProposalFormValues) => {
     try {
-      // First create the proposal with basic data
-      const submitData = {...values};
-      delete (submitData as any).companyProfileFile;
+      console.log("Original form values:", values);
       
+      // Format data before submission
+      const formattedValues = {
+        ...values,
+        // Ensure required fields are strings
+        companyName: values.companyName || "",
+        contactPerson: values.contactPerson || "",
+        email: values.email || "",
+        phone: values.phone || "",
+        courseIds: values.courseIds || "",
+        // Convert numeric values to strings for the API
+        totalAmount: String(values.totalAmount || 0),
+        discount: String(values.discount || 0),
+        finalAmount: String(values.finalAmount || 0),
+        // Content handling
+        content: values.content || "{}",
+        status: values.status || "draft",
+        // Date format
+        date: values.date || format(new Date(), 'yyyy-MM-dd')
+      };
+      
+      console.log("Submitting proposal with formatted data:", formattedValues);
+      
+      // Prepare final submission object (removing file objects)
+      const submitData = {...formattedValues};
+      delete (submitData as any).companyProfileFile;
+      delete (submitData as any).logo;
+      
+      // Submit the proposal
       const newProposal = await createProposalMutation.mutateAsync(submitData);
+      console.log("Proposal created successfully:", newProposal);
       
       // If we have a company profile file, upload it separately
       if (values.companyProfileFile) {
+        console.log("Uploading company profile file");
         const formData = new FormData();
         formData.append('companyProfileFile', values.companyProfileFile);
         
@@ -268,8 +298,7 @@ const ProposalsPage: FC = () => {
         const uploadRes = await apiRequest(
           'POST', 
           `/api/proposals/${newProposal.id}/upload-company-profile`, 
-          formData,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
+          formData
         );
         
         if (!uploadRes.ok) {
@@ -282,6 +311,7 @@ const ProposalsPage: FC = () => {
         });
       }
     } catch (error: any) {
+      console.error("Error in form submission:", error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to create proposal',
@@ -459,15 +489,16 @@ const ProposalsPage: FC = () => {
                         <FormLabel>Total Amount (AED)</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number" 
-                            {...field} 
+                            type="number"
+                            value={typeof field.value === 'string' ? parseFloat(field.value) || 0 : field.value}
                             onChange={(e) => {
                               const value = parseFloat(e.target.value) || 0;
-                              field.onChange(value);
+                              field.onChange(String(value)); // Store as string
                               
                               // Calculate final amount
-                              const discount = form.getValues('discount') || 0;
-                              form.setValue('finalAmount', value - (value * discount / 100));
+                              const discount = parseFloat(form.getValues('discount') || '0');
+                              const finalAmount = value - (value * discount / 100);
+                              form.setValue('finalAmount', String(finalAmount)); // Store as string
                             }}
                           />
                         </FormControl>
@@ -484,8 +515,8 @@ const ProposalsPage: FC = () => {
                         <FormLabel>Discount (%)</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number" 
-                            {...field} 
+                            type="number"
+                            value={typeof field.value === 'string' ? parseFloat(field.value) || 0 : field.value}
                             onChange={(e) => {
                               let value = parseFloat(e.target.value) || 0;
                               
@@ -499,11 +530,12 @@ const ProposalsPage: FC = () => {
                                 });
                               }
                               
-                              field.onChange(value);
+                              field.onChange(String(value)); // Store as string
                               
                               // Calculate final amount
-                              const totalAmount = form.getValues('totalAmount') || 0;
-                              form.setValue('finalAmount', totalAmount - (totalAmount * value / 100));
+                              const totalAmount = parseFloat(form.getValues('totalAmount') || '0');
+                              const finalAmount = totalAmount - (totalAmount * value / 100);
+                              form.setValue('finalAmount', String(finalAmount)); // Store as string
                             }}
                             max={20}
                           />
@@ -520,7 +552,11 @@ const ProposalsPage: FC = () => {
                       <FormItem>
                         <FormLabel>Final Amount (AED)</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} readOnly />
+                          <Input 
+                            type="number" 
+                            value={typeof field.value === 'string' ? parseFloat(field.value) || 0 : field.value} 
+                            readOnly 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -670,13 +706,14 @@ const ProposalsPage: FC = () => {
                               setSelectedCourses([...selectedCourses, newCourse]);
                               
                               // Update total amount
-                              const currentTotal = form.getValues('totalAmount') || 0;
+                              const currentTotal = parseFloat(form.getValues('totalAmount') || '0');
                               const newTotal = currentTotal + newCourse.fee;
-                              form.setValue('totalAmount', newTotal);
+                              form.setValue('totalAmount', String(newTotal));
                               
                               // Calculate final amount with discount
-                              const discount = form.getValues('discount') || 0;
-                              form.setValue('finalAmount', newTotal - (newTotal * discount / 100));
+                              const discount = parseFloat(form.getValues('discount') || '0');
+                              const finalAmount = newTotal - (newTotal * discount / 100);
+                              form.setValue('finalAmount', String(finalAmount));
                               
                               // Update courses field in the form
                               const currentCourseIds = form.getValues('courseIds') || '';
@@ -731,13 +768,14 @@ const ProposalsPage: FC = () => {
                                         setSelectedCourses(newSelectedCourses);
                                         
                                         // Update total amount
-                                        const currentTotal = form.getValues('totalAmount') || 0;
+                                        const currentTotal = parseFloat(form.getValues('totalAmount') || '0');
                                         const newTotal = currentTotal - course.fee;
-                                        form.setValue('totalAmount', newTotal);
+                                        form.setValue('totalAmount', String(newTotal));
                                         
                                         // Calculate final amount with discount
-                                        const discount = form.getValues('discount') || 0;
-                                        form.setValue('finalAmount', newTotal - (newTotal * discount / 100));
+                                        const discount = parseFloat(form.getValues('discount') || '0');
+                                        const finalAmount = newTotal - (newTotal * discount / 100);
+                                        form.setValue('finalAmount', String(finalAmount));
                                         
                                         // Update courses field in the form
                                         const newCourseIds = newSelectedCourses.map(c => c.id).join(',');
@@ -823,7 +861,7 @@ const ProposalsPage: FC = () => {
                           <FormControl>
                             <Select
                               onValueChange={(value) => {
-                                field.onChange(parseInt(value));
+                                field.onChange(value); // Store as string
                               }}
                               value={field.value?.toString() || ""}
                             >
