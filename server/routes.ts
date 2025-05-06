@@ -1606,17 +1606,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // BYPASS VALIDATION COMPLETELY and use a direct query to insert the quotation
       // This is a workaround for the validation issue
       // First, prepare data for insertion
+      // Make sure our keys match the database field names exactly
+      // This is a direct SQL insert that bypasses all Zod/Drizzle validation
       const rawQuotationData = {
         quotation_number: quotationNumber,
         company_name: quotationData.companyName,
         contact_person: quotationData.contactPerson,
         email: quotationData.email,
         phone: quotationData.phone,
-        course_id: quotationData.courseId,
-        participants: quotationData.participants,
-        total_amount: quotationData.totalAmount,
+        course_id: quotationData.courseId || 0,
+        participants: quotationData.participants || 0,
+        total_amount: quotationData.totalAmount || "0",
         discount: quotationData.discount || "0",
-        final_amount: quotationData.finalAmount,
+        final_amount: quotationData.finalAmount || "0",
         validity: new Date(quotationData.validity),
         status: quotationData.status || "pending",
         created_by: req.user!.id,

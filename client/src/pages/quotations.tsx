@@ -333,7 +333,8 @@ const QuotationsPage: FC = () => {
         return;
       }
       
-      // Create a proper formatted object that exactly matches the database schema
+      // Create a proper formatted object that exactly matches what the server expects
+      // The server now uses direct SQL insertion, so we need to make sure all fields are in the correct format
       const formattedValues = {
         // Main quotation fields
         companyName: values.companyName,
@@ -346,20 +347,19 @@ const QuotationsPage: FC = () => {
         validity: values.validity,
         status: values.status || QuotationStatus.PENDING,
         createdBy: user.id, // This is required by the database schema
-        // Note: quotationNumber is generated on the server side
         
-        // Add the courseId and participants from the first item
+        // Add the courseId and participants from the first item 
         // These are stored directly in the quotations table
-        courseId: values.items[0]?.courseId ? Number(values.items[0].courseId) : undefined,
-        participants: values.items[0]?.numberOfPersons ? Number(values.items[0].numberOfPersons) : undefined,
+        courseId: values.items[0]?.courseId ? Number(values.items[0].courseId) : 0,
+        participants: values.items[0]?.numberOfPersons ? Number(values.items[0].numberOfPersons) : 0,
         
         // Items array for quotation_items table
         items: values.items.map(item => ({
           courseId: Number(item.courseId),
           duration: item.duration || "",
-          numberOfPersons: String(item.numberOfPersons), // Ensure this is a string to match the form schema
-          rate: item.rate,
-          total: item.total
+          numberOfPersons: Number(item.numberOfPersons), 
+          rate: String(item.rate),
+          total: String(item.total)
         }))
       };
       
