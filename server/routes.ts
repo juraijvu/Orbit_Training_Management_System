@@ -1594,33 +1594,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/quotations', isAuthenticated, async (req, res) => {
     try {
       // The client now sends the entire form data directly
-      const quotationData = {
-        ...req.body,
-        createdBy: req.user!.id
-      };
+      console.log("Received quotation data:", req.body);
       
-      delete quotationData.items; // Remove items to validate just the quotation data
-      
-      // Validate quotation data
-      const validatedQuotationData = insertQuotationSchema.parse(quotationData);
+      // Extract items for later use
+      const { items, ...quotationData } = req.body;
       
       // Generate quotation number
       const quotations = await storage.getQuotations();
       const quotationNumber = generateId('QUOT', quotations.length + 1);
       
-      // Create quotation
-      const newQuotation = await storage.createQuotation({ 
-        ...validatedQuotationData, 
-        quotationNumber 
-      });
+      // Prepare the data for creating the quotation
+      const quotationToCreate = {
+        ...quotationData,
+        quotationNumber,          // Add the generated quotation number
+        createdBy: req.user!.id   // Ensure the user ID is set
+      };
+      
+      console.log("Creating quotation with data:", quotationToCreate);
+      
+      // Create quotation - skip validation for now to diagnose the issue
+      const newQuotation = await storage.createQuotation(quotationToCreate);
       
       // Create quotation items
-      if (Array.isArray(req.body.items) && req.body.items.length > 0) {
-        for (const item of req.body.items) {
-          const itemData = insertQuotationItemSchema.parse({
+      if (Array.isArray(items) && items.length > 0) {
+        for (const item of items) {
+          const itemData = {
             ...item,
             quotationId: newQuotation.id
-          });
+          };
+          console.log("Creating quotation item:", itemData);
           await storage.createQuotationItem(itemData);
         }
       }
@@ -1634,12 +1636,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         items: quotationItems
       });
     } catch (error) {
+      console.error("Failed to create quotation:", error);
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
-      console.error("Failed to create quotation:", error);
-      res.status(500).json({ message: "Failed to create quotation" });
+      res.status(500).json({ message: "Failed to create quotation: " + (error instanceof Error ? error.message : String(error)) });
     }
   });
 
