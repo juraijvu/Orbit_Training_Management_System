@@ -1862,7 +1862,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         SELECT 
           p.id, p.proposal_number, p.company_name, p.contact_person, 
-          p.email, p.phone, p.course_ids, p.trainer_id, 
+          p.email, p.phone, p.course_ids, 
           p.total_amount, p.discount, p.final_amount, 
           p.cover_page, p.content, p.company_profile, 
           p.company_profile_filename, p.company_profile_mime_type, 
@@ -1884,7 +1884,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: row.email,
         phone: row.phone,
         courseIds: row.course_ids,
-        trainerId: row.trainer_id,
         totalAmount: row.total_amount,
         discount: row.discount,
         finalAmount: row.final_amount,
