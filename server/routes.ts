@@ -1864,7 +1864,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           p.id, p.proposal_number, p.company_name, p.contact_person, 
           p.email, p.phone, p.course_ids, 
           p.total_amount, p.discount, p.final_amount, 
-          p.cover_page, p.content, p.company_profile, 
+          p.cover_page, p.content,
           p.company_profile_filename, p.company_profile_mime_type, 
           p.status, p.created_by, p.created_at 
         FROM proposals p
@@ -1889,7 +1889,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         finalAmount: row.final_amount,
         coverPage: row.cover_page,
         content: row.content,
-        companyProfile: row.company_profile,
         companyProfileFilename: row.company_profile_filename,
         companyProfileMimeType: row.company_profile_mime_type,
         status: row.status,
@@ -1918,9 +1917,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         SELECT 
           p.id, p.proposal_number, p.company_name, p.contact_person, 
-          p.email, p.phone, p.course_ids, p.trainer_id, 
+          p.email, p.phone, p.course_ids,
           p.total_amount, p.discount, p.final_amount, 
-          p.cover_page, p.content, p.company_profile, 
+          p.cover_page, p.content,
           p.company_profile_filename, p.company_profile_mime_type, 
           p.status, p.created_by, p.created_at 
         FROM proposals p
@@ -1940,13 +1939,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: result.rows[0].email,
         phone: result.rows[0].phone,
         courseIds: result.rows[0].course_ids,
-        trainerId: result.rows[0].trainer_id,
         totalAmount: result.rows[0].total_amount,
         discount: result.rows[0].discount,
         finalAmount: result.rows[0].final_amount,
         coverPage: result.rows[0].cover_page,
         content: result.rows[0].content,
-        companyProfile: result.rows[0].company_profile,
         companyProfileFilename: result.rows[0].company_profile_filename,
         companyProfileMimeType: result.rows[0].company_profile_mime_type,
         status: result.rows[0].status,
@@ -1983,13 +1980,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: req.body.email,
         phone: req.body.phone,
         course_ids: req.body.courseIds || "",
-        trainer_id: req.body.trainerId || null,
         total_amount: req.body.totalAmount || "0",
         discount: req.body.discount || "0",
         final_amount: req.body.finalAmount || "0",
         cover_page: req.body.coverPage || "",
         content: req.body.content || "{}",
-        company_profile: req.body.companyProfile || null,
         company_profile_filename: req.body.companyProfileFilename || null,
         company_profile_mime_type: req.body.companyProfileMimeType || null,
         status: req.body.status || "draft",
@@ -2003,12 +1998,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(
         `INSERT INTO proposals (
           proposal_number, company_name, contact_person, email, phone, 
-          course_ids, trainer_id, total_amount, discount, final_amount,
-          cover_page, content, company_profile, company_profile_filename,
+          course_ids, total_amount, discount, final_amount,
+          cover_page, content, company_profile_filename,
           company_profile_mime_type, status, created_by, created_at
         ) VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-          $11, $12, $13, $14, $15, $16, $17, $18
+          $11, $12, $13, $14, $15, $16
         ) RETURNING *`,
         [
           rawProposalData.proposal_number,
@@ -2017,13 +2012,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           rawProposalData.email,
           rawProposalData.phone,
           rawProposalData.course_ids,
-          rawProposalData.trainer_id,
           rawProposalData.total_amount,
           rawProposalData.discount,
           rawProposalData.final_amount,
           rawProposalData.cover_page,
           rawProposalData.content,
-          rawProposalData.company_profile,
           rawProposalData.company_profile_filename,
           rawProposalData.company_profile_mime_type,
           rawProposalData.status,
@@ -2046,11 +2039,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         companyName: result.rows[0].company_name,
         contactPerson: result.rows[0].contact_person,
         courseIds: result.rows[0].course_ids,
-        trainerId: result.rows[0].trainer_id,
         totalAmount: result.rows[0].total_amount,
         finalAmount: result.rows[0].final_amount,
         coverPage: result.rows[0].cover_page,
-        companyProfile: result.rows[0].company_profile,
         companyProfileFilename: result.rows[0].company_profile_filename,
         companyProfileMimeType: result.rows[0].company_profile_mime_type,
         createdBy: result.rows[0].created_by,
