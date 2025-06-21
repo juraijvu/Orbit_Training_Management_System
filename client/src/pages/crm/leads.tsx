@@ -819,10 +819,13 @@ export default function LeadsPage() {
               // Create follow-up record
               const followUpRecord = {
                 leadId: followUpData.leadId,
+                contactDate: combinedDateTime.toISOString(),
+                contactTime: followUpData.followUpTime,
+                contactType: "call", // Default contact type
                 notes: followUpData.notes,
-                followUpDate: combinedDateTime.toISOString(),
                 priority: followUpData.priority,
-                status: followUpData.status
+                status: followUpData.status,
+                consultantId: user?.id || 1
               };
               
               // Make API call to create follow-up

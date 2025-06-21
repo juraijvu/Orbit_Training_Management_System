@@ -3016,12 +3016,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create follow-up
   app.post('/api/crm/follow-ups', isAuthenticated, async (req, res) => {
     try {
-      const newFollowUp = await storage.createFollowUp({
+      const followUpData = {
         ...req.body,
-        createdBy: req.user!.id
-      });
+        createdBy: req.user!.id,
+        consultantId: req.body.consultantId || req.user!.id // Ensure consultantId is set
+      };
+      
+      // Validate required fields
+      if (!followUpData.leadId || !followUpData.contactDate) {
+        return res.status(400).json({ message: "Missing required fields: leadId and contactDate are required" });
+      }
+      
+      // Ensure contactType is set
+      if (!followUpData.contactType) {
+        followUpData.contactType = "call";
+      }
+      
+      const newFollowUp = await storage.createFollowUp(followUpData);
       res.status(201).json(newFollowUp);
     } catch (error) {
+      console.error("Error creating follow-up:", error);
       res.status(500).json({ message: "Failed to create follow-up" });
     }
   });

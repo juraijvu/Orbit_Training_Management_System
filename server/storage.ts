@@ -3004,14 +3004,17 @@ export class DatabaseStorage implements IStorage {
     const followUpWithDefaults = {
       ...followUp,
       createdAt: new Date(),
+      contactDate: typeof followUp.contactDate === 'string' ? new Date(followUp.contactDate) : followUp.contactDate,
+      nextFollowUp: followUp.nextFollowUp ? (typeof followUp.nextFollowUp === 'string' ? new Date(followUp.nextFollowUp) : followUp.nextFollowUp) : null,
       notes: followUp.notes || null,
       outcome: followUp.outcome || null,
-      nextFollowUp: followUp.nextFollowUp || null,
       nextFollowUpTime: followUp.nextFollowUpTime || null,
       contactTime: followUp.contactTime || null,
+      contactType: followUp.contactType || "call",
       priority: followUp.priority || "Medium",
       status: followUp.status || "Pending",
-      isNotified: followUp.isNotified || false
+      isNotified: followUp.isNotified || false,
+      consultantId: followUp.consultantId || followUp.createdBy || 1
     };
     const result = await db.insert(followUps).values(followUpWithDefaults).returning();
     return result[0];
