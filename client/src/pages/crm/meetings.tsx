@@ -559,7 +559,7 @@ export default function Meetings() {
 
       {/* Meeting Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-2xl overflow-hidden">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>{isEditing ? "Edit Meeting" : "Schedule a New Meeting"}</DialogTitle>
             <DialogDescription>
@@ -569,8 +569,7 @@ export default function Meetings() {
             </DialogDescription>
           </DialogHeader>
           
-          <ScrollArea className="max-h-[70vh] overflow-auto">
-            <div className="p-1">
+          <div className="max-h-[75vh] overflow-y-auto px-1">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -968,8 +967,7 @@ export default function Meetings() {
                   </DialogFooter>
                 </form>
               </Form>
-            </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
