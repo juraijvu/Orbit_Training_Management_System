@@ -2847,6 +2847,8 @@ export class DatabaseStorage implements IStorage {
     const campaignWithDefaults = {
       ...campaign,
       createdAt: new Date(),
+      startDate: typeof campaign.startDate === 'string' ? new Date(campaign.startDate) : campaign.startDate,
+      endDate: campaign.endDate ? (typeof campaign.endDate === 'string' ? new Date(campaign.endDate) : campaign.endDate) : null,
       budget: campaign.budget || null,
       platform: campaign.platform || null,
       status: campaign.status || "planned",
@@ -2855,7 +2857,6 @@ export class DatabaseStorage implements IStorage {
       adAccount: campaign.adAccount || null,
       adCampaignId: campaign.adCampaignId || null,
       targetAudience: campaign.targetAudience || null,
-      endDate: campaign.endDate || null,
       costPerLead: campaign.costPerLead || null
     };
     const result = await db.insert(campaigns).values(campaignWithDefaults).returning();

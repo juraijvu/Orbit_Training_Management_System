@@ -119,8 +119,8 @@ export default function CampaignsPage() {
     createCampaignMutation.mutate({
       ...formData,
       budget: formData.budget ? parseFloat(formData.budget) : null,
-      startDate: new Date(formData.startDate),
-      endDate: formData.endDate ? new Date(formData.endDate) : null,
+      startDate: formData.startDate,
+      endDate: formData.endDate || null,
     });
   };
 
