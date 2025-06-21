@@ -58,11 +58,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 // Enhanced schema with validations
-const corporateLeadFormSchema = insertCorporateLeadSchema.extend({
-  companyName: z.string().min(2, { message: "Company name is required" }),
-  contactPerson: z.string().min(2, { message: "Contact person is required" }),
-  email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal("")),
-  phone: z.string().min(5, { message: "Valid phone number is required" }),
+const corporateLeadFormSchema = z.object({
+  companyName: z.string().min(1, { message: "Company name is required" }),
+  industry: z.string().optional(),
+  website: z.string().optional(),
+  employeeCount: z.number().nullable().optional(),
+  annualRevenue: z.string().optional(),
+  address: z.string().optional(),
+  primaryContactName: z.string().min(1, { message: "Contact person name is required" }),
+  primaryContactTitle: z.string().optional(),
+  primaryContactEmail: z.string().email({ message: "Invalid email address" }).optional().or(z.literal("")),
+  primaryContactPhone: z.string().min(5, { message: "Valid phone number is required" }),
+  leadSource: z.string().optional(),
+  leadStatus: z.string().default("new"),
+  priority: z.string().default("medium"),
+  assignedTo: z.number().min(1, { message: "Please assign to a user" }),
+  notes: z.string().optional(),
 });
 
 type CorporateLeadFormValues = z.infer<typeof corporateLeadFormSchema>;
@@ -620,6 +631,162 @@ export default function CorporateLeads() {
                 })} className="space-y-6">
                   <div className="space-y-4">
                     <h3 className="text-sm font-medium">Company Information</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="companyName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Company Name *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter company name" {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="industry"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Industry</FormLabel>
+                            <FormControl>
+                              <Select value={field.value || ""} onValueChange={field.onChange}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select industry" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {industryOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="website"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Website</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Company website" {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="employeeCount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Employees</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                placeholder="Number of employees" 
+                                {...field}
+                                value={field.value || ""}
+                                onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Company address" {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium">Primary Contact Information</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="primaryContactName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contact Person *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Primary contact name" {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="primaryContactTitle"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Position</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Job title" {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="primaryContactEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="Contact email" {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="primaryContactPhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Phone number" {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
