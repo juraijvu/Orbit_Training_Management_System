@@ -146,12 +146,12 @@ const InvoicesPage: FC = () => {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
-      studentId: undefined,
-      amount: "0", // Use string for form input
-      paymentMode: PaymentMode.CASH,
+      studentId: '',
+      amount: '0',
+      paymentMode: 'cash',
       transactionId: '',
       paymentDate: format(new Date(), 'yyyy-MM-dd'),
-      status: 'paid',
+      status: 'pending',
     },
   });
   
@@ -431,7 +431,7 @@ const InvoicesPage: FC = () => {
                       {invoicesWithDetails.map(invoice => (
                         <TableRow key={invoice.id}>
                           <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                          <TableCell>{invoice.student?.fullName || `ID: ${invoice.studentId}`}</TableCell>
+                          <TableCell>{invoice.student ? `${invoice.student.firstName} ${invoice.student.lastName}` : `ID: ${invoice.studentId}`}</TableCell>
                           <TableCell>₹{invoice.amount.toLocaleString()}</TableCell>
                           <TableCell>{invoice.paymentMode}</TableCell>
                           <TableCell>{format(new Date(invoice.paymentDate), 'MMM dd, yyyy')}</TableCell>
@@ -563,13 +563,13 @@ const InvoicesPage: FC = () => {
                     <FormLabel>Student</FormLabel>
                     <Select 
                       onValueChange={(value) => {
-                        field.onChange(Number(value));
+                        field.onChange(value);
                         const student = students?.find(s => s.id === Number(value));
-                        if (student) {
+                        if (student && student.balanceDue) {
                           form.setValue('amount', student.balanceDue.toString());
                         }
                       }} 
-                      value={field.value?.toString()}
+                      value={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -579,7 +579,7 @@ const InvoicesPage: FC = () => {
                       <SelectContent>
                         {students?.map(student => (
                           <SelectItem key={student.id} value={student.id.toString()}>
-                            {student.fullName} ({student.studentId})
+                            {`${student.firstName} ${student.lastName}`} ({student.studentId})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -613,17 +613,17 @@ const InvoicesPage: FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Payment Mode</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select payment mode" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={PaymentMode.CASH}>Cash</SelectItem>
-                        <SelectItem value={PaymentMode.UPI}>UPI</SelectItem>
-                        <SelectItem value={PaymentMode.BANK_TRANSFER}>Bank Transfer</SelectItem>
-                        <SelectItem value={PaymentMode.CHEQUE}>Cheque</SelectItem>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="upi">UPI</SelectItem>
+                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                        <SelectItem value="cheque">Cheque</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -665,7 +665,7 @@ const InvoicesPage: FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
