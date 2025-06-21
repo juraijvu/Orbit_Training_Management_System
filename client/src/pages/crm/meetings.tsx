@@ -61,11 +61,20 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Enhanced schema with validations
-const meetingFormSchema = insertCrmMeetingSchema.extend({
+const meetingFormSchema = z.object({
+  title: z.string().min(1, { message: "Meeting title is required" }),
+  description: z.string().optional(),
+  meetingType: z.string().default("in-person"),
   meetingDate: z.string().min(1, { message: "Meeting date is required" }),
   meetingTime: z.string().min(1, { message: "Meeting time is required" }),
-  leadName: z.string().optional(),
-  corporateLeadName: z.string().optional(),
+  duration: z.number().min(1, { message: "Duration must be at least 1 minute" }).default(30),
+  location: z.string().optional(),
+  status: z.string().default("scheduled"),
+  leadId: z.number().nullable().optional(),
+  corporateLeadId: z.number().nullable().optional(),
+  assignedTo: z.number().min(1, { message: "Please assign the meeting to someone" }),
+  sendNotification: z.boolean().optional().default(false),
+  sendReminder: z.boolean().optional().default(false),
 });
 
 type MeetingFormValues = z.infer<typeof meetingFormSchema>;
@@ -147,10 +156,16 @@ export default function Meetings() {
   // Create meeting mutation
   const createMeetingMutation = useMutation({
     mutationFn: async (meeting: InsertCrmMeeting) => {
+      console.log("Sending meeting data to API:", meeting);
       const res = await apiRequest("POST", "/api/crm/meetings", meeting);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
+      }
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Meeting created successfully:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/crm/meetings"] });
       toast({
         title: "Meeting Created",
@@ -160,6 +175,7 @@ export default function Meetings() {
       form.reset();
     },
     onError: (error: any) => {
+      console.error("Meeting creation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create meeting",
@@ -245,6 +261,7 @@ export default function Meetings() {
     defaultValues: {
       title: "",
       description: "",
+      meetingType: "in-person",
       leadId: null,
       corporateLeadId: null,
       assignedTo: user?.id || 1,
@@ -252,15 +269,9 @@ export default function Meetings() {
       location: "",
       meetingDate: format(new Date(), "yyyy-MM-dd"),
       meetingTime: format(new Date(), "HH:mm"),
-      participantName: "",
-      participantEmail: "",
-      participantPhone: "",
-      sendNotification: true,
-      sendReminder: true,
-      notificationSent: false,
-      reminderSent: false,
-      outcome: "",
-      duration: 30, // default to 30 minutes
+      sendNotification: false,
+      sendReminder: false,
+      duration: 30,
     },
   });
 
@@ -275,47 +286,47 @@ export default function Meetings() {
   // Handle form submission
   const onSubmit = (data: MeetingFormValues) => {
     console.log("Form submission data:", data);
+    console.log("Form errors:", form.formState.errors);
     
-    // Validate required fields
-    if (!data.title || !data.meetingDate || !data.meetingTime) {
+    try {
+      // Combine date and time to create proper datetime
+      const meetingDateTime = new Date(`${data.meetingDate}T${data.meetingTime}`);
+      
+      if (isNaN(meetingDateTime.getTime())) {
+        throw new Error("Invalid date/time combination");
+      }
+      
+      const meetingData: InsertCrmMeeting = {
+        title: data.title,
+        description: data.description || "",
+        meetingType: data.meetingType || "in-person",
+        meetingDate: meetingDateTime,
+        duration: data.duration,
+        location: data.location || "",
+        status: data.status,
+        leadId: data.leadId || null,
+        corporateLeadId: data.corporateLeadId || null,
+        notes: data.description || "",
+        assignedTo: data.assignedTo,
+        createdBy: user?.id || 1,
+        notificationSent: data.sendNotification || false,
+        reminderScheduled: data.sendReminder || false,
+      };
+      
+      console.log("Meeting data to submit:", meetingData);
+      
+      if (isEditing && selectedMeeting) {
+        updateMeetingMutation.mutate({ id: selectedMeeting.id, meeting: meetingData });
+      } else {
+        createMeetingMutation.mutate(meetingData);
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
       toast({
-        title: "Validation Error",
-        description: "Title, date, and time are required fields",
+        title: "Submission Error",
+        description: error instanceof Error ? error.message : "Failed to process form data",
         variant: "destructive"
       });
-      return;
-    }
-    
-    // Combine date and time
-    const meetingDateTime = new Date(`${data.meetingDate}T${data.meetingTime}`);
-    
-    const meetingData = {
-      title: data.title,
-      description: data.description || "",
-      meetingType: "in-person", // Default meeting type
-      meetingDate: meetingDateTime,
-      duration: data.duration || 30,
-      location: data.location || "",
-      status: data.status || "scheduled",
-      leadId: data.leadId && data.leadId !== "none" ? data.leadId : null,
-      corporateLeadId: data.corporateLeadId && data.corporateLeadId !== "none" ? data.corporateLeadId : null,
-      notes: data.description || "",
-      assignedTo: data.assignedTo || user?.id || 1,
-      createdBy: user?.id || 1,
-      notificationSent: data.sendNotification || false,
-      reminderScheduled: data.sendReminder || false,
-      // Remove participant fields as they're not in the schema
-      // participantName: data.participantName || "",
-      // participantEmail: data.participantEmail || "",
-      // participantPhone: data.participantPhone || "",
-    };
-    
-    console.log("Meeting data to submit:", meetingData);
-    
-    if (isEditing && selectedMeeting) {
-      updateMeetingMutation.mutate({ id: selectedMeeting.id, meeting: meetingData });
-    } else {
-      createMeetingMutation.mutate(meetingData as InsertCrmMeeting);
     }
   };
 
@@ -596,7 +607,14 @@ export default function Meetings() {
           
           <div className="flex-1 overflow-y-auto px-1 py-4">
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                  console.log("Form validation errors:", errors);
+                  toast({
+                    title: "Form Validation Error",
+                    description: "Please check all required fields",
+                    variant: "destructive"
+                  });
+                })} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
