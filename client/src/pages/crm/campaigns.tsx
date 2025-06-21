@@ -284,38 +284,131 @@ export default function CampaignsPage() {
 
       {/* Create Campaign Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[525px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Create New Campaign</DialogTitle>
             <DialogDescription>
-              Set up a new marketing campaign. Fill in the details and click create when you're done.
+              Set up a new marketing campaign to promote your courses and reach potential students.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Campaign Name
-              </Label>
-              <Input
-                id="name"
-                placeholder="Summer Enrollment 2025"
-                className="col-span-3"
-              />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Campaign Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  placeholder="e.g., Spring Web Development Course Promotion"
+                  required
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  placeholder="Brief description of the campaign goals and strategy"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="platform">Platform *</Label>
+                  <Select value={formData.platform} onValueChange={(value) => handleInputChange("platform", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="meta-ads">Meta Ads (Facebook/Instagram)</SelectItem>
+                      <SelectItem value="google-ads">Google Ads</SelectItem>
+                      <SelectItem value="linkedin-ads">LinkedIn Ads</SelectItem>
+                      <SelectItem value="tiktok-ads">TikTok Ads</SelectItem>
+                      <SelectItem value="email">Email Marketing</SelectItem>
+                      <SelectItem value="organic-social">Organic Social Media</SelectItem>
+                      <SelectItem value="referral">Referral Program</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="planned">Planned</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="paused">Paused</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="targetAudience">Target Audience</Label>
+                <Input
+                  id="targetAudience"
+                  value={formData.targetAudience}
+                  onChange={(e) => handleInputChange("targetAudience", e.target.value)}
+                  placeholder="e.g., Young professionals, Students, Career changers"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="budget">Budget (AED)</Label>
+                <Input
+                  id="budget"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.budget}
+                  onChange={(e) => handleInputChange("budget", e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="startDate">Start Date *</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange("startDate", e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="endDate">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => handleInputChange("endDate", e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="platform" className="text-right">
-                Platform
-              </Label>
-              <Select>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select platform" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="facebook">Facebook</SelectItem>
-                  <SelectItem value="instagram">Instagram</SelectItem>
-                  <SelectItem value="linkedin">LinkedIn</SelectItem>
-                  <SelectItem value="google">Google Ads</SelectItem>
-                  <SelectItem value="email">Email Marketing</SelectItem>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpenDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createCampaignMutation.isPending}>
+                {createCampaignMutation.isPending ? "Creating..." : "Create Campaign"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
