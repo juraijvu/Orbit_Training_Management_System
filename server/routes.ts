@@ -3494,6 +3494,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Handle postType - convert array to string if needed
+      let postType = req.body.postType;
+      if (Array.isArray(postType)) {
+        postType = postType[0] || 'text'; // Take first item or default to 'text'
+      }
+      
       // Create post data matching the exact schema
       const postData = {
         title: req.body.title,
@@ -3501,7 +3507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mediaUrl: req.file ? `/uploads/crm-posts/${req.file.filename}` : req.body.mediaUrl || null,
         tags,
         category: req.body.category,
-        postType: req.body.postType,
+        postType: postType,
         isApproved: req.body.isApproved === 'true' || req.body.isApproved === true,
         approvedBy: req.body.approvedBy ? parseInt(req.body.approvedBy) : null,
         expiryDate: req.body.expiryDate ? new Date(req.body.expiryDate) : null,
@@ -3523,7 +3529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ 
           message: validationError.message,
           errors: error.errors,
-          receivedData: postData
+          receivedData: req.body // Use req.body instead of postData which may be out of scope
         });
       }
       
