@@ -2789,6 +2789,8 @@ export class DatabaseStorage implements IStorage {
     const leadWithDefaults = {
       ...lead,
       createdAt: new Date(),
+      lastContactDate: lead.lastContactDate ? (typeof lead.lastContactDate === 'string' ? new Date(lead.lastContactDate) : lead.lastContactDate) : new Date(),
+      nextFollowUpDate: lead.nextFollowUpDate ? (typeof lead.nextFollowUpDate === 'string' ? new Date(lead.nextFollowUpDate) : lead.nextFollowUpDate) : null,
       status: lead.status || "New",
       priority: lead.priority || "Medium",
       source: lead.source || null,

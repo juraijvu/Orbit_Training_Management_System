@@ -2514,12 +2514,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create lead
   app.post('/api/crm/leads', isAuthenticated, async (req, res) => {
     try {
-      const newLead = await storage.createLead({
+      const leadData = {
         ...req.body,
         createdBy: req.user!.id
-      });
+      };
+      
+      // Ensure required fields
+      if (!leadData.fullName || !leadData.phone) {
+        return res.status(400).json({ message: "Missing required fields: fullName and phone are required" });
+      }
+      
+      const newLead = await storage.createLead(leadData);
       res.status(201).json(newLead);
     } catch (error) {
+      console.error("Error creating lead:", error);
       res.status(500).json({ message: "Failed to create lead" });
     }
   });
