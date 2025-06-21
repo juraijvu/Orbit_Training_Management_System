@@ -190,29 +190,17 @@ const ProposalsPage: FC = () => {
     },
   });
   
-  // Create proposal mutation
+  // Create proposal mutation (keeping for button state management)
   const createProposalMutation = useMutation({
     mutationFn: async (data: ProposalFormValues) => {
       const res = await apiRequest('POST', '/api/proposals', data);
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/proposals'] });
-      setIsNewProposalOpen(false);
-      form.reset();
-      setLogoUrl(""); // Clear logo preview
-      
-      toast({
-        title: 'Success',
-        description: 'Proposal created successfully.',
-      });
+      // This won't be called since we're handling success in onSubmit
     },
     onError: (error) => {
-      toast({
-        title: 'Failed to create proposal',
-        description: error.message,
-        variant: 'destructive',
-      });
+      // This won't be called since we're handling errors in onSubmit
     },
   });
   
@@ -256,6 +244,7 @@ const ProposalsPage: FC = () => {
   const onSubmit = async (values: ProposalFormValues) => {
     try {
       console.log("Original form values:", values);
+      console.log("Form errors:", form.formState.errors);
       
       // Format data before submission
       const formattedValues = {
@@ -284,9 +273,25 @@ const ProposalsPage: FC = () => {
       delete (submitData as any).companyProfileFile;
       delete (submitData as any).logo;
       
-      // Submit the proposal
-      const newProposal = await createProposalMutation.mutateAsync(submitData);
+      // Submit the proposal directly using API request
+      const res = await apiRequest('POST', '/api/proposals', submitData);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to create proposal');
+      }
+      const newProposal = await res.json();
       console.log("Proposal created successfully:", newProposal);
+      
+      // Invalidate queries and close dialog
+      queryClient.invalidateQueries({ queryKey: ['/api/proposals'] });
+      setIsNewProposalOpen(false);
+      form.reset();
+      setLogoUrl("");
+      
+      toast({
+        title: 'Success',
+        description: 'Proposal created successfully.',
+      });
       
       // If we have a company profile file, upload it separately
       if (values.companyProfileFile) {
@@ -1066,9 +1071,9 @@ const ProposalsPage: FC = () => {
                 </Button>
                 <Button 
                   type="submit"
-                  disabled={createProposalMutation.isPending}
+                  disabled={form.formState.isSubmitting}
                 >
-                  {createProposalMutation.isPending ? (
+                  {form.formState.isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating...
