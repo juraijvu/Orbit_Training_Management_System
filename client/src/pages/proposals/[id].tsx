@@ -36,7 +36,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 const whiteLogoFilter = "brightness(0) invert(1)";
 
 const ProposalDetailPage: FC = () => {
-  const { id } = useParams();
+  const [match, params] = useRoute('/proposals/:id');
+  const id = params?.id;
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -54,9 +55,12 @@ const ProposalDetailPage: FC = () => {
   } = useQuery({
     queryKey: ['/api/proposals', id],
     queryFn: async () => {
+      if (!id) throw new Error('No proposal ID provided');
       const res = await apiRequest('GET', `/api/proposals/${id}`);
+      if (!res.ok) throw new Error('Proposal not found');
       return await res.json();
-    }
+    },
+    enabled: !!id
   });
   
   // Fetch related course for the proposal
@@ -372,6 +376,21 @@ const ProposalDetailPage: FC = () => {
   };
   
   // Render loading state
+  if (!match || !id) {
+    return (
+      <AppLayout>
+        <div className="text-center py-10">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Invalid Proposal URL</h3>
+          <p className="text-gray-500 mb-6">The proposal URL is not valid.</p>
+          <Button onClick={() => setLocation('/proposals')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Proposals
+          </Button>
+        </div>
+      </AppLayout>
+    );
+  }
+
   if (isLoading) {
     return (
       <AppLayout>
@@ -390,7 +409,7 @@ const ProposalDetailPage: FC = () => {
         <div className="text-center py-10">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Proposal Not Found</h3>
           <p className="text-gray-500 mb-6">The proposal you're looking for doesn't exist or you don't have permission to view it.</p>
-          <Button onClick={handleBack}>
+          <Button onClick={() => setLocation('/proposals')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Proposals
           </Button>

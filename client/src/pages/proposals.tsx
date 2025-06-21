@@ -219,9 +219,24 @@ const ProposalsPage: FC = () => {
       // Check if form is valid
       if (!form.formState.isValid) {
         console.error("Form validation failed:", form.formState.errors);
+        
+        // Create specific error messages for each invalid field
+        const errorFields = Object.entries(form.formState.errors).map(([field, error]) => {
+          const fieldNames: Record<string, string> = {
+            companyName: "Company Name",
+            contactPerson: "Contact Person", 
+            email: "Email",
+            phone: "Phone",
+            courseIds: "Course Selection",
+            totalAmount: "Total Amount",
+            trainerId: "Trainer Selection"
+          };
+          return fieldNames[field] || field;
+        });
+        
         toast({
           title: 'Validation Error',
-          description: 'Please fill in all required fields correctly.',
+          description: `Please check: ${errorFields.join(', ')}`,
           variant: 'destructive',
         });
         return;
