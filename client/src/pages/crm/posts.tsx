@@ -291,9 +291,11 @@ export default function Posts() {
       formData.append("category", data.category || "announcement");
       formData.append("postType", "text"); // Default post type
       
-      // Add optional fields
+      // Add optional fields - convert tags array to comma-separated string
       if (data.tags && data.tags.length > 0) {
         formData.append("tags", data.tags.join(","));
+      } else {
+        formData.append("tags", "");
       }
       
       if (data.expiryDate) {

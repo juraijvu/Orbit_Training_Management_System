@@ -3484,19 +3484,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle file upload
       const filePath = req.file ? `/uploads/crm-posts/${req.file.filename}` : null;
       
-      // Parse tags if present
+      // Parse tags if present - handle both string and array formats
       let tags: string[] = [];
       if (req.body.tags) {
-        tags = req.body.tags.split(',').map((tag: string) => tag.trim());
+        if (typeof req.body.tags === 'string') {
+          tags = req.body.tags.split(',').map((tag: string) => tag.trim()).filter(tag => tag.length > 0);
+        } else if (Array.isArray(req.body.tags)) {
+          tags = req.body.tags.map((tag: string) => tag.trim()).filter(tag => tag.length > 0);
+        }
       }
       
       // Create post with file path
       const postData = {
         ...req.body,
-        filePath,
+        mediaUrl: req.file ? `/uploads/crm-posts/${req.file.filename}` : req.body.mediaUrl || null,
         tags,
-        createdBy: req.user!.id
+        createdBy: req.user!.id,
+        expiryDate: req.body.expiryDate ? new Date(req.body.expiryDate) : null
       };
+      
+      // Remove filePath as it's not in the schema
+      delete postData.filePath;
       
       const validatedData = insertCrmPostSchema.parse(postData);
       const newPost = await storage.createCrmPost(validatedData);
