@@ -3106,10 +3106,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create meeting
   app.post('/api/crm/meetings', isAuthenticated, async (req, res) => {
     try {
-      const meetingData = insertCrmMeetingSchema.parse({
+      console.log("Received meeting data:", req.body);
+      
+      // Transform the data before validation
+      const transformedData = {
         ...req.body,
-        createdBy: req.user!.id
-      });
+        createdBy: req.user!.id,
+        // Ensure meetingDate is a proper Date object
+        meetingDate: new Date(req.body.meetingDate),
+        // Ensure numeric fields are numbers
+        duration: Number(req.body.duration),
+        assignedTo: Number(req.body.assignedTo),
+        leadId: req.body.leadId ? Number(req.body.leadId) : null,
+        corporateLeadId: req.body.corporateLeadId ? Number(req.body.corporateLeadId) : null,
+      };
+      
+      console.log("Transformed data:", transformedData);
+      
+      const meetingData = insertCrmMeetingSchema.parse(transformedData);
+      console.log("Validated meeting data:", meetingData);
       
       const newMeeting = await storage.createCrmMeeting(meetingData);
       res.status(201).json(newMeeting);
@@ -3117,6 +3132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error creating meeting:", error);
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
+        console.error("Validation error details:", error.errors);
         return res.status(400).json({ message: validationError.message });
       }
       res.status(500).json({ message: "Failed to create meeting" });

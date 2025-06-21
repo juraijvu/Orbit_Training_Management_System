@@ -800,8 +800,12 @@ export const insertCrmMeetingSchema = createInsertSchema(crmMeetings).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-  notificationSent: true,
-  reminderSent: true,
+}).extend({
+  meetingDate: z.date().or(z.string().transform(str => new Date(str))),
+  leadId: z.number().nullable().optional(),
+  corporateLeadId: z.number().nullable().optional(),
+  duration: z.number().min(1),
+  assignedTo: z.number().min(1),
 });
 
 export type InsertCrmMeeting = z.infer<typeof insertCrmMeetingSchema>;
