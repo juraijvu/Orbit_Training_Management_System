@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useParams, useLocation } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,7 +47,8 @@ const publicRegistrationSchema = z.object({
 type PublicRegistrationFormValues = z.infer<typeof publicRegistrationSchema>;
 
 export default function PublicRegistration() {
-  const params = useParams<{ token: string }>();
+  const [match, params] = useRoute('/register/:token');
+  const token = params?.token;
   const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -86,10 +87,10 @@ export default function PublicRegistration() {
 
   // Fetch registration details using the token
   const { data: registrationData, isLoading, error: fetchError } = useQuery({
-    queryKey: [`/api/register/${params.token}`],
+    queryKey: [`/api/register/${token}`],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/register/${params.token}`);
+        const response = await fetch(`/api/register/${token}`);
         if (!response.ok) {
           const errorData = await response.json();
           if (errorData.expired) {
@@ -105,13 +106,13 @@ export default function PublicRegistration() {
       }
     },
     retry: false,
-    enabled: !!params.token,
+    enabled: !!token,
   });
 
   // Registration submit mutation
   const submitMutation = useMutation({
     mutationFn: async (data: PublicRegistrationFormValues) => {
-      const response = await apiRequest("POST", `/api/register/${params.token}/submit`, data);
+      const response = await apiRequest("POST", `/api/register/${token}/submit`, data);
       return response.json();
     },
     onSuccess: (data) => {

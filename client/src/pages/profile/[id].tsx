@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -24,8 +24,8 @@ interface UserProfile {
 }
 
 export default function UserProfilePage() {
-  const params = useParams();
-  const id = params.id;
+  const [match, params] = useRoute('/profile/:id');
+  const id = params?.id;
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [profileData, setProfileData] = useState({

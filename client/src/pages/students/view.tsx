@@ -32,7 +32,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 export default function StudentDetailPage() {
-  const { id } = useParams();
+  const [match, params] = useRoute('/students/view/:id');
+  const id = params?.id;
   const [_, navigate] = useLocation();
   
   // Fetch student details
