@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useLocation } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { format } from "date-fns";
 import { Loader2, ArrowLeft, Printer, FileText, Edit, CreditCard } from "lucide-react";
 

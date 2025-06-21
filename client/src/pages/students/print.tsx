@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useParams, useLocation } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -7,7 +7,8 @@ import { Loader2, Printer, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function PrintRegistration() {
-  const { id } = useParams();
+  const [match, params] = useRoute('/students/print/:id');
+  const id = params?.id;
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);

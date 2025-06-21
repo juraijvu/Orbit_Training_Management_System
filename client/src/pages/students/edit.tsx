@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useParams, useLocation } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -63,7 +63,8 @@ const studentEditSchema = z.object({
 type StudentEditFormValues = z.infer<typeof studentEditSchema>;
 
 export default function EditStudentPage() {
-  const { id } = useParams();
+  const [match, params] = useRoute('/students/edit/:id');
+  const id = params?.id;
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   
