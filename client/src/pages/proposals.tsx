@@ -85,7 +85,7 @@ const proposalFormSchema = z.object({
   trainingLocation: z.string().optional(),
   trainerId: z.number().optional(),
   companyProfile: z.string().optional(),
-  companyProfileFile: z.any().optional(),
+  companyProfileFile: z.instanceof(File).optional(),
   coverBackgroundColor: z.string().default("#000000"),
   coverTextColor: z.string().default("#ffffff"),
 });
@@ -186,10 +186,9 @@ const ProposalsPage: FC = () => {
         return;
       }
       
-      // Create a URL for preview purposes
-      const url = URL.createObjectURL(file);
-      form.setValue('companyProfile', url);
+      // Store the actual file object
       form.setValue('companyProfileFile', file);
+      form.setValue('companyProfile', file.name);
       
       toast({
         title: 'File uploaded',
@@ -266,26 +265,31 @@ const ProposalsPage: FC = () => {
       });
       
       // If we have a company profile file, upload it separately
-      if (values.companyProfileFile) {
+      if (values.companyProfileFile && values.companyProfileFile instanceof File) {
         console.log("Uploading company profile file");
         const formData = new FormData();
         formData.append('companyProfileFile', values.companyProfileFile);
         
-        // Upload the file
-        const uploadRes = await apiRequest(
-          'POST', 
-          `/api/proposals/${newProposal.id}/upload-company-profile`, 
-          formData
-        );
-        
-        if (!uploadRes.ok) {
-          throw new Error('Failed to upload company profile file');
+        try {
+          // Upload the file
+          const uploadRes = await apiRequest(
+            'POST', 
+            `/api/proposals/${newProposal.id}/upload-company-profile`, 
+            formData
+          );
+          
+          if (!uploadRes.ok) {
+            console.warn('Failed to upload company profile file, but proposal was created successfully');
+          } else {
+            toast({
+              title: 'Company Profile Uploaded',
+              description: 'The company profile PDF has been uploaded successfully.',
+            });
+          }
+        } catch (uploadError) {
+          console.warn('Company profile upload failed:', uploadError);
+          // Don't fail the entire operation for file upload issues
         }
-        
-        toast({
-          title: 'Company Profile Uploaded',
-          description: 'The company profile PDF has been uploaded successfully.',
-        });
       }
     } catch (error: any) {
       console.error("Error in form submission:", error);
@@ -352,9 +356,9 @@ const ProposalsPage: FC = () => {
                   <Button variant="outline" size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // TODO: Implement print functionality
+                            setLocation(`/proposals/${proposal.id}`);
                           }}>
-                    Print
+                    View
                   </Button>
                 </div>
               </CardContent>
@@ -999,11 +1003,11 @@ const ProposalsPage: FC = () => {
                               <Upload className="mr-2 h-4 w-4" />
                               Upload Company Profile PDF
                             </Button>
-                            {field.value && (
+                            {form.getValues('companyProfileFile') && (
                               <div className="flex items-center justify-between p-2 border rounded-md mt-2">
                                 <div className="flex items-center">
                                   <FileText className="h-4 w-4 mr-2 text-primary" />
-                                  <span className="text-sm">Company Profile PDF</span>
+                                  <span className="text-sm">{form.getValues('companyProfileFile')?.name || 'Company Profile PDF'}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <Button
@@ -1014,6 +1018,9 @@ const ProposalsPage: FC = () => {
                                     onClick={() => {
                                       form.setValue('companyProfile', '');
                                       form.setValue('companyProfileFile', undefined);
+                                      if (companyProfileFileRef.current) {
+                                        companyProfileFileRef.current.value = '';
+                                      }
                                     }}
                                   >
                                     <X className="h-4 w-4" />
