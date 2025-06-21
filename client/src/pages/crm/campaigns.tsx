@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,16 @@ export default function CampaignsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [openDialog, setOpenDialog] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    platform: "",
+    targetAudience: "",
+    budget: "",
+    startDate: "",
+    endDate: "",
+    status: "draft"
+  });
 
   // Query to fetch campaigns
   const { 
@@ -59,6 +70,63 @@ export default function CampaignsPage() {
   } = useQuery({
     queryKey: ['/api/crm/campaigns'],
   });
+
+  // Create campaign mutation
+  const createCampaignMutation = useMutation({
+    mutationFn: async (campaignData: any) => {
+      const response = await apiRequest('POST', '/api/crm/campaigns', campaignData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Campaign created successfully",
+      });
+      setOpenDialog(false);
+      setFormData({
+        name: "",
+        description: "",
+        platform: "",
+        targetAudience: "",
+        budget: "",
+        startDate: "",
+        endDate: "",
+        status: "draft"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/crm/campaigns'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create campaign",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.platform || !formData.startDate) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createCampaignMutation.mutate({
+      ...formData,
+      budget: formData.budget ? parseFloat(formData.budget) : null,
+      startDate: new Date(formData.startDate),
+      endDate: formData.endDate ? new Date(formData.endDate) : null,
+    });
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">

@@ -2705,14 +2705,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create campaign
-  app.post('/api/crm/campaigns', isAdmin, async (req, res) => {
+  app.post('/api/crm/campaigns', isAuthenticated, async (req, res) => {
     try {
-      const newCampaign = await storage.createCampaign({
+      const campaignData = {
         ...req.body,
         createdBy: req.user!.id
-      });
+      };
+      
+      // Ensure required fields
+      if (!campaignData.name || !campaignData.platform || !campaignData.startDate) {
+        return res.status(400).json({ message: "Missing required fields: name, platform, and startDate are required" });
+      }
+      
+      const newCampaign = await storage.createCampaign(campaignData);
       res.status(201).json(newCampaign);
     } catch (error) {
+      console.error("Error creating campaign:", error);
       res.status(500).json({ message: "Failed to create campaign" });
     }
   });
