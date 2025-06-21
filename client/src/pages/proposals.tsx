@@ -57,59 +57,35 @@ import { format } from 'date-fns';
 
 // Define proposal form type
 // Custom Zod schema to handle numeric-to-string conversions
-const proposalFormSchema = insertProposalSchema.extend({
-  // Fix for numeric fields - convert to string for backend
-  totalAmount: z.union([
-    z.string(),
-    z.number().transform(val => String(val))
-  ]).pipe(z.string()),
+// Simplified form schema to avoid validation issues
+const proposalFormSchema = z.object({
+  companyName: z.string().min(1, "Company name is required"),
+  contactPerson: z.string().min(1, "Contact person is required"),
+  email: z.string().email("Invalid email format"),
+  phone: z.string().min(1, "Phone is required"),
+  courseIds: z.string().optional(),
+  totalAmount: z.string().default("0"),
+  discount: z.string().default("0"),
+  finalAmount: z.string().default("0"),
+  coverPage: z.string().optional(),
+  content: z.string().optional(),
+  status: z.string().default("draft"),
+  date: z.string().default(format(new Date(), 'yyyy-MM-dd')),
   
-  discount: z.union([
-    z.string(),
-    z.number().transform(val => String(val))
-  ]).pipe(z.string().default("0")),
-  
-  finalAmount: z.union([
-    z.string(),
-    z.number().transform(val => String(val))
-  ]).pipe(z.string()),
-
-  date: z.string().refine(val => {
-    try {
-      const date = new Date(val);
-      return !isNaN(date.getTime());
-    } catch {
-      return false;
-    }
-  }, {
-    message: "Please enter a valid date",
-  }),
-  
-  // Logo handling
-  logo: z.any().optional(), // To handle file upload
-  applyWhiteFilter: z.boolean().default(true), // Option to apply white filter to logo
-  
-  // Additional fields for the cover page
-  presenterName: z.string().min(1, "Presenter name is required"),
+  // Optional fields
+  logo: z.any().optional(),
+  applyWhiteFilter: z.boolean().default(true),
+  presenterName: z.string().optional(),
   presenterTitle: z.string().optional(),
-  presenterEmail: z.string().email("Invalid email format").optional(),
+  presenterEmail: z.string().optional(),
   presenterPhone: z.string().optional(),
-  
-  // Course details
-  courseIds: z.string().optional(), // Comma-separated course IDs
-  courseName: z.string().optional(), // For backward compatibility
+  courseName: z.string().optional(),
   courseFormat: z.string().optional(),
   trainingDuration: z.string().optional(),
   trainingLocation: z.string().optional(),
-  
-  // Trainer selection
   trainerId: z.number().optional(),
-  
-  // Company profile (last page)
   companyProfile: z.string().optional(),
-  companyProfileFile: z.instanceof(File).optional(),
-  
-  // Cover page customization
+  companyProfileFile: z.any().optional(),
   coverBackgroundColor: z.string().default("#000000"),
   coverTextColor: z.string().default("#ffffff"),
 });
@@ -155,8 +131,6 @@ const ProposalsPage: FC = () => {
       email: '',
       phone: '',
       courseIds: '',
-      courses: [],
-      // Note the conversion to strings for numerical fields
       totalAmount: '0',
       discount: '0',
       finalAmount: '0',
@@ -170,21 +144,15 @@ const ProposalsPage: FC = () => {
       ]),
       date: format(new Date(), 'yyyy-MM-dd'),
       status: 'draft',
-      applyWhiteFilter: true, // Default to applying white filter
-      
-      // New fields for presenter information
+      applyWhiteFilter: true,
       presenterName: user?.username || '',
       presenterTitle: 'Training Consultant',
       presenterEmail: '',
       presenterPhone: '',
-      
-      // Course details
       courseName: '',
       courseFormat: 'In-Person',
       trainingDuration: '5 Days',
       trainingLocation: 'Dubai, UAE',
-      
-      // Used for logo background and text color in preview
       coverBackgroundColor: '#000000',
       coverTextColor: '#ffffff',
     },
@@ -243,38 +211,42 @@ const ProposalsPage: FC = () => {
   // Handle form submission
   const onSubmit = async (values: ProposalFormValues) => {
     try {
+      console.log("Form submission started");
       console.log("Original form values:", values);
       console.log("Form errors:", form.formState.errors);
+      console.log("Form is valid:", form.formState.isValid);
+      
+      // Check if form is valid
+      if (!form.formState.isValid) {
+        console.error("Form validation failed:", form.formState.errors);
+        toast({
+          title: 'Validation Error',
+          description: 'Please fill in all required fields correctly.',
+          variant: 'destructive',
+        });
+        return;
+      }
       
       // Format data before submission
       const formattedValues = {
-        ...values,
-        // Ensure required fields are strings
         companyName: values.companyName || "",
         contactPerson: values.contactPerson || "",
         email: values.email || "",
         phone: values.phone || "",
         courseIds: values.courseIds || "",
-        // Convert numeric values to strings for the API
         totalAmount: String(values.totalAmount || 0),
         discount: String(values.discount || 0),
         finalAmount: String(values.finalAmount || 0),
-        // Content handling
         content: values.content || "{}",
         status: values.status || "draft",
-        // Date format
-        date: values.date || format(new Date(), 'yyyy-MM-dd')
+        date: values.date || format(new Date(), 'yyyy-MM-dd'),
+        coverPage: values.coverPage || ""
       };
       
       console.log("Submitting proposal with formatted data:", formattedValues);
       
-      // Prepare final submission object (removing file objects)
-      const submitData = {...formattedValues};
-      delete (submitData as any).companyProfileFile;
-      delete (submitData as any).logo;
-      
       // Submit the proposal directly using API request
-      const res = await apiRequest('POST', '/api/proposals', submitData);
+      const res = await apiRequest('POST', '/api/proposals', formattedValues);
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Failed to create proposal');
