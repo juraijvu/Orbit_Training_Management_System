@@ -1573,9 +1573,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract items for later use
       const { items, ...quotationData } = req.body;
       
-      // Generate quotation number
+      // Generate unique quotation number
       const quotations = await storage.getQuotations();
-      const quotationNumber = generateId('QUOT', quotations.length + 1);
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      
+      // Generate a unique quotation number with timestamp to avoid duplicates
+      const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp
+      const quotationNumber = `QUOT-${year}${month}${day}-${timestamp}`;
       
       // BYPASS VALIDATION COMPLETELY and use a direct query to insert the quotation
       // This is a workaround for the validation issue

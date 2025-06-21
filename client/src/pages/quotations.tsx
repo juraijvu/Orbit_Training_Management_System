@@ -263,7 +263,7 @@ const QuotationsPage: FC = () => {
   // Update quotation status mutation
   const updateQuotationMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number, status: string }) => {
-      const res = await apiRequest('PATCH', `/api/quotations/${id}`, { status });
+      const res = await apiRequest('PATCH', `/api/quotations/${id}`, { quotation: { status } });
       return await res.json();
     },
     onSuccess: () => {
