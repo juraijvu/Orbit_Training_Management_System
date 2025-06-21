@@ -1954,9 +1954,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Received proposal data:", req.body);
       
-      // Add the user ID and generate proposal number
-      const proposals = await storage.getProposals();
-      const proposalNumber = generateId('PROP', proposals.length + 1);
+      // Generate unique proposal number with timestamp
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      
+      // Generate a unique proposal number with timestamp to avoid duplicates
+      const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp
+      const proposalNumber = `PROP-${year}${month}${day}-${timestamp}`;
       
       // Bypass validation using direct SQL
       const rawProposalData = {
@@ -1966,13 +1972,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: req.body.email,
         phone: req.body.phone,
         course_ids: req.body.courseIds || "",
+        trainer_id: req.body.trainerId || null,
         total_amount: req.body.totalAmount || "0",
         discount: req.body.discount || "0",
         final_amount: req.body.finalAmount || "0",
         cover_page: req.body.coverPage || "",
         content: req.body.content || "{}",
-        company_profile_filename: req.body.companyProfileFilename || null,
-        company_profile_mime_type: req.body.companyProfileMimeType || null,
+        company_profile: null,
+        company_profile_filename: null,
+        company_profile_mime_type: null,
         status: req.body.status || "draft",
         created_by: req.user!.id,
         created_at: new Date()
