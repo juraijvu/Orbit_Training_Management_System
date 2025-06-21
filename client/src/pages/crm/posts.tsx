@@ -277,34 +277,59 @@ export default function Posts() {
 
   // Handle form submission
   const onSubmit = (data: PostFormValues) => {
-    // Create FormData object for file upload
-    const formData = new FormData();
+    console.log("Form submission data:", data);
+    console.log("Form errors:", form.formState.errors);
     
-    // Add all form fields to FormData
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        if (Array.isArray(value)) {
-          formData.append(key, JSON.stringify(value));
-        } else if (key === "expiryDate" && value) {
-          formData.append(key, new Date(value).toISOString());
-        } else {
-          formData.append(key, String(value));
-        }
+    try {
+      // Create FormData object for file upload
+      const formData = new FormData();
+      
+      // Add required fields
+      formData.append("title", data.title || "");
+      formData.append("content", data.content || "");
+      formData.append("category", data.category || "announcement");
+      formData.append("postType", "text"); // Default post type
+      
+      // Add optional fields
+      if (data.tags && data.tags.length > 0) {
+        formData.append("tags", data.tags.join(","));
       }
-    });
-    
-    // Add file if it exists
-    if (mediaFile) {
-      formData.append("file", mediaFile);
-    }
-    
-    // Set createdBy to current user
-    formData.append("createdBy", String(user?.id));
-    
-    if (isEditing && selectedPost) {
-      updatePostMutation.mutate({ id: selectedPost.id, postData: formData });
-    } else {
-      createPostMutation.mutate(formData);
+      
+      if (data.expiryDate) {
+        formData.append("expiryDate", new Date(data.expiryDate).toISOString());
+      }
+      
+      // Add boolean fields
+      formData.append("downloadable", String(data.downloadable || false));
+      formData.append("shareable", String(data.shareable || false));
+      
+      // Add file if it exists
+      if (mediaFile) {
+        formData.append("file", mediaFile);
+        formData.append("postType", mediaFile.type.startsWith("image/") ? "image" : 
+                                   mediaFile.type.startsWith("video/") ? "video" : "document");
+      }
+      
+      // Set createdBy to current user
+      formData.append("createdBy", String(user?.id || 1));
+      
+      console.log("FormData entries:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
+      if (isEditing && selectedPost) {
+        updatePostMutation.mutate({ id: selectedPost.id, postData: formData });
+      } else {
+        createPostMutation.mutate(formData);
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast({
+        title: "Submission Error",
+        description: error instanceof Error ? error.message : "Failed to process form data",
+        variant: "destructive"
+      });
     }
   };
 
@@ -710,7 +735,14 @@ export default function Posts() {
           <ScrollArea className="max-h-[70vh] overflow-auto">
             <div className="p-1">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                  console.log("Form validation errors:", errors);
+                  toast({
+                    title: "Form Validation Error",
+                    description: "Please check all required fields",
+                    variant: "destructive"
+                  });
+                })} className="space-y-6">
                   <FormField
                     control={form.control}
                     name="title"
