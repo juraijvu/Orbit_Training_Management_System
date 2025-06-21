@@ -357,9 +357,9 @@ export default function CorporateLeads() {
     // Search by name, company, email, phone
     const searchMatch = searchTerm === "" || 
       lead.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.phone?.includes(searchTerm) ||
+      lead.primaryContactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.primaryContactEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.primaryContactPhone?.includes(searchTerm) ||
       lead.industry?.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Filter by tab
@@ -371,7 +371,7 @@ export default function CorporateLeads() {
     } else if (activeTab === "proposal") {
       tabMatch = lead.proposalStatus === "sent" || lead.proposalStatus === "in_progress";
     } else if (activeTab !== "all") {
-      tabMatch = lead.status === activeTab;
+      tabMatch = lead.leadStatus === activeTab;
     }
     
     return searchMatch && tabMatch;
@@ -545,23 +545,23 @@ export default function CorporateLeads() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{lead.contactPerson}</span>
-                    {lead.position && (
-                      <span className="text-xs text-muted-foreground">{lead.position}</span>
+                    <span className="text-sm font-medium">{lead.primaryContactName}</span>
+                    {lead.primaryContactTitle && (
+                      <span className="text-xs text-muted-foreground">{lead.primaryContactTitle}</span>
                     )}
                   </div>
                   
-                  {lead.phone && (
+                  {lead.primaryContactPhone && (
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{lead.phone}</span>
+                      <span className="text-sm">{lead.primaryContactPhone}</span>
                     </div>
                   )}
                   
-                  {lead.email && (
+                  {lead.primaryContactEmail && (
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm truncate">{lead.email}</span>
+                      <span className="text-sm truncate">{lead.primaryContactEmail}</span>
                     </div>
                   )}
                 </div>
@@ -587,19 +587,15 @@ export default function CorporateLeads() {
                 )}
               </CardContent>
               <CardFooter className="flex flex-wrap gap-2">
-                <Badge className={getStatusColor(lead.status)}>
-                  {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
+                <Badge className={getStatusColor(lead.leadStatus)}>
+                  {lead.leadStatus.charAt(0).toUpperCase() + lead.leadStatus.slice(1)}
                 </Badge>
                 
                 <Badge className={getPriorityColor(lead.priority)}>
                   {lead.priority.charAt(0).toUpperCase() + lead.priority.slice(1)} Priority
                 </Badge>
                 
-                {lead.proposalStatus !== "none" && (
-                  <Badge className={getProposalStatusColor(lead.proposalStatus)}>
-                    Proposal: {lead.proposalStatus.replace("_", " ").charAt(0).toUpperCase() + lead.proposalStatus.replace("_", " ").slice(1)}
-                  </Badge>
-                )}
+
               </CardFooter>
             </Card>
           ))}
@@ -786,167 +782,6 @@ export default function CorporateLeads() {
                             <FormMessage />
                           </FormItem>
                         )}
-                      />
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="companyName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Company Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter company name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="industry"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Industry</FormLabel>
-                            <FormControl>
-                              <Select value={field.value || ""} onValueChange={field.onChange}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select industry" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {industryOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="website"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Website</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Company website" {...field} value={field.value || ""} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="employeeCount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Employees</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="Number of employees" 
-                                {...field}
-                                value={field.value || ""}
-                                onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Address</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Company address" 
-                              {...field}
-                              value={field.value || ""}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-medium">Contact Information</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="contactPerson"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Contact Person</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Name of contact person" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="position"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Position</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Job title or position" {...field} value={field.value || ""} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Email address" type="email" {...field} value={field.value || ""} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="primaryContactPhone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Phone number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
                   </div>
                   
@@ -1008,33 +843,6 @@ export default function CorporateLeads() {
                       
                       <FormField
                         control={form.control}
-                        name="proposalStatus"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Proposal Status</FormLabel>
-                            <FormControl>
-                              <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select proposal status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {proposalStatusOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
                         name="assignedTo"
                         render={({ field }) => (
                           <FormItem>
@@ -1060,36 +868,16 @@ export default function CorporateLeads() {
                           </FormItem>
                         )}
                       />
-                      
-                      <FormField
-                        control={form.control}
-                        name="leadSource"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lead Source</FormLabel>
-                            <FormControl>
-                              <Input placeholder="How did you find this lead?" {...field} value={field.value || ""} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
                     
                     <FormField
                       control={form.control}
-                      name="annualRevenue"
+                      name="leadSource"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Annual Revenue (in AED)</FormLabel>
+                          <FormLabel>Lead Source</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="Estimated annual revenue" 
-                              {...field}
-                              value={field.value || ""}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
+                            <Input placeholder="How did you find this lead?" {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
