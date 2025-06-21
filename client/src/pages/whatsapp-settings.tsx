@@ -84,7 +84,7 @@ export default function WhatsappSettingsPage() {
 
   // Create or update API settings
   const saveMutation = useMutation({
-    mutationFn: async (settings) => {
+    mutationFn: async (settings: any) => {
       const res = await apiRequest(
         "POST", 
         "/api/whatsapp/settings", 
@@ -145,7 +145,7 @@ export default function WhatsappSettingsPage() {
 
   // Delete template
   const deleteTemplateMutation = useMutation({
-    mutationFn: async (id) => {
+    mutationFn: async (id: number) => {
       const res = await apiRequest(
         "DELETE", 
         `/api/whatsapp/templates/${id}`
@@ -183,34 +183,34 @@ export default function WhatsappSettingsPage() {
   }, [whatsappSettings]);
 
   // Input change handlers
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleTemplateInputChange = (e) => {
+  const handleTemplateInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setTemplateForm({ ...templateForm, [name]: value });
   };
 
-  const handleSwitchChange = (checked) => {
+  const handleSwitchChange = (checked: boolean) => {
     setFormData({ ...formData, isActive: checked });
   };
 
-  const handleTemplateSwitchChange = (checked) => {
+  const handleTemplateSwitchChange = (checked: boolean) => {
     setTemplateForm({ ...templateForm, isActive: checked });
   };
 
-  const handleSelectChange = (value) => {
+  const handleSelectChange = (value: string) => {
     setTemplateForm({ ...templateForm, type: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     saveMutation.mutate(formData);
   };
 
-  const handleTemplateSubmit = (e) => {
+  const handleTemplateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createTemplateMutation.mutate({
       ...templateForm,
@@ -218,7 +218,7 @@ export default function WhatsappSettingsPage() {
     });
   };
 
-  const handleDeleteTemplate = (id) => {
+  const handleDeleteTemplate = (id: number) => {
     if (confirm("Are you sure you want to delete this template?")) {
       deleteTemplateMutation.mutate(id);
     }

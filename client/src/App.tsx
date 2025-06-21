@@ -68,6 +68,14 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <ProtectedRoute path="/proposals/:id/edit" component={() => {
+          const ProposalEditPage = React.lazy(() => import("@/pages/proposals/edit"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ProposalEditPage />
+            </React.Suspense>
+          );
+        }} />
         <ProtectedRoute path="/proposal-templates" component={ProposalTemplates} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/settings/crm" component={() => {
