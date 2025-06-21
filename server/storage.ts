@@ -195,9 +195,13 @@ export interface IStorage {
   
   // CRM Meetings
   getCrmMeetings(): Promise<CrmMeeting[]>;
+  getCrmMeeting(id: number): Promise<CrmMeeting | undefined>;
   getCrmMeetingsByLeadId(leadId: number): Promise<CrmMeeting[]>;
   getCrmMeetingsByCorporateLeadId(corporateLeadId: number): Promise<CrmMeeting[]>;
   getCrmMeetingsByAssignedTo(userId: number): Promise<CrmMeeting[]>;
+  createCrmMeeting(meeting: InsertCrmMeeting): Promise<CrmMeeting>;
+  updateCrmMeeting(id: number, meeting: Partial<CrmMeeting>): Promise<CrmMeeting | undefined>;
+  deleteCrmMeeting(id: number): Promise<boolean>;
   getCrmMeetingsByDate(date: Date): Promise<CrmMeeting[]>;
   getCrmMeetingsByStatus(status: string): Promise<CrmMeeting[]>;
   getCrmMeeting(id: number): Promise<CrmMeeting | undefined>;
@@ -3426,6 +3430,16 @@ export class DatabaseStorage implements IStorage {
     };
     const result = await db.update(crmMeetings).set(updatedData).where(eq(crmMeetings.id, id)).returning();
     return result[0];
+  }
+
+  async deleteCrmMeeting(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crmMeetings).where(eq(crmMeetings.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting CRM meeting:", error);
+      return false;
+    }
   }
 
   async deleteCrmMeeting(id: number): Promise<boolean> {

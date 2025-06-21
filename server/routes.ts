@@ -3076,6 +3076,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================== CRM - Meetings API ==================
+  // Get all meetings
+  app.get('/api/crm/meetings', isAuthenticated, async (req, res) => {
+    try {
+      const meetings = await storage.getCrmMeetings();
+      res.json(meetings);
+    } catch (error) {
+      console.error("Error fetching meetings:", error);
+      res.status(500).json({ message: "Failed to fetch meetings" });
+    }
+  });
+
+  // Get meeting by ID
+  app.get('/api/crm/meetings/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const meeting = await storage.getCrmMeeting(id);
+      if (!meeting) {
+        return res.status(404).json({ message: "Meeting not found" });
+      }
+      res.json(meeting);
+    } catch (error) {
+      console.error("Error fetching meeting:", error);
+      res.status(500).json({ message: "Failed to fetch meeting" });
+    }
+  });
+
+  // Create meeting
+  app.post('/api/crm/meetings', isAuthenticated, async (req, res) => {
+    try {
+      const meetingData = insertCrmMeetingSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      
+      const newMeeting = await storage.createCrmMeeting(meetingData);
+      res.status(201).json(newMeeting);
+    } catch (error) {
+      console.error("Error creating meeting:", error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to create meeting" });
+    }
+  });
+
+  // Update meeting
+  app.patch('/api/crm/meetings/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingMeeting = await storage.getCrmMeeting(id);
+      if (!existingMeeting) {
+        return res.status(404).json({ message: "Meeting not found" });
+      }
+      
+      const updatedMeeting = await storage.updateCrmMeeting(id, req.body);
+      res.json(updatedMeeting);
+    } catch (error) {
+      console.error("Error updating meeting:", error);
+      res.status(500).json({ message: "Failed to update meeting" });
+    }
+  });
+
+  // Delete meeting
+  app.delete('/api/crm/meetings/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existingMeeting = await storage.getCrmMeeting(id);
+      if (!existingMeeting) {
+        return res.status(404).json({ message: "Meeting not found" });
+      }
+      
+      const result = await storage.deleteCrmMeeting(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete meeting" });
+      }
+    } catch (error) {
+      console.error("Error deleting meeting:", error);
+      res.status(500).json({ message: "Failed to delete meeting" });
+    }
+  });
+
+  // Send meeting reminder
+  app.post('/api/crm/meetings/:id/send-reminder', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const meeting = await storage.getCrmMeeting(id);
+      if (!meeting) {
+        return res.status(404).json({ message: "Meeting not found" });
+      }
+      
+      // Update reminder status
+      await storage.updateCrmMeeting(id, { reminderSent: true });
+      
+      res.json({ message: "Reminder sent successfully" });
+    } catch (error) {
+      console.error("Error sending reminder:", error);
+      res.status(500).json({ message: "Failed to send reminder" });
+    }
+  });
+
   // ================== WhatsApp API ==================
   // Get WhatsApp API settings
   app.get('/api/whatsapp/settings', isAdmin, async (req, res) => {

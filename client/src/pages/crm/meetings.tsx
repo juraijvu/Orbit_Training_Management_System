@@ -274,18 +274,43 @@ export default function Meetings() {
 
   // Handle form submission
   const onSubmit = (data: MeetingFormValues) => {
+    console.log("Form submission data:", data);
+    
+    // Validate required fields
+    if (!data.title || !data.meetingDate || !data.meetingTime) {
+      toast({
+        title: "Validation Error",
+        description: "Title, date, and time are required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Combine date and time
     const meetingDateTime = new Date(`${data.meetingDate}T${data.meetingTime}`);
     
     const meetingData = {
-      ...data,
+      title: data.title,
+      description: data.description || "",
+      meetingType: "in-person", // Default meeting type
       meetingDate: meetingDateTime,
-      sendNotification: data.sendNotification || false,
-      sendReminder: data.sendReminder || false,
-      notificationMethod: sendWhatsApp ? "whatsapp" : sendEmail ? "email" : "none",
+      duration: data.duration || 30,
+      location: data.location || "",
+      status: data.status || "scheduled",
+      leadId: data.leadId && data.leadId !== "none" ? data.leadId : null,
+      corporateLeadId: data.corporateLeadId && data.corporateLeadId !== "none" ? data.corporateLeadId : null,
+      notes: data.description || "",
+      assignedTo: data.assignedTo || user?.id || 1,
+      createdBy: user?.id || 1,
+      notificationSent: data.sendNotification || false,
+      reminderScheduled: data.sendReminder || false,
+      // Remove participant fields as they're not in the schema
+      // participantName: data.participantName || "",
+      // participantEmail: data.participantEmail || "",
+      // participantPhone: data.participantPhone || "",
     };
     
-    delete meetingData.meetingTime;
+    console.log("Meeting data to submit:", meetingData);
     
     if (isEditing && selectedMeeting) {
       updateMeetingMutation.mutate({ id: selectedMeeting.id, meeting: meetingData });
