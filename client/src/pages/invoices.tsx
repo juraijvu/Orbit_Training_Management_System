@@ -162,11 +162,11 @@ const InvoicesPage: FC = () => {
   useEffect(() => {
     if (watchedStudentId) {
       const student = students?.find(s => s.id === Number(watchedStudentId));
-      if (student) {
+      if (student && student.balanceDue) {
         form.setValue('amount', student.balanceDue.toString());
       }
     }
-  }, [watchedStudentId, students]);
+  }, [watchedStudentId, students, form]);
   
   // Create invoice mutation
   const invoiceMutation = useMutation({
@@ -784,10 +784,10 @@ const InvoicesPage: FC = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={PaymentMode.CASH}>Cash</SelectItem>
-                          <SelectItem value={PaymentMode.UPI}>UPI</SelectItem>
-                          <SelectItem value={PaymentMode.BANK_TRANSFER}>Bank Transfer</SelectItem>
-                          <SelectItem value={PaymentMode.CHEQUE}>Cheque</SelectItem>
+                          <SelectItem value="cash">Cash</SelectItem>
+                          <SelectItem value="upi">UPI</SelectItem>
+                          <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                          <SelectItem value="cheque">Cheque</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -901,9 +901,9 @@ const InvoicesPage: FC = () => {
                 <div className="flex flex-col md:flex-row justify-between mb-6">
                   <div>
                     <p className="font-semibold">Invoice To:</p>
-                    <p>{selectedInvoice.student.fullName}</p>
-                    <p>{selectedInvoice.student.address}</p>
-                    <p>Phone: {selectedInvoice.student.phone}</p>
+                    <p>{`${selectedInvoice.student.firstName} ${selectedInvoice.student.lastName}`}</p>
+                    <p>{selectedInvoice.student.address || 'Address not provided'}</p>
+                    <p>Phone: {selectedInvoice.student.phoneNo || selectedInvoice.student.phone}</p>
                   </div>
                   <div className="mt-4 md:mt-0">
                     <p><span className="font-semibold">Invoice No:</span> {selectedInvoice.invoiceNumber}</p>
