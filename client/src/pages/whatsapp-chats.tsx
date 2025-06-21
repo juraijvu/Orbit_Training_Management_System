@@ -173,23 +173,33 @@ export default function WhatsappChatsPage() {
         {/* Chat List */}
         <Card className="lg:col-span-1">
           <CardHeader className="p-3">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="assigned">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium">Conversations</h3>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={activeTab === "assigned" ? "default" : "outline"}
+                  onClick={() => setActiveTab("assigned")}
+                >
                   My Chats {assignedChats.length > 0 && <Badge className="ml-1">{assignedChats.length}</Badge>}
-                </TabsTrigger>
+                </Button>
                 {(user?.role === "admin" || user?.role === "superadmin") && (
-                  <TabsTrigger value="unassigned">
+                  <Button
+                    size="sm"
+                    variant={activeTab === "unassigned" ? "default" : "outline"}
+                    onClick={() => setActiveTab("unassigned")}
+                  >
                     Unassigned {unassignedChats.length > 0 && <Badge variant="secondary" className="ml-1">{unassignedChats.length}</Badge>}
-                  </TabsTrigger>
+                  </Button>
                 )}
-              </TabsList>
-            </Tabs>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="h-[calc(100vh-240px)]">
-              <TabsContent value="assigned" className="mt-0">
-                {isLoadingChats ? (
+              {activeTab === "assigned" && (
+                <div>
+                  {isLoadingChats ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   </div>
@@ -232,10 +242,12 @@ export default function WhatsappChatsPage() {
                       );
                     })}
                   </div>
-                )}
-              </TabsContent>
+                  )}
+                </div>
+              )}
               
-              <TabsContent value="unassigned" className="mt-0">
+              {activeTab === "unassigned" && (
+                <div>
                 {isLoadingChats ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -277,8 +289,9 @@ export default function WhatsappChatsPage() {
                       );
                     })}
                   </div>
-                )}
-              </TabsContent>
+                  )}
+                </div>
+              )}
             </ScrollArea>
           </CardContent>
         </Card>
