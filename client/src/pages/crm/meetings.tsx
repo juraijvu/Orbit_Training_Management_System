@@ -694,15 +694,15 @@ export default function Meetings() {
                             <Select
                               value={field.value?.toString() || ""}
                               onValueChange={(value) => {
-                                field.onChange(value ? parseInt(value) : null);
-                                if (value) handleLeadSelect(value);
+                                field.onChange(value && value !== "none" ? parseInt(value) : null);
+                                if (value && value !== "none") handleLeadSelect(value);
                               }}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a lead (optional)" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">None</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
                                 {leads.map((lead: any) => (
                                   <SelectItem key={lead.id} value={lead.id.toString()}>
                                     {lead.name} ({lead.phone})
@@ -729,15 +729,15 @@ export default function Meetings() {
                             <Select
                               value={field.value?.toString() || ""}
                               onValueChange={(value) => {
-                                field.onChange(value ? parseInt(value) : null);
-                                if (value) handleCorporateLeadSelect(value);
+                                field.onChange(value && value !== "none" ? parseInt(value) : null);
+                                if (value && value !== "none") handleCorporateLeadSelect(value);
                               }}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a company (optional)" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">None</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
                                 {corporateLeads.map((lead: any) => (
                                   <SelectItem key={lead.id} value={lead.id.toString()}>
                                     {lead.companyName}
