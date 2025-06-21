@@ -62,6 +62,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const postFormSchema = insertCrmPostSchema.extend({
   title: z.string().min(2, { message: "Title is required" }),
   category: z.string().min(1, { message: "Category is required" }),
+  expiryDate: z.string().optional().transform((val) => val ? new Date(val) : null),
 });
 
 type PostFormValues = z.infer<typeof postFormSchema>;
@@ -260,7 +261,7 @@ export default function Posts() {
       mediaUrl: "",
       downloadable: true,
       shareable: true,
-      expiryDate: null,
+      expiryDate: "",
     },
   });
 
