@@ -855,7 +855,7 @@ export default function CorporateLeads() {
                               placeholder="Estimated annual revenue" 
                               {...field}
                               value={field.value || ""}
-                              onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormMessage />

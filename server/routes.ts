@@ -2629,16 +2629,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create corporate lead
   app.post('/api/crm/corporate-leads', isAuthenticated, async (req, res) => {
     try {
-      const validatedData = insertCorporateLeadSchema.parse({
+      console.log("Received corporate lead data:", req.body);
+      
+      // Transform data to ensure proper types
+      const transformedData = {
         ...req.body,
-        createdBy: req.user!.id
-      });
+        createdBy: req.user!.id,
+        // Ensure annualRevenue is a string
+        annualRevenue: req.body.annualRevenue ? String(req.body.annualRevenue) : null,
+        // Ensure numeric fields are numbers
+        employeeCount: req.body.employeeCount ? Number(req.body.employeeCount) : null,
+        assignedTo: Number(req.body.assignedTo),
+      };
+      
+      console.log("Transformed corporate lead data:", transformedData);
+      
+      const validatedData = insertCorporateLeadSchema.parse(transformedData);
       
       const newLead = await storage.createCorporateLead(validatedData);
       res.status(201).json(newLead);
     } catch (error) {
+      console.error("Error creating corporate lead:", error);
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
+        console.error("Validation error details:", error.errors);
         return res.status(400).json({ message: validationError.message });
       }
       
