@@ -63,6 +63,9 @@ const postFormSchema = insertCrmPostSchema.extend({
   title: z.string().min(2, { message: "Title is required" }),
   category: z.string().min(1, { message: "Category is required" }),
   expiryDate: z.string().optional().transform((val) => val ? new Date(val) : null),
+}).omit({
+  postType: true,
+  createdBy: true,
 });
 
 type PostFormValues = z.infer<typeof postFormSchema>;
@@ -259,8 +262,6 @@ export default function Posts() {
       category: "announcement",
       tags: [],
       mediaUrl: "",
-      downloadable: true,
-      shareable: true,
       expiryDate: "",
     },
   });
@@ -299,9 +300,11 @@ export default function Posts() {
         formData.append("expiryDate", new Date(data.expiryDate).toISOString());
       }
       
-      // Add boolean fields
-      formData.append("downloadable", String(data.downloadable || false));
-      formData.append("shareable", String(data.shareable || false));
+      // Add approval fields (defaults)
+      formData.append("isApproved", "false");
+      if (user?.id) {
+        formData.append("approvedBy", String(user.id));
+      }
       
       // Add file if it exists
       if (mediaFile) {
@@ -882,53 +885,7 @@ export default function Posts() {
                       )}
                     </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <FormLabel>Post Settings</FormLabel>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="downloadable"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">Allow Downloads</FormLabel>
-                              <FormDescription>
-                                Let users download attached files
-                              </FormDescription>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="shareable"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">Allow Sharing</FormLabel>
-                              <FormDescription>
-                                Let users share this post
-                              </FormDescription>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
+
 
                   <DialogFooter>
                     <Button
