@@ -260,10 +260,17 @@ export default function LeadsPage() {
     if (editMode && selectedLead) {
       updateLeadMutation.mutate({ 
         id: selectedLead.id, 
-        data: formData 
+        data: {
+          ...formData,
+          interestedCourses: formData.interestedCourse ? `[${formData.interestedCourse}]` : "[]"
+        }
       });
     } else {
-      createLeadMutation.mutate(formData);
+      createLeadMutation.mutate({
+        ...formData,
+        consultantId: user?.id || 1, // Use current user ID as consultant
+        interestedCourses: formData.interestedCourse ? `[${formData.interestedCourse}]` : "[]"
+      });
     }
   };
   

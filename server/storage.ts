@@ -2789,15 +2789,16 @@ export class DatabaseStorage implements IStorage {
     const leadWithDefaults = {
       ...lead,
       createdAt: new Date(),
+      consultantId: lead.consultantId || lead.createdBy || 1, // Default to createdBy user or fallback to user 1
       lastContactDate: lead.lastContactDate ? (typeof lead.lastContactDate === 'string' ? new Date(lead.lastContactDate) : lead.lastContactDate) : new Date(),
       nextFollowUpDate: lead.nextFollowUpDate ? (typeof lead.nextFollowUpDate === 'string' ? new Date(lead.nextFollowUpDate) : lead.nextFollowUpDate) : null,
       status: lead.status || "New",
       priority: lead.priority || "Medium",
-      source: lead.source || null,
+      source: lead.source || "website",
       notes: lead.notes || null,
       email: lead.email || null,
       whatsappNumber: lead.whatsappNumber || null,
-      assignedTo: lead.assignedTo || lead.consultantId
+      assignedTo: lead.assignedTo || lead.consultantId || lead.createdBy
     };
     const result = await db.insert(leads).values(leadWithDefaults).returning();
     return result[0];
