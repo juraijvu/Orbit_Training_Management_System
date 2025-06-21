@@ -107,10 +107,16 @@ export default function CorporateLeads() {
   // Create corporate lead mutation
   const createCorporateLeadMutation = useMutation({
     mutationFn: async (lead: InsertCorporateLead) => {
+      console.log("Sending corporate lead data to API:", lead);
       const res = await apiRequest("POST", "/api/crm/corporate-leads", lead);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
+      }
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Corporate lead created successfully:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/crm/corporate-leads"] });
       toast({
         title: "Corporate Lead Created",
@@ -120,6 +126,7 @@ export default function CorporateLeads() {
       form.reset();
     },
     onError: (error: any) => {
+      console.error("Corporate lead creation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create corporate lead",
@@ -182,24 +189,20 @@ export default function CorporateLeads() {
     resolver: zodResolver(corporateLeadFormSchema),
     defaultValues: {
       companyName: "",
-      contactPerson: "",
-      position: "",
-      email: "",
-      phone: "",
+      primaryContactName: "",
+      primaryContactTitle: "",
+      primaryContactEmail: "",
+      primaryContactPhone: "",
       address: "",
       website: "",
       industry: "",
       employeeCount: null,
-      annualRevenue: null,
-      source: "",
-      status: "new",
+      annualRevenue: "",
+      leadSource: "",
+      leadStatus: "new",
       priority: "medium",
       assignedTo: user?.id,
       notes: "",
-      interestedCourses: [],
-      proposalStatus: "none",
-      proposalSent: false,
-      tags: [],
     },
   });
 
@@ -213,10 +216,66 @@ export default function CorporateLeads() {
 
   // Handle form submission
   const onSubmit = (data: CorporateLeadFormValues) => {
-    if (isEditing && selectedLead) {
-      updateCorporateLeadMutation.mutate({ id: selectedLead.id, lead: data });
-    } else {
-      createCorporateLeadMutation.mutate(data as InsertCorporateLead);
+    console.log("Form submission data:", data);
+    console.log("Form errors:", form.formState.errors);
+    
+    try {
+      // Validate required fields
+      if (!data.companyName || !data.primaryContactName || !data.primaryContactPhone) {
+        toast({
+          title: "Validation Error",
+          description: "Company name, contact name, and phone are required fields",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Transform data for submission
+      const submitData = {
+        companyName: data.companyName,
+        industry: data.industry || null,
+        website: data.website || null,
+        employeeCount: data.employeeCount || null,
+        annualRevenue: data.annualRevenue || null,
+        address: data.address || null,
+        city: null,
+        country: null,
+        primaryContactName: data.primaryContactName,
+        primaryContactTitle: data.primaryContactTitle || null,
+        primaryContactEmail: data.primaryContactEmail || null,
+        primaryContactPhone: data.primaryContactPhone,
+        secondaryContactName: null,
+        secondaryContactTitle: null,
+        secondaryContactEmail: null,
+        secondaryContactPhone: null,
+        leadSource: data.leadSource || null,
+        leadStatus: data.leadStatus || "new",
+        priority: data.priority || "medium",
+        pipelineDealId: null,
+        notes: data.notes || null,
+        requirements: null,
+        budget: null,
+        timeframe: null,
+        assignedTo: data.assignedTo || user?.id || 1,
+        lastContactDate: null,
+        nextFollowUpDate: null,
+        tags: [],
+      };
+
+      console.log("Transformed data for submission:", submitData);
+
+      if (isEditing && selectedLead) {
+        updateCorporateLeadMutation.mutate({ id: selectedLead.id, lead: submitData });
+      } else {
+        createCorporateLeadMutation.mutate(submitData as InsertCorporateLead);
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast({
+        title: "Submission Error",
+        description: error instanceof Error ? error.message : "Failed to process form data",
+        variant: "destructive"
+      });
     }
   };
 
@@ -551,7 +610,14 @@ export default function CorporateLeads() {
           <ScrollArea className="max-h-[70vh] overflow-auto">
             <div className="p-1">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                  console.log("Form validation errors:", errors);
+                  toast({
+                    title: "Form Validation Error",
+                    description: "Please check all required fields",
+                    variant: "destructive"
+                  });
+                })} className="space-y-6">
                   <div className="space-y-4">
                     <h3 className="text-sm font-medium">Company Information</h3>
                     
@@ -703,7 +769,7 @@ export default function CorporateLeads() {
                       
                       <FormField
                         control={form.control}
-                        name="phone"
+                        name="primaryContactPhone"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Phone</FormLabel>
@@ -725,7 +791,7 @@ export default function CorporateLeads() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
-                        name="status"
+                        name="leadStatus"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Status</FormLabel>
@@ -830,7 +896,7 @@ export default function CorporateLeads() {
                       
                       <FormField
                         control={form.control}
-                        name="source"
+                        name="leadSource"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Lead Source</FormLabel>
