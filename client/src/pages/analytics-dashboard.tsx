@@ -29,7 +29,9 @@ import { format, parseISO } from 'date-fns';
 import {
   AreaChart,
   Area,
+  BarChart as RechartsBarChart,
   Bar,
+  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -264,7 +266,7 @@ const AnalyticsDashboard: FC = () => {
         >
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
+              <RechartsBarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
             <TabsTrigger value="students" className="flex items-center gap-2">
@@ -406,7 +408,7 @@ const AnalyticsDashboard: FC = () => {
                     <CardContent className="pl-2">
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
+                          <RechartsBarChart
                             data={dashboardStats?.topCourses}
                             margin={{ top: 10, right: 30, left: 20, bottom: 40 }}
                           >
@@ -425,7 +427,7 @@ const AnalyticsDashboard: FC = () => {
                             <Tooltip formatter={(value) => [`${value} students`, 'Enrollments']} />
                             <Legend />
                             <Bar dataKey="count" fill="#82ca9d" name="Enrolled Students" />
-                          </BarChart>
+                          </RechartsBarChart>
                         </ResponsiveContainer>
                       </div>
                     </CardContent>
@@ -552,7 +554,7 @@ const AnalyticsDashboard: FC = () => {
                   <CardContent className="pl-2">
                     <div className="h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
+                        <RechartsBarChart
                           data={studentAnalytics?.courseEnrollments}
                           margin={{ top: 10, right: 30, left: 20, bottom: 40 }}
                         >
@@ -567,7 +569,7 @@ const AnalyticsDashboard: FC = () => {
                           <YAxis width={30} tick={{ fontSize: 12 }} />
                           <Tooltip formatter={(value) => [`${value} students`, 'Enrollments']} />
                           <Bar dataKey="students" fill="#82ca9d" name="Students" />
-                        </BarChart>
+                        </RechartsBarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -648,7 +650,7 @@ const AnalyticsDashboard: FC = () => {
                   <CardContent className="pl-2">
                     <div className="h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
+                        <RechartsBarChart
                           data={studentAnalytics?.nationalityDistribution}
                           layout="vertical"
                           margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
@@ -663,7 +665,7 @@ const AnalyticsDashboard: FC = () => {
                           />
                           <Tooltip formatter={(value) => [`${value} students`, 'Students']} />
                           <Bar dataKey="count" fill="#8884d8" name="Students" />
-                        </BarChart>
+                        </RechartsBarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -678,7 +680,7 @@ const AnalyticsDashboard: FC = () => {
                   <CardContent className="pl-2">
                     <div className="h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
+                        <RechartsBarChart
                           data={studentAnalytics?.emiratesDistribution}
                           layout="vertical"
                           margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
@@ -693,7 +695,7 @@ const AnalyticsDashboard: FC = () => {
                           />
                           <Tooltip formatter={(value) => [`${value} students`, 'Students']} />
                           <Bar dataKey="count" fill="#00C49F" name="Students" />
-                        </BarChart>
+                        </RechartsBarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -759,7 +761,7 @@ const AnalyticsDashboard: FC = () => {
                   <CardContent className="pl-2">
                     <div className="h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
+                        <RechartsBarChart
                           data={financialAnalytics?.courseRevenue.map(item => ({
                             ...item,
                             // Extract numeric value from AED string for chart display
@@ -787,7 +789,7 @@ const AnalyticsDashboard: FC = () => {
                             name="Revenue" 
                             label={{ position: 'top', formatter: (value) => `AED ${(value/1000).toFixed(1)}K` }}
                           />
-                        </BarChart>
+                        </RechartsBarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -882,7 +884,7 @@ const AnalyticsDashboard: FC = () => {
                   <CardContent className="pl-2">
                     <div className="h-[400px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
+                        <RechartsBarChart
                           data={courseAnalytics?.courseStats}
                           margin={{ top: 10, right: 30, left: 20, bottom: 60 }}
                         >
@@ -904,7 +906,7 @@ const AnalyticsDashboard: FC = () => {
                           />
                           <Legend />
                           <Bar dataKey="enrollments" fill="#8884d8" name="Students" />
-                        </BarChart>
+                        </RechartsBarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -919,7 +921,7 @@ const AnalyticsDashboard: FC = () => {
                   <CardContent className="pl-2">
                     <div className="h-[400px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
+                        <RechartsBarChart
                           data={courseAnalytics?.popularTimeSlots}
                           margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
                           layout="vertical"
@@ -934,7 +936,7 @@ const AnalyticsDashboard: FC = () => {
                           />
                           <Tooltip formatter={(value) => [`${value} classes`, 'Classes']} />
                           <Bar dataKey="count" fill="#82ca9d" name="Classes" />
-                        </BarChart>
+                        </RechartsBarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -949,7 +951,7 @@ const AnalyticsDashboard: FC = () => {
                   <CardContent className="pl-2">
                     <div className="h-[400px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
+                        <RechartsBarChart
                           data={courseAnalytics?.courseStats.map(course => ({
                             ...course,
                             // Extract numeric value from fee string for chart display
@@ -976,7 +978,7 @@ const AnalyticsDashboard: FC = () => {
                           />
                           <Legend />
                           <Bar dataKey="numericFee" fill="#FFBB28" name="Course Fee" />
-                        </BarChart>
+                        </RechartsBarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -1077,7 +1079,7 @@ const AnalyticsDashboard: FC = () => {
                   <CardContent className="pl-2">
                     <div className="h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
+                        <RechartsBarChart
                           data={crmAnalytics?.leadStatus}
                           margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
                         >
@@ -1087,7 +1089,7 @@ const AnalyticsDashboard: FC = () => {
                           <Tooltip formatter={(value) => [`${value} leads`, 'Leads']} />
                           <Legend />
                           <Bar dataKey="count" fill="#00C49F" name="Leads" />
-                        </BarChart>
+                        </RechartsBarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
