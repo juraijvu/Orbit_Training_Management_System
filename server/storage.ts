@@ -2659,8 +2659,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateQuotation(id: number, quotation: Partial<Quotation>): Promise<Quotation | undefined> {
-    const result = await db.update(quotations).set(quotation).where(eq(quotations.id, id)).returning();
-    return result[0];
+    try {
+      console.log("Updating quotation with data:", quotation);
+      const result = await db.update(quotations).set(quotation).where(eq(quotations.id, id)).returning();
+      console.log("Update result:", result[0]);
+      return result[0];
+    } catch (error) {
+      console.error("Database error in updateQuotation:", error);
+      throw error;
+    }
   }
   
   // Quotation Items methods

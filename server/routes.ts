@@ -1705,6 +1705,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Quotation not found" });
       }
       
+      // Ensure quotation data is valid
+      if (!quotation || typeof quotation !== 'object') {
+        return res.status(400).json({ message: "Invalid quotation data" });
+      }
+      
       // Update quotation
       const updatedQuotation = await storage.updateQuotation(id, quotation);
       
