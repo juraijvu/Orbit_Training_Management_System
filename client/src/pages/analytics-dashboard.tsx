@@ -266,7 +266,7 @@ const AnalyticsDashboard: FC = () => {
         >
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
-              <RechartsBarChart3 className="h-4 w-4" />
+              <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
             <TabsTrigger value="students" className="flex items-center gap-2">
