@@ -3494,26 +3494,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Create post with file path
+      // Create post data matching the exact schema
       const postData = {
-        ...req.body,
+        title: req.body.title,
+        content: req.body.content,
         mediaUrl: req.file ? `/uploads/crm-posts/${req.file.filename}` : req.body.mediaUrl || null,
         tags,
+        category: req.body.category,
+        postType: req.body.postType,
+        isApproved: req.body.isApproved === 'true' || req.body.isApproved === true,
+        approvedBy: req.body.approvedBy ? parseInt(req.body.approvedBy) : null,
+        expiryDate: req.body.expiryDate ? new Date(req.body.expiryDate) : null,
         createdBy: req.user!.id,
-        expiryDate: req.body.expiryDate ? new Date(req.body.expiryDate) : null
+        updatedBy: null
       };
       
-      // Remove filePath as it's not in the schema
-      delete postData.filePath;
+      console.log("Processed post data:", postData);
       
       const validatedData = insertCrmPostSchema.parse(postData);
       const newPost = await storage.createCrmPost(validatedData);
       
       res.status(201).json(newPost);
     } catch (error) {
+      console.error("CRM Post creation error:", error);
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
-        return res.status(400).json({ message: validationError.message });
+        console.error("Validation errors:", error.errors);
+        return res.status(400).json({ 
+          message: validationError.message,
+          errors: error.errors,
+          receivedData: postData
+        });
       }
       
       res.status(500).json({ message: "Failed to create post" });
