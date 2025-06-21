@@ -247,7 +247,7 @@ export default function Meetings() {
       description: "",
       leadId: null,
       corporateLeadId: null,
-      assignedTo: user?.id,
+      assignedTo: user?.id || 1,
       status: "scheduled",
       location: "",
       meetingDate: format(new Date(), "yyyy-MM-dd"),
@@ -559,7 +559,7 @@ export default function Meetings() {
 
       {/* Meeting Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{isEditing ? "Edit Meeting" : "Schedule a New Meeting"}</DialogTitle>
             <DialogDescription>
@@ -569,7 +569,7 @@ export default function Meetings() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="px-1 py-4">
+          <div className="flex-1 overflow-y-auto px-1 py-4">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
