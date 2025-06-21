@@ -118,10 +118,7 @@ export default function ProposalEditPage() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: ProposalEditFormValues) => {
-      const response = await apiRequest(`/api/proposals/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('PUT', `/api/proposals/${id}`, data);
       return response;
     },
     onSuccess: () => {

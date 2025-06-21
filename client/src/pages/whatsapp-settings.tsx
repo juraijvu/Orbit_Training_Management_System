@@ -111,7 +111,7 @@ export default function WhatsappSettingsPage() {
 
   // Create template
   const createTemplateMutation = useMutation({
-    mutationFn: async (template) => {
+    mutationFn: async (template: any) => {
       const res = await apiRequest(
         "POST", 
         "/api/whatsapp/templates", 
