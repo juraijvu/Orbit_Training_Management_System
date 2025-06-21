@@ -300,13 +300,12 @@ const InvoicesPage: FC = () => {
     console.log("Form submitted with values:", values);
     
     try {
-      // Generate a simple invoice number based on date and student ID
-      // This is required by the server validation, though it will be overwritten
+      // Generate a unique invoice number with timestamp
       const today = new Date();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
-      const studentIdNumber = Number(values.studentId);
-      const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
+      const timestamp = Date.now().toString().slice(-4); // Last 4 digits for uniqueness
+      const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${timestamp}`;
       
       // Make sure the values are in the format the server expects
       const formattedValues = {
@@ -696,12 +695,12 @@ const InvoicesPage: FC = () => {
                     console.log("Manual form submission");
                     const formData = form.getValues();
                     
-                    // Generate a simple invoice number based on date and student ID
+                    // Generate a unique invoice number with timestamp
                     const today = new Date();
                     const month = String(today.getMonth() + 1).padStart(2, '0');
                     const day = String(today.getDate()).padStart(2, '0');
-                    const studentIdNumber = Number(formData.studentId);
-                    const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${studentIdNumber}`;
+                    const timestamp = Date.now().toString().slice(-4); // Last 4 digits for uniqueness
+                    const invoiceNumber = `INV-${today.getFullYear()}${month}${day}-${timestamp}`;
                     
                     const payload = {
                       invoiceNumber: invoiceNumber,

@@ -1158,9 +1158,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { studentId, amount, paymentMode, transactionId, paymentDate, status } = req.body;
       
-      // Generate invoice number
+      // Generate unique invoice number
       const invoices = await storage.getInvoices();
-      const invoiceNumber = generateId('INV', invoices.length + 1);
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      
+      // Generate a unique invoice number with timestamp to avoid duplicates
+      const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp
+      const invoiceNumber = `INV-${year}${month}${day}-${timestamp}`;
       
       // Manually prepare the invoice data with proper types
       const invoiceData = {
