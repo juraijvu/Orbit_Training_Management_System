@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react';
-import { useParams, useLocation } from 'wouter';
+import { useRoute, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
