@@ -213,10 +213,10 @@ export default function CampaignsPage() {
                       <TableCell>
                         <div className={`
                           px-2 py-1 rounded-full text-xs inline-flex items-center
-                          ${campaign.status === 'Draft' ? 'bg-gray-100 text-gray-800' : ''}
-                          ${campaign.status === 'Active' ? 'bg-green-100 text-green-800' : ''}
-                          ${campaign.status === 'Paused' ? 'bg-yellow-100 text-yellow-800' : ''}
-                          ${campaign.status === 'Completed' ? 'bg-blue-100 text-blue-800' : ''}
+                          ${campaign.status === 'draft' ? 'bg-gray-100 text-gray-800' : ''}
+                          ${campaign.status === 'active' ? 'bg-green-100 text-green-800' : ''}
+                          ${campaign.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : ''}
+                          ${campaign.status === 'completed' ? 'bg-blue-100 text-blue-800' : ''}
                         `}>
                           {campaign.status}
                         </div>
@@ -407,80 +407,6 @@ export default function CampaignsPage() {
               </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                placeholder="Campaign objectives and details"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="startDate" className="text-right">
-                Start Date
-              </Label>
-              <Input
-                id="startDate"
-                type="date"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="endDate" className="text-right">
-                End Date
-              </Label>
-              <Input
-                id="endDate"
-                type="date"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="budget" className="text-right">
-                Budget (AED)
-              </Label>
-              <Input
-                id="budget"
-                type="number"
-                placeholder="5000"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status" className="text-right">
-                Status
-              </Label>
-              <Select>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit" onClick={() => {
-              toast({
-                title: "Success",
-                description: "Campaign created successfully!",
-              });
-              setOpenDialog(false);
-            }}>
-              Create Campaign
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
