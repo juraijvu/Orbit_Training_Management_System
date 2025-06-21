@@ -2537,14 +2537,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
-    const invoiceWithDefaults = {
-      ...invoice,
-      createdAt: new Date(),
-      transactionId: invoice.transactionId || null,
-      paymentDate: invoice.paymentDate || new Date()
-    };
-    const result = await db.insert(invoices).values(invoiceWithDefaults).returning();
-    return result[0];
+    try {
+      const invoiceWithDefaults = {
+        ...invoice,
+        createdAt: new Date(),
+        transactionId: invoice.transactionId || null,
+        paymentDate: invoice.paymentDate || new Date()
+      };
+      console.log("Creating invoice with data:", invoiceWithDefaults);
+      const result = await db.insert(invoices).values(invoiceWithDefaults).returning();
+      return result[0];
+    } catch (error) {
+      console.error("Database error in createInvoice:", error);
+      throw error;
+    }
   }
   
   async updateInvoice(id: number, invoice: Partial<Invoice>): Promise<Invoice | undefined> {
