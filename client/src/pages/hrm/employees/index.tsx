@@ -50,18 +50,7 @@ import {
   TabsTrigger 
 } from '@/components/ui/tabs';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import {
   Users,
-  UserPlus,
   Search,
   Filter,
   Download,
@@ -70,9 +59,8 @@ import {
   MoreHorizontal,
   PlusCircle,
   Mail,
-  Pencil as Edit,
-  Trash2 as Trash,
-  ArrowDownUp,
+  Edit,
+  Trash2,
   Eye,
   List,
   Grid3X3,
@@ -90,7 +78,9 @@ interface Employee {
   status: 'Active' | 'On Leave' | 'Terminated' | 'Inactive';
   joiningDate: string;
   visaExpiry?: string;
-  leavingDate?: string;
+  nationality?: string;
+  contractType?: string;
+  workLocation?: string;
 }
 
 interface EmployeeManagementProps {
@@ -104,6 +94,14 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
+  
+  // Open dialog when component mounts if showAddDialog is true
+  useEffect(() => {
+    if (showAddDialog) {
+      setIsAddEmployeeOpen(true);
+    }
+  }, [showAddDialog]);
 
   // Fetch employees from API
   const { data: employees, isLoading } = useQuery<Employee[]>({
@@ -117,19 +115,6 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
     },
   });
 
-  // If employees is undefined or empty, show empty state
-  const employeeList = employees || [];
-
-  // Set up state for employee form dialogs
-  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
-  
-  // Open dialog when component mounts if showAddDialog is true
-  useEffect(() => {
-    if (showAddDialog) {
-      setIsAddEmployeeOpen(true);
-    }
-  }, [showAddDialog]);
-  
   // Derive departments from employees data
   const departments = employees ? Array.from(new Set(employees.map(e => e.department))).sort() : [];
 
@@ -234,12 +219,15 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="flex-1">
-          <Input
-            placeholder="Search employees..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-sm"
-          />
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search employees..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
         </div>
         <div className="flex gap-2">
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
@@ -359,229 +347,6 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
         </Card>
       </div>
 
-      <Tabs defaultValue="all" className="mb-6">
-        <TabsList>
-          <TabsTrigger value="all">All Employees</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="onLeave">On Leave</TabsTrigger>
-          <TabsTrigger value="visaExpiringSoon">Visa Expiring Soon</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {/* Employees list/grid */}
-      {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <p>Loading employees...</p>
-        </div>
-      ) : filteredEmployees?.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-              <Users className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="mb-2 text-lg font-semibold">No employees found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your search or filter to find what you're looking for.
-            </p>
-          </CardContent>
-        </Card>
-      ) : viewType === 'list' ? (
-        <Card>
-          <CardContent className="p-0">
-                  <Input id="joiningDate" type="date" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status*</Label>
-                  <Select defaultValue="Active">
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="On Leave">On Leave</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="visaExpiry">Visa Expiry Date</Label>
-                  <Input id="visaExpiry" type="date" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="leavingDate">Leaving Date (if applicable)</Label>
-                  <Input id="leavingDate" type="date" />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddEmployeeOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={() => setIsAddEmployeeOpen(false)}>
-                  Add Employee
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Filters and search */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4 md:justify-between">
-            <div className="flex flex-1 gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search employees..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Select 
-                value={departmentFilter} 
-                onValueChange={setDepartmentFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All Departments" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Departments</SelectItem>
-                  {departments.map((department) => (
-                    <SelectItem key={department} value={department}>
-                      {department}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select 
-                value={statusFilter} 
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="On Leave">On Leave</SelectItem>
-                  <SelectItem value="Terminated">Terminated</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex gap-1 border rounded-md">
-                <Button 
-                  variant={viewType === 'list' ? 'secondary' : 'ghost'} 
-                  size="sm"
-                  onClick={() => setViewType('list')}
-                  className="rounded-r-none"
-                >
-                  <FileText className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant={viewType === 'card' ? 'secondary' : 'ghost'} 
-                  size="sm"
-                  onClick={() => setViewType('card')}
-                  className="rounded-l-none"
-                >
-                  <Users className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Summary stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-full bg-blue-100 p-3">
-                <Users className="h-6 w-6 text-blue-700" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Employees</p>
-                <p className="text-2xl font-bold">
-                  {isLoading ? '-' : filteredEmployees?.length || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-full bg-green-100 p-3">
-                <Users className="h-6 w-6 text-green-700" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-2xl font-bold">
-                  {isLoading ? '-' : 
-                    filteredEmployees?.filter(e => e.status === 'Active').length || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-full bg-amber-100 p-3">
-                <Users className="h-6 w-6 text-amber-700" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">On Leave</p>
-                <p className="text-2xl font-bold">
-                  {isLoading ? '-' : 
-                    filteredEmployees?.filter(e => e.status === 'On Leave').length || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-full bg-red-100 p-3">
-                <Users className="h-6 w-6 text-red-700" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Visa Expiring Soon</p>
-                <p className="text-2xl font-bold">
-                  {isLoading ? '-' : 
-                    filteredEmployees?.filter(e => {
-                      if (!e.visaExpiry) return false;
-                      const expiry = new Date(e.visaExpiry);
-                      const today = new Date();
-                      const diffTime = expiry.getTime() - today.getTime();
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                      return diffDays <= 90 && diffDays > 0;
-                    }).length || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="all" className="mb-6">
-        <TabsList>
-          <TabsTrigger value="all">All Employees</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="onLeave">On Leave</TabsTrigger>
-          <TabsTrigger value="visaExpiringSoon">Visa Expiring Soon</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       {/* Employees list/grid */}
       {isLoading ? (
         <div className="flex items-center justify-center h-48">
@@ -605,56 +370,53 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Employee ID</TableHead>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Employee</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Position</TableHead>
-                  <TableHead>Joining Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Joining Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedEmployees?.map((employee) => (
                   <TableRow key={employee.id}>
-                    <TableCell>{employee.employeeId}</TableCell>
-                    <TableCell className="font-medium">
-                      <Link href={`/hrm/employees/${employee.id}`} className="hover:underline">
-                        {`${employee.firstName} ${employee.lastName}`}
-                      </Link>
-                      <div className="text-xs text-muted-foreground">{employee.email}</div>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-sm font-medium">
+                            {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium">{`${employee.firstName} ${employee.lastName}`}</div>
+                          <div className="text-sm text-muted-foreground">{employee.employeeId}</div>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>{employee.department}</TableCell>
                     <TableCell>{employee.position}</TableCell>
-                    <TableCell>{formatDate(employee.joiningDate)}</TableCell>
                     <TableCell>{getStatusBadge(employee.status)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>{formatDate(employee.joiningDate)}</TableCell>
+                    <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" className="h-8 w-8 p-0">
                             <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Actions</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/hrm/employees/${employee.id}`}>
-                              View Profile
-                            </Link>
+                          <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/hrm/employees/${employee.id}/edit`}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              <span>Edit Employee</span>
-                            </Link>
+                          <DropdownMenuItem>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Mail className="mr-2 h-4 w-4" />
-                            <span>Send Email</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Trash className="mr-2 h-4 w-4" />
-                            <span>Delete Employee</span>
+                            Send Email
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -666,44 +428,49 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedEmployees?.map((employee) => (
             <Card key={employee.id} className="overflow-hidden">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-lg">{`${employee.firstName} ${employee.lastName}`}</CardTitle>
-                <CardDescription>
-                  {employee.position}<br/>
-                  {employee.department}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="text-sm text-muted-foreground mb-2">
-                  <p>{employee.email}</p>
-                  <p>{employee.phone}</p>
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">ID: </span>
-                    {employee.employeeId}
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-lg font-medium">
+                      {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
+                    </span>
                   </div>
-                  <div>
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{`${employee.firstName} ${employee.lastName}`}</CardTitle>
+                    <CardDescription>{employee.position}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Department</span>
+                    <span className="text-sm font-medium">{employee.department}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Status</span>
                     {getStatusBadge(employee.status)}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Joined</span>
+                    <span className="text-sm">{formatDate(employee.joiningDate)}</span>
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="p-4 pt-0 flex justify-between">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/hrm/employees/${employee.id}`}>
+              <CardFooter className="pt-0">
+                <div className="flex gap-2 w-full">
+                  <Button variant="outline" size="sm" className="flex-1">
                     <Eye className="mr-2 h-4 w-4" />
                     View
-                  </Link>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/hrm/employees/${employee.id}/edit`}>
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1">
                     <Edit className="mr-2 h-4 w-4" />
                     Edit
-                  </Link>
-                </Button>
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           ))}
@@ -711,49 +478,44 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
       )}
 
       {/* Pagination */}
-      {(filteredEmployees?.length || 0) > 0 && (
+      {totalPages > 1 && (
         <div className="mt-6">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>
-              {' '}to{' '}
-              <span className="font-medium">
-                {Math.min(currentPage * itemsPerPage, filteredEmployees?.length || 0)}
-              </span>
-              {' '}of{' '}
-              <span className="font-medium">{filteredEmployees?.length}</span> results
-            </div>
-            <div>
-              <Pagination>
-                <PaginationContent>
-                  {currentPage === 1 ? (
-                    <PaginationPrevious className="cursor-not-allowed opacity-50" />
-                  ) : (
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    />
-                  )}
-                  {[...Array(totalPages)].map((_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(i + 1)}
-                        isActive={currentPage === i + 1}
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  {currentPage === totalPages ? (
-                    <PaginationNext className="cursor-not-allowed opacity-50" />
-                  ) : (
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    />
-                  )}
-                </PaginationContent>
-              </Pagination>
-            </div>
-          </div>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) setCurrentPage(currentPage - 1);
+                  }}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <PaginationItem key={i + 1}>
+                  <PaginationLink
+                    href="#"
+                    isActive={currentPage === i + 1}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage(i + 1);
+                    }}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>
