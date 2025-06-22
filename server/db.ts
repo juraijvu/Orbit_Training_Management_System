@@ -8,8 +8,13 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// Force disable SSL for local PostgreSQL
+const connectionString = process.env.DATABASE_URL.includes('sslmode=disable') 
+  ? process.env.DATABASE_URL 
+  : `${process.env.DATABASE_URL}?sslmode=disable`;
+
 export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   ssl: false
 });
 export const db = drizzle(pool, { schema });
