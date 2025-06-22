@@ -102,6 +102,22 @@ function Router() {
             </React.Suspense>
           );
         }} />
+        <ProtectedRoute path="/settings/hrm/working-hours" component={() => {
+          const WorkingHoursPage = React.lazy(() => import("@/pages/settings/hrm/working-hours"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <WorkingHoursPage />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/settings/hrm/document-types" component={() => {
+          const DocumentTypesPage = React.lazy(() => import("@/pages/settings/hrm/document-types"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <DocumentTypesPage />
+            </React.Suspense>
+          );
+        }} />
         {/* External Integrations */}
         <ProtectedRoute path="/whatsapp-settings" component={WhatsappSettings} />
         <ProtectedRoute path="/whatsapp-chats" component={WhatsappChats} />
@@ -262,6 +278,14 @@ function Router() {
           return (
             <React.Suspense fallback={<div>Loading...</div>}>
               <PayrollManagement showAddDialog={true} />
+            </React.Suspense>
+          );
+        }} />
+        <ProtectedRoute path="/hrm/payroll/:id" component={() => {
+          const PayrollDetailsPage = React.lazy(() => import("@/pages/hrm/payroll/details"));
+          return (
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <PayrollDetailsPage />
             </React.Suspense>
           );
         }} />
