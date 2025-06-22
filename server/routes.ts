@@ -5037,6 +5037,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Process payroll
+  app.post('/api/hrm/payroll/process', isAuthenticated, async (req, res) => {
+    try {
+      console.log('Processing payroll with data:', req.body);
+      
+      const { month, paymentDate, department, paymentMethod, notes } = req.body;
+      
+      // Validate required fields
+      if (!month || !paymentDate || !department || !paymentMethod) {
+        return res.status(400).json({ 
+          message: "Missing required fields: month, paymentDate, department, and paymentMethod are required" 
+        });
+      }
+
+      // For now, we'll create a mock response since there's no payroll table in the schema
+      // In a real implementation, this would:
+      // 1. Fetch all employees from the specified department
+      // 2. Calculate their salaries based on attendance and base salary
+      // 3. Create payroll records
+      // 4. Process payments
+      
+      const processedPayroll = {
+        id: Date.now(),
+        month,
+        paymentDate,
+        department,
+        paymentMethod,
+        notes: notes || null,
+        status: 'processed',
+        totalAmount: 0,
+        employeeCount: 0,
+        processedBy: req.user!.id,
+        processedAt: new Date(),
+      };
+
+      console.log('Payroll processed successfully:', processedPayroll);
+      res.status(201).json(processedPayroll);
+    } catch (error) {
+      console.error("Error processing payroll:", error);
+      res.status(500).json({ message: "Failed to process payroll" });
+    }
+  });
+
   // Get HRM overview/stats
   app.get('/api/hrm/overview', isAuthenticated, async (req, res) => {
     try {

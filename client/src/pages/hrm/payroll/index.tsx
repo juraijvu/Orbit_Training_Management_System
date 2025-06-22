@@ -1,5 +1,10 @@
 import { FC, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { 
@@ -54,6 +59,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 import { 
   Calendar,
@@ -119,11 +132,25 @@ interface PayrollSummary {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#A28DFF', '#FF6B6B'];
 
+// Payroll processing form schema
+const payrollProcessSchema = z.object({
+  month: z.string().min(1, 'Month is required'),
+  paymentDate: z.string().min(1, 'Payment date is required'),
+  department: z.string().min(1, 'Department is required'),
+  paymentMethod: z.string().min(1, 'Payment method is required'),
+  notes: z.string().optional(),
+});
+
+type PayrollProcessData = z.infer<typeof payrollProcessSchema>;
+
 interface PayrollManagementProps {
   showAddDialog?: boolean;
 }
 
 const PayrollManagement: FC<PayrollManagementProps> = ({ showAddDialog = false }) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   // State variables for filtering and pagination
   const [selectedMonth, setSelectedMonth] = useState<string>('April 2025');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -132,6 +159,19 @@ const PayrollManagement: FC<PayrollManagementProps> = ({ showAddDialog = false }
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [viewMode, setViewMode] = useState<'transactions' | 'summary'>('transactions');
   const [isProcessPayrollOpen, setIsProcessPayrollOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form setup
+  const form = useForm<PayrollProcessData>({
+    resolver: zodResolver(payrollProcessSchema),
+    defaultValues: {
+      month: selectedMonth,
+      paymentDate: new Date().toISOString().split('T')[0],
+      department: 'all',
+      paymentMethod: 'Bank Transfer',
+      notes: '',
+    },
+  });
   
   // Open dialog when component mounts if showAddDialog is true
   useEffect(() => {
@@ -139,6 +179,37 @@ const PayrollManagement: FC<PayrollManagementProps> = ({ showAddDialog = false }
       setIsProcessPayrollOpen(true);
     }
   }, [showAddDialog]);
+
+  // Payroll processing mutation
+  const processPayrollMutation = useMutation({
+    mutationFn: (data: PayrollProcessData) => apiRequest('POST', '/api/hrm/payroll/process', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/hrm/payroll/records'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/hrm/payroll/summary'] });
+      toast({
+        title: 'Success',
+        description: 'Payroll has been processed successfully.',
+      });
+      form.reset();
+      setIsProcessPayrollOpen(false);
+      setIsSubmitting(false);
+    },
+    onError: (error: any) => {
+      console.error('Error processing payroll:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to process payroll. Please try again.',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+    },
+  });
+
+  const onSubmit = async (data: PayrollProcessData) => {
+    console.log('Processing payroll with data:', data);
+    setIsSubmitting(true);
+    processPayrollMutation.mutate(data);
+  };
   
   // Fetch payroll records
   const { data: payrollRecords, isLoading: recordsLoading } = useQuery<PayrollRecord[]>({
@@ -426,62 +497,123 @@ const PayrollManagement: FC<PayrollManagementProps> = ({ showAddDialog = false }
                     Create or update payroll records for the selected month.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="payrollMonth">Month</Label>
-                    <Select defaultValue={selectedMonth}>
-                      <SelectTrigger id="payrollMonth">
-                        <SelectValue placeholder="Select month" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month} value={month}>{month}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentDate">Payment Date</Label>
-                    <Input type="date" id="paymentDate" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Select defaultValue="all">
-                      <SelectTrigger id="department">
-                        <SelectValue placeholder="All Departments" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Departments</SelectItem>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentMethod">Payment Method</Label>
-                    <Select defaultValue="Bank Transfer">
-                      <SelectTrigger id="paymentMethod">
-                        <SelectValue placeholder="Select payment method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                        <SelectItem value="Cash">Cash</SelectItem>
-                        <SelectItem value="Cheque">Cheque</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Input id="notes" placeholder="Additional notes for this payroll" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsProcessPayrollOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">Process Payroll</Button>
-                </DialogFooter>
+                
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                      <FormField
+                        control={form.control}
+                        name="month"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Month</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select month" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {months.map((month) => (
+                                  <SelectItem key={month} value={month}>{month}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="paymentDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Payment Date</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="department"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Department</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="All Departments" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="all">All Departments</SelectItem>
+                                {departments.map((dept) => (
+                                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="paymentMethod"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Payment Method</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select payment method" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                                <SelectItem value="Cash">Cash</SelectItem>
+                                <SelectItem value="Cheque">Cheque</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="notes"
+                        render={({ field }) => (
+                          <FormItem className="col-span-2">
+                            <FormLabel>Notes</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Additional notes for this payroll" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsProcessPayrollOpen(false)}
+                        disabled={isSubmitting}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? 'Processing...' : 'Process Payroll'}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
               </DialogContent>
             </Dialog>
           </div>
