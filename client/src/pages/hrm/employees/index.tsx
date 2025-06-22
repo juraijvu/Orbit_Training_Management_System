@@ -74,12 +74,15 @@ import {
   Trash2 as Trash,
   ArrowDownUp,
   Eye,
+  List,
+  Grid3X3,
 } from 'lucide-react';
 
 interface Employee {
   id: number;
   employeeId: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   department: string;
@@ -276,7 +279,7 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
               size="sm"
               onClick={() => setViewType('card')}
             >
-              <Grid className="h-4 w-4" />
+              <Grid3X3 className="h-4 w-4" />
             </Button>
           </div>
         </div>

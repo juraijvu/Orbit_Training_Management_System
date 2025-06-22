@@ -86,21 +86,26 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
   
-  // Kill any existing process that might be using the port
-  try {
-    const { execSync } = require('child_process');
-    execSync(`lsof -t -i:${port} | xargs -r kill -9`);
-    console.log(`Killed any process using port ${port}`);
-  } catch (error) {
-    console.log(`No process found using port ${port}`);
-  }
-  
+  // Try to start the server with error handling for port conflicts
   server.listen({
     port,
     host: "0.0.0.0",
-    reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+  });
+
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`Port ${port} is busy, trying port ${port + 1}`);
+      server.listen({
+        port: port + 1,
+        host: "0.0.0.0",
+      }, () => {
+        log(`serving on port ${port + 1}`);
+      });
+    } else {
+      throw err;
+    }
   });
   } catch (error) {
     console.error('Error starting server:', error);
