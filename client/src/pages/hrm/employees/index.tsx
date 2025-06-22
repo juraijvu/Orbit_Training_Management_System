@@ -378,48 +378,13 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
             </div>
             <h3 className="mb-2 text-lg font-semibold">No employees found</h3>
             <p className="text-muted-foreground">
-                  Enter employee details to add a new staff member to the system.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name*</Label>
-                  <Input id="name" placeholder="Full name" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="employeeId">Employee ID*</Label>
-                  <Input id="employeeId" placeholder="EMP-XXX" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email*</Label>
-                  <Input id="email" type="email" placeholder="email@example.com" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone*</Label>
-                  <Input id="phone" placeholder="+971 5X XXX XXXX" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department*</Label>
-                  <Select>
-                    <SelectTrigger id="department">
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Training">Training</SelectItem>
-                      <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
-                      <SelectItem value="Administration">Administration</SelectItem>
-                      <SelectItem value="IT">IT</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position">Position*</Label>
-                  <Input id="position" placeholder="Job title" required />
-                </div>
-                <div className="space-y-2">
+              Try adjusting your search or filter to find what you're looking for.
+            </p>
+          </CardContent>
+        </Card>
+      ) : viewType === 'list' ? (
+        <Card>
+          <CardContent className="p-0">
                   <Label htmlFor="joiningDate">Joining Date*</Label>
                   <Input id="joiningDate" type="date" required />
                 </div>
