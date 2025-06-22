@@ -5080,6 +5080,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple in-memory storage for visa employees (replace with database later)
+  let visaEmployees: any[] = [];
+
+  // Get all visa management employees
+  app.get('/api/visa-management/employees', isAuthenticated, async (req, res) => {
+    try {
+      console.log('Fetching visa employees, current count:', visaEmployees.length);
+      res.json(visaEmployees);
+    } catch (error) {
+      console.error("Error fetching visa employees:", error);
+      res.status(500).json({ message: "Failed to fetch visa employees" });
+    }
+  });
+
   // Add employee to visa management
   app.post('/api/visa-management/employees', isAuthenticated, async (req, res) => {
     try {
@@ -5094,7 +5108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // For now, we'll create a mock response since there's no visa management table in the schema
+      // Create new visa employee
       const newVisaEmployee = {
         id: Date.now(),
         name: fullName,
@@ -5108,9 +5122,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         progress: visaStatus === 'Active' ? 100 : visaStatus === 'Processing' ? 50 : 25,
         createdBy: req.user!.id,
         createdAt: new Date(),
+        images: {},
+        alerts: [],
+        statusHistory: [{
+          status: visaStatus,
+          date: new Date().toISOString().split('T')[0],
+          notes: notes || `${visaStatus} status set during employee creation`,
+          updatedBy: req.user!.username || 'System'
+        }]
       };
 
+      // Add to in-memory storage
+      visaEmployees.push(newVisaEmployee);
+
       console.log('Visa employee added successfully:', newVisaEmployee);
+      console.log('Total visa employees now:', visaEmployees.length);
       res.status(201).json(newVisaEmployee);
     } catch (error) {
       console.error("Error adding visa employee:", error);
