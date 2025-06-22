@@ -1,6 +1,8 @@
 import { FC, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
+import { EmployeeForm } from '@/components/forms/employee-form';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -93,6 +95,7 @@ interface EmployeeManagementProps {
 }
 
 const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false }) => {
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [viewType, setViewType] = useState<'list' | 'card'>('list');
   const [searchQuery, setSearchQuery] = useState('');
@@ -209,17 +212,172 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Dialog open={isAddEmployeeOpen} onOpenChange={setIsAddEmployeeOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Employee
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Employee</DialogTitle>
-                <DialogDescription>
+          <Button onClick={() => setIsAddEmployeeOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Employee
+          </Button>
+        </div>
+      </div>
+
+      {/* Employee Form Dialog */}
+      {user && (
+        <EmployeeForm 
+          open={isAddEmployeeOpen} 
+          onOpenChange={setIsAddEmployeeOpen}
+          currentUserId={user.id}
+        />
+      )}
+
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <Input
+            placeholder="Search employees..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Departments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept} value={dept}>
+                  {dept}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="On Leave">On Leave</SelectItem>
+              <SelectItem value="Inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex border rounded-md">
+            <Button 
+              variant={viewType === 'list' ? 'default' : 'ghost'} 
+              size="sm"
+              onClick={() => setViewType('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant={viewType === 'card' ? 'default' : 'ghost'} 
+              size="sm"
+              onClick={() => setViewType('card')}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Employee Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="rounded-full bg-blue-100 p-3">
+                <Users className="h-6 w-6 text-blue-700" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? '-' : employees?.length || 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="rounded-full bg-green-100 p-3">
+                <Users className="h-6 w-6 text-green-700" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Active</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? '-' : 
+                    filteredEmployees?.filter(e => e.status === 'Active').length || 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="rounded-full bg-amber-100 p-3">
+                <Users className="h-6 w-6 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">On Leave</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? '-' : 
+                    filteredEmployees?.filter(e => e.status === 'On Leave').length || 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="rounded-full bg-red-100 p-3">
+                <Users className="h-6 w-6 text-red-700" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Visa Expiring Soon</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? '-' : 
+                    filteredEmployees?.filter(e => {
+                      if (!e.visaExpiry) return false;
+                      const expiry = new Date(e.visaExpiry);
+                      const today = new Date();
+                      const diffTime = expiry.getTime() - today.getTime();
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      return diffDays <= 90 && diffDays > 0;
+                    }).length || 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="all" className="mb-6">
+        <TabsList>
+          <TabsTrigger value="all">All Employees</TabsTrigger>
+          <TabsTrigger value="active">Active</TabsTrigger>
+          <TabsTrigger value="onLeave">On Leave</TabsTrigger>
+          <TabsTrigger value="visaExpiringSoon">Visa Expiring Soon</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Employees list/grid */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48">
+          <p>Loading employees...</p>
+        </div>
+      ) : filteredEmployees?.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+              <Users className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold">No employees found</h3>
+            <p className="text-muted-foreground">
                   Enter employee details to add a new staff member to the system.
                 </DialogDescription>
               </DialogHeader>
@@ -495,7 +653,7 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
                     <TableCell>{employee.employeeId}</TableCell>
                     <TableCell className="font-medium">
                       <Link href={`/hrm/employees/${employee.id}`} className="hover:underline">
-                        {employee.name}
+                        {`${employee.firstName} ${employee.lastName}`}
                       </Link>
                       <div className="text-xs text-muted-foreground">{employee.email}</div>
                     </TableCell>
@@ -545,7 +703,7 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
           {paginatedEmployees?.map((employee) => (
             <Card key={employee.id} className="overflow-hidden">
               <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-lg">{employee.name}</CardTitle>
+                <CardTitle className="text-lg">{`${employee.firstName} ${employee.lastName}`}</CardTitle>
                 <CardDescription>
                   {employee.position}<br/>
                   {employee.department}
