@@ -94,10 +94,7 @@ export function EmployeeForm({ open, onOpenChange, currentUserId }: EmployeeForm
   });
 
   const createEmployeeMutation = useMutation({
-    mutationFn: (data: EmployeeFormData) => apiRequest('/api/hrm/employees', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: EmployeeFormData) => apiRequest('POST', '/api/hrm/employees', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/hrm/employees'] });
       queryClient.invalidateQueries({ queryKey: ['/api/hrm/overview'] });
