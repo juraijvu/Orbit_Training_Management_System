@@ -4976,12 +4976,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new employee
   app.post('/api/hrm/employees', isAuthenticated, async (req, res) => {
     try {
+      console.log('Received employee data:', req.body);
+      
+      // Validate required fields
+      const { firstName, lastName, email, phone, department, position, joiningDate } = req.body;
+      if (!firstName || !lastName || !email || !phone || !department || !position || !joiningDate) {
+        return res.status(400).json({ 
+          message: "Missing required fields: firstName, lastName, email, phone, department, position, and joiningDate are required" 
+        });
+      }
+      
       const employeeData = {
         ...req.body,
         createdBy: req.user!.id,
         updatedBy: req.user!.id
       };
       
+      console.log('Creating employee with data:', employeeData);
       const newEmployee = await storage.createEmployee(employeeData);
       res.status(201).json(newEmployee);
     } catch (error) {

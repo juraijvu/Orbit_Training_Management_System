@@ -36,7 +36,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 // Create a form schema with required fields
-const employeeFormSchema = insertEmployeeSchema.extend({
+const employeeFormSchema = insertEmployeeSchema.omit({
+  employeeId: true, // Auto-generated on backend
+}).extend({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Valid email is required'),
@@ -76,6 +78,16 @@ export function EmployeeForm({ open, onOpenChange, currentUserId }: EmployeeForm
       address: '',
       contractType: 'full_time',
       workLocation: 'office',
+      visaExpiry: '',
+      passportNumber: '',
+      emiratesId: '',
+      emergencyContact: '',
+      emergencyPhone: '',
+      salary: '',
+      profilePhoto: '',
+      documents: '',
+      notes: '',
+      leavingDate: '',
       createdBy: currentUserId,
       updatedBy: currentUserId,
     },
@@ -109,8 +121,28 @@ export function EmployeeForm({ open, onOpenChange, currentUserId }: EmployeeForm
   });
 
   const onSubmit = async (data: EmployeeFormData) => {
+    console.log('Form submitted with data:', data);
+    console.log('Form validation errors:', form.formState.errors);
+    
+    // Clean up empty optional fields
+    const cleanedData = {
+      ...data,
+      visaExpiry: data.visaExpiry || null,
+      passportNumber: data.passportNumber || null,
+      emiratesId: data.emiratesId || null,
+      nationality: data.nationality || null,
+      address: data.address || null,
+      emergencyContact: data.emergencyContact || null,
+      emergencyPhone: data.emergencyPhone || null,
+      salary: data.salary || null,
+      profilePhoto: data.profilePhoto || null,
+      documents: data.documents || null,
+      notes: data.notes || null,
+      leavingDate: data.leavingDate || null,
+    };
+    
     setIsSubmitting(true);
-    createEmployeeMutation.mutate(data);
+    createEmployeeMutation.mutate(cleanedData);
   };
 
   const departments = [
