@@ -1,0 +1,120 @@
+.ts" --include="*.js"
+root@srv833286:/var/www/html/orbit-system# ls -la server/
+total 480
+drwxr-xr-x  2 root root   4096 Jun 22 14:02 .
+drwxr-xr-x 17 root root   4096 Jun 22 16:18 ..
+-rwxr-xr-x  1 root root  13366 Jun 20 13:36 analytics.ts
+-rwxr-xr-x  1 root root   5083 Jun 20 13:36 auth.ts
+-rwxr-xr-x  1 root root  16839 Jun 20 13:36 chatbot.ts
+-rwxr-xr-x  1 root root   1694 Jun 20 13:36 create-session-table.ts
+-rwxr-xr-x  1 root root   1563 Jun 20 13:36 db-selector.ts
+-rwxr-xr-x  1 root root    483 Jun 20 13:36 db.ts
+-rwxr-xr-x  1 root root   1870 Jun 20 13:36 dbInit.ts
+-rwxr-xr-x  1 root root   2789 Jun 20 13:36 fixed-routes.ts
+-rwxr-xr-x  1 root root   3343 Jun 22 10:59 index.ts
+-rwxr-xr-x  1 root root   2620 Jun 20 13:36 mysql-db.ts
+-rwxr-xr-x  1 root root  15765 Jun 20 13:36 notifications.ts
+-rwxr-xr-x  1 root root 185337 Jun 22 12:00 routes.ts
+-rwxr-xr-x  1 root root 142337 Jun 22 08:54 storage.ts
+-rwxr-xr-x  1 root root   2254 Jun 20 13:36 vite.ts
+root@srv833286:/var/www/html/orbit-system# grep -r "server/public\|public" server/ --include="*.ts" --include="*.js"
+server/routes.ts:  // Get registration link details (public endpoint)
+server/routes.ts:  // Submit registration via public link
+server/vite.ts:  const distPath = path.resolve(import.meta.dirname, "public");
+root@srv833286:/var/www/html/orbit-system# mkdir -p server/public
+root@srv833286:/var/www/html/orbit-system# cp -r dist/* server/public/
+root@srv833286:/var/www/html/orbit-system# NODE_ENV=production PORT=5000 node --import tsx server/index.ts
+Environment settings: {
+  USE_MYSQL: undefined,
+  DATABASE_URL_EXISTS: true,
+  MYSQL_DATABASE_URL_EXISTS: false
+}
+Using PostgreSQL database connection
+Database connection test result: true
+Creating session table if it doesn't exist...
+Error creating PostgreSQL session table: ErrorEvent {
+  [Symbol(kTarget)]: WebSocket {
+    _events: [Object: null prototype] {
+      error: [Function],
+      message: [Function],
+      close: [Function],
+      open: [Function]
+    },
+    _eventsCount: 4,
+    _maxListeners: undefined,
+    _binaryType: 'arraybuffer',
+    _closeCode: 1006,
+    _closeFrameReceived: false,
+    _closeFrameSent: false,
+    _closeMessage: <Buffer >,
+    _closeTimer: null,
+    _errorEmitted: true,
+    _extensions: {},
+    _paused: false,
+    _protocol: '',
+    _readyState: 3,
+    _receiver: null,
+    _sender: null,
+    _socket: null,
+    _bufferedAmount: 0,
+    _isServer: false,
+    _redirects: 0,
+    _autoPong: true,
+    _url: 'wss://localhost/v2',
+    _req: null,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  },
+  [Symbol(kType)]: 'error',
+  [Symbol(kError)]: AggregateError [ECONNREFUSED]:
+      at internalConnectMultiple (node:net:1122:18)
+      at afterConnectMultiple (node:net:1689:7) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  },
+  [Symbol(kMessage)]: ''
+}
+Session table created or already exists.
+Error seeding database: ErrorEvent {
+  [Symbol(kTarget)]: WebSocket {
+    _events: [Object: null prototype] {
+      error: [Function],
+      message: [Function],
+      close: [Function],
+      open: [Function]
+    },
+    _eventsCount: 4,
+    _maxListeners: undefined,
+    _binaryType: 'arraybuffer',
+    _closeCode: 1006,
+    _closeFrameReceived: false,
+    _closeFrameSent: false,
+    _closeMessage: <Buffer >,
+    _closeTimer: null,
+    _errorEmitted: true,
+    _extensions: {},
+    _paused: false,
+    _protocol: '',
+    _readyState: 3,
+    _receiver: null,
+    _sender: null,
+    _socket: null,
+    _bufferedAmount: 0,
+    _isServer: false,
+    _redirects: 0,
+    _autoPong: true,
+    _url: 'wss://localhost/v2',
+    _req: null,
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false
+  },
+  [Symbol(kType)]: 'error',
+  [Symbol(kError)]: AggregateError [ECONNREFUSED]:
+      at internalConnectMultiple (node:net:1122:18)
+      at afterConnectMultiple (node:net:1689:7) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  },
+  [Symbol(kMessage)]: ''
+}
+4:21:09 PM [express] serving on port 5000

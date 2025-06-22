@@ -1,0 +1,55 @@
+
+root@srv833286:/var/www/html/orbit-system# pm2 logs orbit-system --lines 50
+[TAILING] Tailing last 50 lines for [orbit-system] process (change the value with --lines option)
+/root/.pm2/logs/orbit-system-out.log last 50 lines:
+/root/.pm2/logs/orbit-system-error.log last 50 lines:
+0|orbit-sy |     triggerUncaughtException(
+0|orbit-sy |     ^
+0|orbit-sy | Error: tsx must be loaded with --import instead of --loader
+0|orbit-sy | The --loader flag was deprecated in Node v20.6.0 and v18.19.0
+0|orbit-sy |     at initialize (file:///var/www/html/orbit-system/node_modules/tsx/dist/esm/index.mjs:1:919)
+0|orbit-sy |     at Hooks.addCustomLoader (node:internal/modules/esm/hooks:206:24)
+0|orbit-sy |     at Hooks.register (node:internal/modules/esm/hooks:172:16)
+0|orbit-sy |     at async initializeHooks (node:internal/modules/esm/utils:318:5)
+0|orbit-sy |     at async customizedModuleWorker (node:internal/modules/esm/worker:104:24)
+0|orbit-sy |
+0|orbit-sy | Node.js v20.19.2
+0|orbit-sy |
+0|orbit-sy | node:internal/modules/run_main:123
+0|orbit-sy |     triggerUncaughtException(
+0|orbit-sy |     ^
+0|orbit-sy | Error: tsx must be loaded with --import instead of --loader
+0|orbit-sy | The --loader flag was deprecated in Node v20.6.0 and v18.19.0
+0|orbit-sy |     at initialize (file:///var/www/html/orbit-system/node_modules/tsx/dist/esm/index.mjs:1:919)
+0|orbit-sy |     at Hooks.addCustomLoader (node:internal/modules/esm/hooks:206:24)
+0|orbit-sy |     at Hooks.register (node:internal/modules/esm/hooks:172:16)
+0|orbit-sy |     at async initializeHooks (node:internal/modules/esm/utils:318:5)
+0|orbit-sy |     at async customizedModuleWorker (node:internal/modules/esm/worker:104:24)
+0|orbit-sy |
+0|orbit-sy | Node.js v20.19.2
+0|orbit-sy |
+0|orbit-sy | node:internal/modules/run_main:123
+0|orbit-sy |     triggerUncaughtException(
+0|orbit-sy |     ^
+0|orbit-sy | Error: tsx must be loaded with --import instead of --loader
+0|orbit-sy | The --loader flag was deprecated in Node v20.6.0 and v18.19.0
+0|orbit-sy |     at initialize (file:///var/www/html/orbit-system/node_modules/tsx/dist/esm/index.mjs:1:919)
+0|orbit-sy |     at Hooks.addCustomLoader (node:internal/modules/esm/hooks:206:24)
+0|orbit-sy |     at Hooks.register (node:internal/modules/esm/hooks:172:16)
+0|orbit-sy |     at async initializeHooks (node:internal/modules/esm/utils:318:5)
+0|orbit-sy |     at async customizedModuleWorker (node:internal/modules/esm/worker:104:24)
+0|orbit-sy |
+0|orbit-sy | Node.js v20.19.2
+0|orbit-sy |
+0|orbit-sy | node:internal/modules/run_main:123
+0|orbit-sy |     triggerUncaughtException(
+0|orbit-sy |     ^
+0|orbit-sy | Error: tsx must be loaded with --import instead of --loader
+0|orbit-sy | The --loader flag was deprecated in Node v20.6.0 and v18.19.0
+0|orbit-sy |     at initialize (file:///var/www/html/orbit-system/node_modules/tsx/dist/esm/index.mjs:1:919)
+0|orbit-sy |     at Hooks.addCustomLoader (node:internal/modules/esm/hooks:206:24)
+0|orbit-sy |     at Hooks.register (node:internal/modules/esm/hooks:172:16)
+0|orbit-sy |     at async initializeHooks (node:internal/modules/esm/utils:318:5)
+0|orbit-sy |     at async customizedModuleWorker (node:internal/modules/esm/worker:104:24)
+0|orbit-sy |
+0|orbit-sy | Node.js v20.19.2
