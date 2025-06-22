@@ -385,7 +385,6 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
       ) : viewType === 'list' ? (
         <Card>
           <CardContent className="p-0">
-                  <Label htmlFor="joiningDate">Joining Date*</Label>
                   <Input id="joiningDate" type="date" required />
                 </div>
                 <div className="space-y-2">

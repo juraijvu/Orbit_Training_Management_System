@@ -184,7 +184,7 @@ export default function PrintRegistration() {
                   <td className="border p-2 w-1/3"><strong>Courses:</strong></td>
                   <td className="border p-2">
                     {registrationCourses.map((rc: any, index: number) => (
-                      <p key={index}>{rc.course.name}</p>
+                      <p key={index}>{rc.course?.name || rc.courseName || 'Course name not available'}</p>
                     ))}
                   </td>
                 </tr>
