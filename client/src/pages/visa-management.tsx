@@ -42,6 +42,20 @@ import { Progress } from '@/components/ui/progress';
 import { PlusCircle, Search, Filter, AlertCircle, Calendar, UserCheck, FileText, ArrowUpDown, MessageSquare, CheckCircle2, ClipboardCheck, FileCheck } from 'lucide-react';
 import { format, parseISO, differenceInDays, isAfter, isBefore, addMonths } from 'date-fns';
 
+// Form schema
+const visaEmployeeSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required'),
+  position: z.string().min(1, 'Position is required'),
+  nationality: z.string().min(1, 'Nationality is required'),
+  passportNumber: z.string().min(1, 'Passport number is required'),
+  visaType: z.string().min(1, 'Visa type is required'),
+  visaStatus: z.string().min(1, 'Visa status is required'),
+  expiryDate: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type VisaEmployeeData = z.infer<typeof visaEmployeeSchema>;
+
 // Interfaces
 interface Employee {
   id: number;
@@ -88,12 +102,60 @@ interface VisaStatusUpdate {
 }
 
 const VisaManagementPage: FC = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [addEmployeeOpen, setAddEmployeeOpen] = useState<boolean>(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [employeeDetailsOpen, setEmployeeDetailsOpen] = useState<boolean>(false);
   const [updateStatusOpen, setUpdateStatusOpen] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form setup
+  const form = useForm<VisaEmployeeData>({
+    resolver: zodResolver(visaEmployeeSchema),
+    defaultValues: {
+      fullName: '',
+      position: '',
+      nationality: '',
+      passportNumber: '',
+      visaType: '',
+      visaStatus: '',
+      expiryDate: '',
+      notes: '',
+    },
+  });
+
+  // Add employee mutation
+  const addEmployeeMutation = useMutation({
+    mutationFn: (data: VisaEmployeeData) => apiRequest('POST', '/api/visa-management/employees', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/visa-management/employees'] });
+      toast({
+        title: 'Success',
+        description: 'Employee has been added to visa management successfully.',
+      });
+      form.reset();
+      setAddEmployeeOpen(false);
+      setIsSubmitting(false);
+    },
+    onError: (error: any) => {
+      console.error('Error adding employee:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add employee. Please try again.',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+    },
+  });
+
+  const onSubmit = async (data: VisaEmployeeData) => {
+    console.log('Adding employee to visa management:', data);
+    setIsSubmitting(true);
+    addEmployeeMutation.mutate(data);
+  };
 
   // Fetch employee visa data - this will be replaced with actual API call
   const { data: employees, isLoading } = useQuery<Employee[]>({
