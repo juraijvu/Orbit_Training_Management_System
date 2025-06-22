@@ -159,8 +159,30 @@ DATABASE_URL=postgresql://orbit_user:your_secure_password@localhost:5432/orbit_d
 
 ### 4.6 Run Database Setup
 ```bash
-# Run database initialization
+# Run database initialization - creates tables and default users
 npm run db:push
+```
+
+**Note**: This creates an empty database with:
+- All necessary tables (students, courses, users, etc.)
+- Default admin users (admin/admin123 and superadmin/admin123)
+- No existing data - you'll start fresh
+
+### 4.7 Data Migration (Optional)
+If you want to transfer data from your Replit development environment:
+
+1. **In Replit**, run the export script:
+```bash
+node scripts/export-data.js
+```
+
+2. **Download the generated `data-export.json`** file
+
+3. **Upload it to your VPS** via WinSCP to `/var/www/orbit-system/`
+
+4. **On your VPS**, run the import script:
+```bash
+node scripts/import-data.js
 ```
 
 ## Step 5: Configure PM2 for Process Management
