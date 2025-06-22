@@ -34,6 +34,9 @@ import {
   pipelineActivities, PipelineActivity, InsertPipelineActivity,
   pipelineStageHistory, PipelineStageHistory, InsertPipelineStageHistory,
   
+  // HRM imports
+  employees, Employee, InsertEmployee,
+  
   // Chatbot related imports
   chatbotFlows, ChatbotFlow, InsertChatbotFlow,
   chatbotNodes, ChatbotNode, InsertChatbotNode,
@@ -364,6 +367,22 @@ export interface IStorage {
   // Sales Pipeline Stage History
   getPipelineStageHistory(dealId: number): Promise<PipelineStageHistory[]>;
   createPipelineStageHistory(history: InsertPipelineStageHistory): Promise<PipelineStageHistory>;
+  
+  // HRM Employees
+  getEmployees(): Promise<Employee[]>;
+  getEmployee(id: number): Promise<Employee | undefined>;
+  getEmployeeByEmployeeId(employeeId: string): Promise<Employee | undefined>;
+  getEmployeesByDepartment(department: string): Promise<Employee[]>;
+  getEmployeesByStatus(status: string): Promise<Employee[]>;
+  createEmployee(employee: InsertEmployee): Promise<Employee>;
+  updateEmployee(id: number, employee: Partial<Employee>): Promise<Employee | undefined>;
+  deleteEmployee(id: number): Promise<boolean>;
+  getEmployeeStats(): Promise<{
+    totalEmployees: number;
+    activeEmployees: number;
+    onLeave: number;
+    visaExpiringSoon: number;
+  }>;
 }
 
 // Memory Storage implementation

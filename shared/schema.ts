@@ -900,6 +900,47 @@ export const insertPipelineDealSchema = createInsertSchema(pipelineDeals).omit({
 export type InsertPipelineDeal = z.infer<typeof insertPipelineDealSchema>;
 export type PipelineDeal = typeof pipelineDeals.$inferSelect;
 
+// HRM Employees Table
+export const employees = pgTable("employees", {
+  id: serial("id").primaryKey(),
+  employeeId: text("employee_id").notNull().unique(), // e.g., EMP-001
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone").notNull(),
+  department: text("department").notNull(),
+  position: text("position").notNull(),
+  status: text("status").notNull().default("Active"), // Active, Inactive, On Leave
+  joiningDate: date("joining_date").notNull(),
+  leavingDate: date("leaving_date"),
+  visaExpiry: date("visa_expiry"),
+  passportNumber: text("passport_number"),
+  emiratesId: text("emirates_id"),
+  nationality: text("nationality"),
+  address: text("address"),
+  emergencyContact: text("emergency_contact"),
+  emergencyPhone: text("emergency_phone"),
+  salary: numeric("salary"),
+  workLocation: text("work_location"), // office, remote, hybrid
+  contractType: text("contract_type"), // full_time, part_time, contract, intern
+  profilePhoto: text("profile_photo"), // URL to photo
+  documents: text("documents"), // JSON array of document URLs
+  notes: text("notes"),
+  createdBy: integer("created_by").notNull(),
+  updatedBy: integer("updated_by"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertEmployeeSchema = createInsertSchema(employees).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
+export type Employee = typeof employees.$inferSelect;
+
 // Sales Pipeline Deal Activities
 export const pipelineActivities = pgTable("pipeline_activities", {
   id: serial("id").primaryKey(),
