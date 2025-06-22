@@ -99,12 +99,20 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Mock Data
+  // Fetch employees from API
   const { data: employees, isLoading } = useQuery<Employee[]>({
     queryKey: ['/api/hrm/employees'],
     queryFn: async () => {
-      // Mocked data for development
-      return [
+      const response = await fetch('/api/hrm/employees');
+      if (!response.ok) {
+        throw new Error('Failed to fetch employees');
+      }
+      return response.json();
+    },
+  });
+
+  // If employees is undefined or empty, show empty state (not mock data)
+  const employeeList = employees || [];
         {
           id: 1,
           employeeId: 'EMP-001',
@@ -246,8 +254,9 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
 
   // Filter employees based on search and filters
   const filteredEmployees = employees?.filter(employee => {
+    const fullName = `${employee.firstName} ${employee.lastName}`;
     const matchesSearch = searchQuery === '' || 
-      employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       employee.employeeId.toLowerCase().includes(searchQuery.toLowerCase());
     

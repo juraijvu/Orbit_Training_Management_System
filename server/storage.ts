@@ -3842,6 +3842,165 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // HRM Employees methods
+  async getEmployees(): Promise<Employee[]> {
+    try {
+      return await db.select().from(employees).orderBy(desc(employees.createdAt));
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      return [];
+    }
+  }
+
+  async getEmployee(id: number): Promise<Employee | undefined> {
+    try {
+      const [employee] = await db.select().from(employees).where(eq(employees.id, id));
+      return employee;
+    } catch (error) {
+      console.error("Error fetching employee:", error);
+      return undefined;
+    }
+  }
+
+  async getEmployeeByEmployeeId(employeeId: string): Promise<Employee | undefined> {
+    try {
+      const [employee] = await db.select().from(employees).where(eq(employees.employeeId, employeeId));
+      return employee;
+    } catch (error) {
+      console.error("Error fetching employee by employeeId:", error);
+      return undefined;
+    }
+  }
+
+  async getEmployeesByDepartment(department: string): Promise<Employee[]> {
+    try {
+      return await db.select().from(employees)
+        .where(eq(employees.department, department))
+        .orderBy(desc(employees.createdAt));
+    } catch (error) {
+      console.error("Error fetching employees by department:", error);
+      return [];
+    }
+  }
+
+  async getEmployeesByStatus(status: string): Promise<Employee[]> {
+    try {
+      return await db.select().from(employees)
+        .where(eq(employees.status, status))
+        .orderBy(desc(employees.createdAt));
+    } catch (error) {
+      console.error("Error fetching employees by status:", error);
+      return [];
+    }
+  }
+
+  async createEmployee(employee: InsertEmployee): Promise<Employee> {
+    try {
+      // Generate employee ID if not provided
+      if (!employee.employeeId) {
+        const count = await db.select({ count: sql<number>`count(*)` }).from(employees);
+        const nextId = (count[0]?.count || 0) + 1;
+        employee.employeeId = `EMP-${String(nextId).padStart(3, '0')}`;
+      }
+
+      const employeeWithDefaults = {
+        ...employee,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        joiningDate: typeof employee.joiningDate === 'string' ? employee.joiningDate : employee.joiningDate,
+        visaExpiry: employee.visaExpiry ? (typeof employee.visaExpiry === 'string' ? employee.visaExpiry : employee.visaExpiry) : null,
+        leavingDate: employee.leavingDate ? (typeof employee.leavingDate === 'string' ? employee.leavingDate : employee.leavingDate) : null,
+      };
+
+      const [newEmployee] = await db.insert(employees).values(employeeWithDefaults).returning();
+      return newEmployee;
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      throw error;
+    }
+  }
+
+  async updateEmployee(id: number, employee: Partial<Employee>): Promise<Employee | undefined> {
+    try {
+      const updateData = {
+        ...employee,
+        updatedAt: new Date(),
+      };
+      const [updatedEmployee] = await db.update(employees)
+        .set(updateData)
+        .where(eq(employees.id, id))
+        .returning();
+      return updatedEmployee;
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      return undefined;
+    }
+  }
+
+  async deleteEmployee(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(employees).where(eq(employees.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      return false;
+    }
+  }
+
+  async getEmployeeStats(): Promise<{
+    totalEmployees: number;
+    activeEmployees: number;
+    onLeave: number;
+    visaExpiringSoon: number;
+  }> {
+    try {
+      // Get total employees
+      const [totalResult] = await db.select({ count: sql<number>`count(*)` }).from(employees);
+      const totalEmployees = totalResult?.count || 0;
+
+      // Get active employees
+      const [activeResult] = await db.select({ count: sql<number>`count(*)` })
+        .from(employees)
+        .where(eq(employees.status, 'Active'));
+      const activeEmployees = activeResult?.count || 0;
+
+      // Get employees on leave
+      const [onLeaveResult] = await db.select({ count: sql<number>`count(*)` })
+        .from(employees)
+        .where(eq(employees.status, 'On Leave'));
+      const onLeave = onLeaveResult?.count || 0;
+
+      // Get employees with visa expiring soon (within 60 days)
+      const sixtyDaysFromNow = new Date();
+      sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
+      
+      const [visaExpiringResult] = await db.select({ count: sql<number>`count(*)` })
+        .from(employees)
+        .where(
+          and(
+            lte(employees.visaExpiry, sixtyDaysFromNow.toISOString().split('T')[0]),
+            eq(employees.status, 'Active')
+          )
+        );
+      const visaExpiringSoon = visaExpiringResult?.count || 0;
+
+      return {
+        totalEmployees,
+        activeEmployees,
+        onLeave,
+        visaExpiringSoon
+      };
+    } catch (error) {
+      console.error("Error fetching employee stats:", error);
+      return {
+        totalEmployees: 0,
+        activeEmployees: 0,
+        onLeave: 0,
+        visaExpiringSoon: 0
+      };
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

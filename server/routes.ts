@@ -4943,6 +4943,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // ================== End of Sales Pipeline API ==================
 
+  // =========================================
+  // HRM ROUTES
+  // =========================================
+
+  // Get all employees
+  app.get('/api/hrm/employees', isAuthenticated, async (req, res) => {
+    try {
+      const employees = await storage.getEmployees();
+      res.json(employees);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      res.status(500).json({ message: "Failed to fetch employees" });
+    }
+  });
+
+  // Get employee by ID
+  app.get('/api/hrm/employees/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const employee = await storage.getEmployee(id);
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found" });
+      }
+      res.json(employee);
+    } catch (error) {
+      console.error("Error fetching employee:", error);
+      res.status(500).json({ message: "Failed to fetch employee" });
+    }
+  });
+
+  // Create new employee
+  app.post('/api/hrm/employees', isAuthenticated, async (req, res) => {
+    try {
+      const employeeData = {
+        ...req.body,
+        createdBy: req.user!.id,
+        updatedBy: req.user!.id
+      };
+      
+      const newEmployee = await storage.createEmployee(employeeData);
+      res.status(201).json(newEmployee);
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      res.status(500).json({ message: "Failed to create employee" });
+    }
+  });
+
+  // Update employee
+  app.patch('/api/hrm/employees/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = {
+        ...req.body,
+        updatedBy: req.user!.id
+      };
+      
+      const updatedEmployee = await storage.updateEmployee(id, updateData);
+      if (!updatedEmployee) {
+        return res.status(404).json({ message: "Employee not found" });
+      }
+      res.json(updatedEmployee);
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      res.status(500).json({ message: "Failed to update employee" });
+    }
+  });
+
+  // Delete employee
+  app.delete('/api/hrm/employees/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await storage.deleteEmployee(id);
+      if (result) {
+        res.status(204).send();
+      } else {
+        res.status(404).json({ message: "Employee not found" });
+      }
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      res.status(500).json({ message: "Failed to delete employee" });
+    }
+  });
+
+  // Get HRM overview/stats
+  app.get('/api/hrm/overview', isAuthenticated, async (req, res) => {
+    try {
+      const stats = await storage.getEmployeeStats();
+      const allEmployees = await storage.getEmployees();
+      
+      // Calculate departments breakdown
+      const departmentCounts = allEmployees.reduce((acc, emp) => {
+        acc[emp.department] = (acc[emp.department] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const departments = Object.entries(departmentCounts).map(([name, count]) => ({
+        name,
+        count
+      }));
+
+      // Get recent hires (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentHires = allEmployees
+        .filter(emp => new Date(emp.joiningDate) >= thirtyDaysAgo)
+        .slice(0, 5)
+        .map(emp => ({
+          id: emp.id,
+          name: `${emp.firstName} ${emp.lastName}`,
+          position: emp.position,
+          department: emp.department,
+          joinDate: emp.joiningDate
+        }));
+
+      res.json({
+        ...stats,
+        newHires: recentHires.length,
+        departments,
+        recentHires,
+        upcomingLeaves: [], 
+        birthdays: [], 
+        workAnniversaries: []
+      });
+    } catch (error) {
+      console.error("Error fetching HRM overview:", error);
+      res.status(500).json({ message: "Failed to fetch HRM overview" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

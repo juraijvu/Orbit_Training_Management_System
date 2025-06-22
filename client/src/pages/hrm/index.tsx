@@ -63,8 +63,13 @@ const HRMDashboard: FC = () => {
   const { data: overviewData, isLoading } = useQuery<EmployeeOverview>({
     queryKey: ['/api/hrm/overview'],
     queryFn: async () => {
-      // Mock data - replace with actual API call
-      return {
+      const response = await fetch('/api/hrm/overview');
+      if (!response.ok) {
+        throw new Error('Failed to fetch HRM overview');
+      }
+      return response.json();
+    },
+  });
         totalEmployees: 48,
         activeEmployees: 45,
         onLeave: 3,
