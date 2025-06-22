@@ -13,7 +13,7 @@ const connectionString = process.env.DATABASE_URL.includes('sslmode=disable')
   ? process.env.DATABASE_URL 
   : `${process.env.DATABASE_URL}?sslmode=disable`;
 
-console.log('Database connection mode: Local PostgreSQL with SSL disabled');
+console.log('Using local PostgreSQL connection:', connectionString.replace(/:[^:@]*@/, ':****@'));
 
 export const pool = new Pool({ 
   connectionString,
@@ -22,4 +22,5 @@ export const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
+
 export const db = drizzle(pool, { schema });
