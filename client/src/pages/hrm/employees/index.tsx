@@ -113,63 +113,6 @@ const EmployeeManagement: FC<EmployeeManagementProps> = ({ showAddDialog = false
 
   // If employees is undefined or empty, show empty state
   const employeeList = employees || [];
-          status: 'Active',
-          joiningDate: '2023-10-01',
-          visaExpiry: '2025-02-15',
-        },
-        {
-          id: 7,
-          employeeId: 'EMP-007',
-          name: 'John Smith',
-          email: 'john@orbitinstitute.ae',
-          phone: '+971 55 789 0123',
-          department: 'Finance',
-          position: 'Accountant',
-          status: 'Active',
-          joiningDate: '2023-11-15',
-          visaExpiry: '2025-11-15',
-        },
-        {
-          id: 8,
-          employeeId: 'EMP-008',
-          name: 'Priya Singh',
-          email: 'priya@orbitinstitute.ae',
-          phone: '+971 55 890 1234',
-          department: 'HR',
-          position: 'HR Manager',
-          status: 'On Leave',
-          joiningDate: '2023-12-01',
-          visaExpiry: '2025-12-01',
-        },
-        {
-          id: 9,
-          employeeId: 'EMP-009',
-          name: 'Ali Hassan',
-          email: 'ali@orbitinstitute.ae',
-          phone: '+971 55 901 2345',
-          department: 'Sales',
-          position: 'Sales Representative',
-          status: 'Inactive',
-          joiningDate: '2024-01-15',
-          visaExpiry: '2025-01-15',
-          leavingDate: '2024-03-15',
-        },
-        {
-          id: 10,
-          employeeId: 'EMP-010',
-          name: 'Layla Ahmed',
-          email: 'layla@orbitinstitute.ae',
-          phone: '+971 55 012 3456',
-          department: 'Training',
-          position: 'Assistant Trainer',
-          status: 'Active',
-          joiningDate: '2024-02-01',
-          visaExpiry: '2025-02-01',
-        },
-      ];
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
 
   // Set up state for employee form dialogs
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
