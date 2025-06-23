@@ -1117,8 +1117,29 @@ export default function ProposalTemplates() {
                   <CardTitle>Cover Page Preview</CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {/* Debug info for right panel */}
+                  {coverPageImage && (
+                    <div className="mb-2 text-sm text-green-600 text-center">
+                      Background image active
+                    </div>
+                  )}
+                  {!coverPageImage && (
+                    <div className="mb-2 text-sm text-gray-500 text-center">
+                      Upload background image to preview
+                    </div>
+                  )}
+                  
                   <div className="w-full border rounded p-4 overflow-auto max-h-[800px]">
-                    <div className="relative w-[595px] h-[842px] mx-auto border border-gray-300 shadow-md bg-white">
+                    <div 
+                      className="relative w-[595px] h-[842px] mx-auto border border-gray-300 shadow-md"
+                      style={{
+                        backgroundColor: coverPageImage ? 'transparent' : 'white',
+                        backgroundImage: coverPageImage ? `url(${coverPageImage})` : 'none',
+                        backgroundSize: coverPageImage ? 'cover' : 'auto',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                      }}
+                    >
                       {/* Render all fields from the cover template */}
                       {coverFields.map((field) => {
                         if (field.type === "rectangle") {
