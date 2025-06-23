@@ -10,10 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { useDropzone } from "react-dropzone";
 import { 
-  Download, 
   Save, 
   Upload, 
   Eye, 
@@ -264,8 +263,7 @@ export default function ProposalTemplates() {
   const { toast } = useToast();
   const [coverFields, setCoverFields] = useState<CoverPageField[]>(defaultCoverFields);
   const [selectedFieldId, setSelectedFieldId] = useState<string>(defaultCoverFields[0].id);
-  const [templateBackground, setTemplateBackground] = useState<string>("");
-  const [backgroundType, setBackgroundType] = useState<'none' | 'image' | 'color'>('none');
+  const [coverPageImage, setCoverPageImage] = useState<string>("");
   const [previewData, setPreviewData] = useState<PreviewData>({
     companyName: "ABC Corporation",
     contactPerson: "Jane Doe",
@@ -356,16 +354,13 @@ export default function ProposalTemplates() {
     });
   };
 
-  // Save template with background
+  // Save template with cover page
   const saveTemplate = () => {
     try {
       const templateData = {
         coverFields,
-        background: {
-          type: backgroundType,
-          data: templateBackground
-        },
-        version: "2.0"
+        coverPageImage,
+        version: "3.0"
       };
       
       // Convert to JSON and save
@@ -375,7 +370,7 @@ export default function ProposalTemplates() {
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'proposal-template-v2.json';
+      link.download = 'proposal-template.json';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -394,60 +389,7 @@ export default function ProposalTemplates() {
     }
   };
 
-  // Export template as SVG
-  const exportAsSVG = () => {
-    try {
-      let svgContent = `<svg width="595" height="842" xmlns="http://www.w3.org/2000/svg">`;
-      
-      // Add background
-      if (backgroundType === 'image' && templateBackground) {
-        svgContent += `<image x="0" y="0" width="595" height="842" href="${templateBackground}" preserveAspectRatio="xMidYMid slice"/>`;
-      } else if (backgroundType === 'color') {
-        svgContent += `<rect x="0" y="0" width="595" height="842" fill="${templateBackground}"/>`;
-      } else {
-        svgContent += `<rect x="0" y="0" width="595" height="842" fill="white"/>`;
-      }
-      
-      // Add fields
-      coverFields.forEach(field => {
-        if (field.type === 'rectangle') {
-          svgContent += `<rect x="${field.x}" y="${field.y}" width="${field.width}" height="${field.height}" fill="${field.backgroundColor || '#000000'}"/>`;
-        } else if (field.type === 'text') {
-          const fontSize = field.fontSize || 16;
-          const fontFamily = field.fontFamily || 'Arial, sans-serif';
-          const color = field.color || '#000000';
-          const fontWeight = field.bold ? 'bold' : 'normal';
-          const fontStyle = field.italic ? 'italic' : 'normal';
-          
-          svgContent += `<text x="${field.x}" y="${field.y + fontSize}" font-family="${fontFamily}" font-size="${fontSize}" fill="${color}" font-weight="${fontWeight}" font-style="${fontStyle}">${field.placeholder || field.name}</text>`;
-        }
-      });
-      
-      svgContent += `</svg>`;
-      
-      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'proposal-template.svg';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Success",
-        description: "Template exported as SVG successfully"
-      });
-    } catch (error) {
-      console.error("Error exporting SVG:", error);
-      toast({
-        title: "Error",
-        description: "Failed to export template as SVG",
-        variant: "destructive"
-      });
-    }
-  };
+
 
   // Generate PDF preview
   const generatePdfPreview = () => {
@@ -457,38 +399,46 @@ export default function ProposalTemplates() {
     });
   };
 
-  // Handle background image upload
-  const onBackgroundDrop = useCallback((acceptedFiles: File[]) => {
+  // Handle cover page image upload
+  const onCoverImageDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
+
+    // Validate PNG format
+    if (!file.type.includes('png')) {
+      toast({
+        title: "Invalid Format",
+        description: "Please upload a PNG file only",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsUploading(true);
     const reader = new FileReader();
     reader.onload = () => {
-      setTemplateBackground(reader.result as string);
-      setBackgroundType('image');
+      setCoverPageImage(reader.result as string);
       setIsUploading(false);
       toast({
         title: "Success",
-        description: "Background image uploaded successfully"
+        description: "Cover page image uploaded successfully"
       });
     };
     reader.onerror = () => {
       setIsUploading(false);
       toast({
         title: "Error",
-        description: "Failed to upload background image",
+        description: "Failed to upload cover page image",
         variant: "destructive"
       });
     };
     reader.readAsDataURL(file);
   }, [toast]);
 
-  const { getRootProps: getBackgroundRootProps, getInputProps: getBackgroundInputProps, isDragActive: isBackgroundDragActive } = useDropzone({
-    onDrop: onBackgroundDrop,
+  const { getRootProps: getCoverImageRootProps, getInputProps: getCoverImageInputProps, isDragActive: isCoverImageDragActive } = useDropzone({
+    onDrop: onCoverImageDrop,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'],
-      'image/svg+xml': ['.svg']
+      'image/png': ['.png']
     },
     maxFiles: 1
   });
@@ -506,10 +456,9 @@ export default function ProposalTemplates() {
           setCoverFields(json.coverFields);
           setSelectedFieldId(json.coverFields[0].id);
           
-          // Load background if available (v2.0 templates)
-          if (json.background) {
-            setBackgroundType(json.background.type || 'none');
-            setTemplateBackground(json.background.data || '');
+          // Load cover page image if available
+          if (json.coverPageImage) {
+            setCoverPageImage(json.coverPageImage);
           }
           
           toast({
@@ -661,69 +610,37 @@ export default function ProposalTemplates() {
                 <CardContent>
                   {showEditor ? (
                     <div>
-                      {/* Background Upload Section */}
+                      {/* Cover Page Image Upload */}
                       <div className="mb-6 p-4 border rounded-lg bg-gray-50">
-                        <Label className="text-sm font-medium mb-3 block">Template Background</Label>
-                        <div className="space-y-3">
-                          <Select value={backgroundType} onValueChange={(value: 'none' | 'image' | 'color') => setBackgroundType(value)}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select background type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">No Background</SelectItem>
-                              <SelectItem value="image">Background Image</SelectItem>
-                              <SelectItem value="color">Background Color</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          {backgroundType === 'image' && (
-                            <div
-                              {...getBackgroundRootProps()}
-                              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                                isBackgroundDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-                              }`}
-                            >
-                              <input {...getBackgroundInputProps()} />
-                              {isUploading ? (
-                                <div className="flex items-center justify-center">
-                                  <Loader2 className="h-8 w-8 animate-spin" />
-                                  <span className="ml-2">Uploading...</span>
-                                </div>
-                              ) : templateBackground ? (
-                                <div className="space-y-2">
-                                  <FileImage className="h-8 w-8 mx-auto text-green-600" />
-                                  <p className="text-sm text-green-600">Background image uploaded successfully</p>
-                                  <Button variant="outline" size="sm" onClick={() => setTemplateBackground("")}>
-                                    Remove Image
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="space-y-2">
-                                  <Image className="h-8 w-8 mx-auto text-gray-400" />
-                                  <p className="text-sm text-gray-600">
-                                    {isBackgroundDragActive ? "Drop image here..." : "Drag & drop an image or click to browse"}
-                                  </p>
-                                  <p className="text-xs text-gray-500">Supports: PNG, JPG, GIF, SVG</p>
-                                </div>
-                              )}
+                        <Label className="text-sm font-medium mb-3 block">Cover Page Background (A4 Size PNG)</Label>
+                        <div
+                          {...getCoverImageRootProps()}
+                          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                            isCoverImageDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <input {...getCoverImageInputProps()} />
+                          {isUploading ? (
+                            <div className="flex items-center justify-center">
+                              <Loader2 className="h-8 w-8 animate-spin" />
+                              <span className="ml-2">Uploading...</span>
                             </div>
-                          )}
-
-                          {backgroundType === 'color' && (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="color"
-                                value={templateBackground || "#ffffff"}
-                                onChange={(e) => setTemplateBackground(e.target.value)}
-                                className="w-16 h-10"
-                              />
-                              <Input
-                                type="text"
-                                value={templateBackground || "#ffffff"}
-                                onChange={(e) => setTemplateBackground(e.target.value)}
-                                placeholder="#ffffff"
-                                className="flex-1"
-                              />
+                          ) : coverPageImage ? (
+                            <div className="space-y-2">
+                              <FileImage className="h-8 w-8 mx-auto text-green-600" />
+                              <p className="text-sm text-green-600">Cover page image uploaded successfully</p>
+                              <p className="text-xs text-gray-500">A4 size PNG ready for use</p>
+                              <Button variant="outline" size="sm" onClick={() => setCoverPageImage("")}>
+                                Remove Image
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <Image className="h-8 w-8 mx-auto text-gray-400" />
+                              <p className="text-sm text-gray-600">
+                                {isCoverImageDragActive ? "Drop PNG file here..." : "Drag & drop PNG file or click to browse"}
+                              </p>
+                              <p className="text-xs text-gray-500">PNG format only • A4 size recommended (595x842px)</p>
                             </div>
                           )}
                         </div>
@@ -752,16 +669,10 @@ export default function ProposalTemplates() {
                             Add Field
                           </Button>
                         </div>
-                        <div className="space-x-2">
-                          <Button variant="outline" onClick={exportAsSVG}>
-                            <Download className="h-4 w-4 mr-2" />
-                            Export SVG
-                          </Button>
-                          <Button onClick={saveTemplate}>
-                            <Save className="h-4 w-4 mr-2" />
-                            Save Template
-                          </Button>
-                        </div>
+                        <Button onClick={saveTemplate}>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Template
+                        </Button>
                       </div>
 
                       <Tabs
@@ -1148,8 +1059,7 @@ export default function ProposalTemplates() {
                         <div 
                           className="relative w-[595px] h-[842px] mx-auto border border-gray-300 shadow-md bg-white"
                           style={{
-                            backgroundImage: backgroundType === 'image' && templateBackground ? `url(${templateBackground})` : 'none',
-                            backgroundColor: backgroundType === 'color' ? templateBackground : 'white',
+                            backgroundImage: coverPageImage ? `url(${coverPageImage})` : 'none',
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                             backgroundRepeat: 'no-repeat'
