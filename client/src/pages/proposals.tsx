@@ -391,10 +391,15 @@ const ProposalsPage: FC = () => {
               <p className="text-gray-500 mb-6">
                 You haven't created any proposals yet. Create your first proposal for a corporate client.
               </p>
-              <Button onClick={handleNewProposal}>
-                <FilePlus className="mr-2 h-4 w-4" />
-                Create New Proposal
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleNewProposal}>
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  Create New Proposal
+                </Button>
+                <Button variant="outline" onClick={() => setLocation('/proposal-templates')}>
+                  Templates
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

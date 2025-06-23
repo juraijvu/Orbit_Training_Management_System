@@ -527,13 +527,39 @@ export default function ProposalTemplates() {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Proposal Template Editor</h1>
+    <AppLayout>
+      <div className="container mx-auto py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Proposal Templates</h1>
+          <p className="text-gray-600">Create and manage proposal templates for your corporate clients</p>
+          
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="template-name">Template Name</Label>
+              <Input
+                id="template-name"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Enter template name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="template-description">Description</Label>
+              <Input
+                id="template-description"
+                value={templateDescription}
+                onChange={(e) => setTemplateDescription(e.target.value)}
+                placeholder="Brief description of this template"
+              />
+            </div>
+          </div>
+        </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="cover">Cover Page</TabsTrigger>
           <TabsTrigger value="content">Content Pages</TabsTrigger>
+          <TabsTrigger value="closing">Last 3 Pages</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cover">
@@ -1523,16 +1549,25 @@ export default function ProposalTemplates() {
         <Button onClick={saveCompleteTemplate} size="lg">
           <Save className="h-4 w-4 mr-2" />
           Save Complete Template
-                        </div>
-                        
-                        <div className="flex items-center">
-                          <div className="bg-gray-100 rounded flex-1 p-2 flex items-center">
+        </Button>
+      </div>
+      </div>
+    </AppLayout>
+  );
+}
                             <div className="text-xs text-gray-600 overflow-hidden overflow-ellipsis">
                               No file selected
                             </div>
                           </div>
                         </div>
                       </TabsContent>
+                    </Tabs>
+                  </div>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
                       
                       <TabsContent value="text" className="space-y-4 pt-4">
                         <div>
