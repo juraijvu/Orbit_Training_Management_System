@@ -1163,7 +1163,6 @@ export default function ProposalTemplates() {
                         className="mt-4"
                         onClick={generatePdfPreview}
                       >
-                        <Download className="h-4 w-4 mr-2" />
                         Generate PDF Preview
                       </Button>
                     </div>
@@ -1296,7 +1295,6 @@ export default function ProposalTemplates() {
                     className="mt-4"
                     onClick={generatePdfPreview}
                   >
-                    <Download className="h-4 w-4 mr-2" />
                     Generate PDF Preview
                   </Button>
                 </CardContent>
