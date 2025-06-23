@@ -357,40 +357,35 @@ export default function ProposalTemplates() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      
-      switch (pageType) {
-        case 'page2':
-          setPage2Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
-          break;
-        case 'page3':
-          setPage3Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
-          break;
-        case 'page4':
-          setPage4Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
-          break;
-        case 'page5':
-          setPage5Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
-          break;
-        case 'last1':
-          setLastPage1Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
-          break;
-        case 'last2':
-          setLastPage2Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
-          break;
-        case 'last3':
-          setLastPage3Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
-          break;
-      }
-      
-      toast({
-        title: "Success",
-        description: "PDF uploaded successfully!",
-      });
-    };
-    reader.readAsDataURL(file);
+    // Store file reference without reading as data URL to avoid large payloads
+    switch (pageType) {
+      case 'page2':
+        setPage2Content(prev => ({ ...prev, pdfFile: file, backgroundImage: null }));
+        break;
+      case 'page3':
+        setPage3Content(prev => ({ ...prev, pdfFile: file, backgroundImage: null }));
+        break;
+      case 'page4':
+        setPage4Content(prev => ({ ...prev, pdfFile: file, backgroundImage: null }));
+        break;
+      case 'page5':
+        setPage5Content(prev => ({ ...prev, pdfFile: file, backgroundImage: null }));
+        break;
+      case 'last1':
+        setLastPage1Content(prev => ({ ...prev, pdfFile: file, backgroundImage: null }));
+        break;
+      case 'last2':
+        setLastPage2Content(prev => ({ ...prev, pdfFile: file, backgroundImage: null }));
+        break;
+      case 'last3':
+        setLastPage3Content(prev => ({ ...prev, pdfFile: file, backgroundImage: null }));
+        break;
+    }
+    
+    toast({
+      title: "Success",
+      description: "PDF uploaded successfully!",
+    });
   };
 
   // Find the selected field in our list
@@ -479,18 +474,54 @@ export default function ProposalTemplates() {
     }
 
     try {
+      // Prepare template data without large PDF data URLs
       const templateData = {
         name: templateName.trim(),
         description: templateDescription.trim() || null,
         coverPageImage: coverPageImage,
         coverPageFields: JSON.stringify(coverFields),
-        page2Template: JSON.stringify(page2Content),
-        page3Template: JSON.stringify(page3Content),
-        page4Template: JSON.stringify(page4Content),
-        page5Template: JSON.stringify(page5Content),
-        lastPage1Content: JSON.stringify(lastPage1Content),
-        lastPage2Content: JSON.stringify(lastPage2Content),
-        lastPage3Content: JSON.stringify(lastPage3Content),
+        page2Template: JSON.stringify({
+          title: page2Content.title,
+          content: page2Content.content,
+          hasPdf: !!page2Content.pdfFile,
+          pdfName: page2Content.pdfFile?.name
+        }),
+        page3Template: JSON.stringify({
+          title: page3Content.title,
+          content: page3Content.content,
+          hasPdf: !!page3Content.pdfFile,
+          pdfName: page3Content.pdfFile?.name
+        }),
+        page4Template: JSON.stringify({
+          title: page4Content.title,
+          content: page4Content.content,
+          hasPdf: !!page4Content.pdfFile,
+          pdfName: page4Content.pdfFile?.name
+        }),
+        page5Template: JSON.stringify({
+          title: page5Content.title,
+          content: page5Content.content,
+          hasPdf: !!page5Content.pdfFile,
+          pdfName: page5Content.pdfFile?.name
+        }),
+        lastPage1Content: JSON.stringify({
+          title: lastPage1Content.title,
+          content: lastPage1Content.content,
+          hasPdf: !!lastPage1Content.pdfFile,
+          pdfName: lastPage1Content.pdfFile?.name
+        }),
+        lastPage2Content: JSON.stringify({
+          title: lastPage2Content.title,
+          content: lastPage2Content.content,
+          hasPdf: !!lastPage2Content.pdfFile,
+          pdfName: lastPage2Content.pdfFile?.name
+        }),
+        lastPage3Content: JSON.stringify({
+          title: lastPage3Content.title,
+          content: lastPage3Content.content,
+          hasPdf: !!lastPage3Content.pdfFile,
+          pdfName: lastPage3Content.pdfFile?.name
+        }),
         isActive: true
       };
 
