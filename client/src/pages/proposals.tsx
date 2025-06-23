@@ -46,7 +46,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { insertProposalSchema } from '@shared/schema';
+import { insertProposalSchema, type ProposalTemplate } from '@shared/schema';
 import {
   Select,
   SelectContent,
@@ -127,6 +127,11 @@ const ProposalsPage: FC = () => {
   // Fetch trainers
   const { data: trainers, isLoading: isTrainersLoading } = useQuery({
     queryKey: ['/api/trainers'],
+  });
+
+  // Fetch proposal templates
+  const { data: templates, isLoading: isTemplatesLoading } = useQuery({
+    queryKey: ['/api/proposal-templates'],
   });
   
   // New proposal form
@@ -691,7 +696,17 @@ const ProposalsPage: FC = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="0">Default Template</SelectItem>
+                            {isTemplatesLoading ? (
+                              <SelectItem value="" disabled>Loading templates...</SelectItem>
+                            ) : templates && templates.length > 0 ? (
+                              templates.map((template) => (
+                                <SelectItem key={template.id} value={template.id.toString()}>
+                                  {template.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="" disabled>No templates available</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
