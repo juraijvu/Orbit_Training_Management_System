@@ -86,6 +86,11 @@ const proposalFormSchema = z.object({
   trainerId: z.union([z.number(), z.string().transform(val => val ? parseInt(val) : undefined)]).optional(),
   companyProfile: z.string().optional(),
   companyProfileFile: z.instanceof(File).optional(),
+  templateId: z.number().optional(),
+  courseOutline: z.string().optional(),
+  courseOutlineFile: z.instanceof(File).optional(),
+  courseOutlineFilename: z.string().optional(),
+  courseOutlineMimeType: z.string().optional(),
   coverBackgroundColor: z.string().default("#000000"),
   coverTextColor: z.string().default("#ffffff"),
 });
@@ -250,13 +255,18 @@ const ProposalsPage: FC = () => {
         phone: values.phone || "",
         courseIds: values.courseIds || "",
         trainerId: values.trainerId || null,
+        templateId: values.templateId || null,
+        courseOutline: values.courseOutline || null,
+        courseOutlineFilename: values.courseOutlineFilename || null,
+        courseOutlineMimeType: values.courseOutlineMimeType || null,
         totalAmount: String(values.totalAmount || 0),
         discount: String(values.discount || 0),
         finalAmount: String(values.finalAmount || 0),
         content: values.content || "{}",
         status: values.status || "draft",
         date: values.date || format(new Date(), 'yyyy-MM-dd'),
-        coverPage: values.coverPage || ""
+        coverPage: values.coverPage || "",
+        createdBy: user!.id
       };
       
       console.log("Submitting proposal with formatted data:", formattedValues);

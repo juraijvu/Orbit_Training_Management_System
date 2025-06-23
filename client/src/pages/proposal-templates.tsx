@@ -353,6 +353,42 @@ export default function ProposalTemplates() {
     });
   };
 
+  // Save the complete template
+  const saveCompleteTemplate = async () => {
+    try {
+      const templateData = {
+        name: templateName,
+        description: templateDescription,
+        coverPageImage: coverPageImage,
+        coverPageFields: JSON.stringify(coverFields),
+        page2Template: JSON.stringify({ title: "About Our Company", content: "" }),
+        page3Template: JSON.stringify({ title: "Our Training Services", content: "" }),
+        page4Template: JSON.stringify({ title: "Why Choose Orbit Institute", content: "" }),
+        page5Template: JSON.stringify({ title: "Training Program Details", content: "" }),
+        lastPage1Content: JSON.stringify({ title: "Terms & Conditions", content: "" }),
+        lastPage2Content: JSON.stringify({ title: "Our Credentials & Certifications", content: "" }),
+        lastPage3Content: JSON.stringify({ title: "Contact Us", content: "" }),
+        isActive: true
+      };
+
+      await apiRequest('/api/proposal-templates', {
+        method: 'POST',
+        body: JSON.stringify(templateData)
+      });
+
+      toast({
+        title: "Template Saved",
+        description: "Your proposal template has been saved successfully!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save template. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Save template 
   const saveTemplate = () => {
     if (!coverPageImage) {
@@ -1555,22 +1591,6 @@ export default function ProposalTemplates() {
     </AppLayout>
   );
 }
-                            <div className="text-xs text-gray-600 overflow-hidden overflow-ellipsis">
-                              No file selected
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-                      
-                      <TabsContent value="text" className="space-y-4 pt-4">
-                        <div>
                           <Label htmlFor="intro-title">Section Title</Label>
                           <Input id="intro-title" defaultValue="Company Introduction" className="mb-2" />
                         </div>
