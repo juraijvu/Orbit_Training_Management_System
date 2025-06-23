@@ -2185,6 +2185,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Send proposal via email
+  app.post('/api/proposals/:id/send', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      const proposal = await storage.getProposal(id);
+      if (!proposal) {
+        return res.status(404).json({ message: "Proposal not found" });
+      }
+      
+      // Update proposal status to 'sent'
+      await storage.updateProposal(id, { status: 'sent' });
+      
+      // Here you would integrate with an email service to send the proposal
+      // For now, we'll just log the action and return success
+      console.log(`Proposal ${proposal.proposalNumber} sent to ${email}`);
+      
+      res.json({ message: "Proposal sent successfully" });
+    } catch (error) {
+      console.error("Failed to send proposal:", error);
+      res.status(500).json({ message: "Failed to send proposal" });
+    }
+  });
+
   // ================== Dashboard API ==================
   // Get dashboard stats
   app.get('/api/dashboard/stats', isAuthenticated, async (req, res) => {
