@@ -216,6 +216,10 @@ export const proposals = pgTable("proposals", {
   coverPage: text("cover_page"), // URL or content
   content: text("content"), // Stored as JSON
   companyProfile: text("company_profile"), // Company profile PDF URL or path
+  courseOutline: text("course_outline"), // Course outline PDF URL
+  courseOutlineFilename: text("course_outline_filename"),
+  courseOutlineMimeType: text("course_outline_mime_type"),
+  templateId: integer("template_id"), // Reference to proposal template
   companyProfileFilename: text("company_profile_filename"), // Original filename of the company profile
   companyProfileMimeType: text("company_profile_mime_type"), // MIME type of the company profile file
   status: text("status").notNull().default("draft"), // draft, sent, accepted, rejected
@@ -258,6 +262,39 @@ export type QuotationItem = typeof quotationItems.$inferSelect;
 
 export type InsertProposal = z.infer<typeof insertProposalSchema>;
 export type Proposal = typeof proposals.$inferSelect;
+
+// Proposal Templates Table
+export const proposalTemplates = pgTable("proposal_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  // Cover page template data
+  coverPageImage: text("cover_page_image"), // Background image URL
+  coverPageFields: text("cover_page_fields"), // JSON stored field configurations
+  // Page templates (2-5)
+  page2Template: text("page2_template"), // JSON template data
+  page3Template: text("page3_template"),
+  page4Template: text("page4_template"), 
+  page5Template: text("page5_template"),
+  // Last 3 pages (static)
+  lastPage1Content: text("last_page1_content"), // Static content/PDF URL
+  lastPage2Content: text("last_page2_content"),
+  lastPage3Content: text("last_page3_content"),
+  // Template settings
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertProposalTemplateSchema = createInsertSchema(proposalTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertProposalTemplate = z.infer<typeof insertProposalTemplateSchema>;
+export type ProposalTemplate = typeof proposalTemplates.$inferSelect;
 
 // Registration Courses Table for tracking courses in a registration
 export const registrationCourses = pgTable("registration_courses", {

@@ -9,6 +9,7 @@ import {
   quotations, Quotation, InsertQuotation,
   quotationItems, QuotationItem, InsertQuotationItem,
   proposals, Proposal, InsertProposal,
+  proposalTemplates, ProposalTemplate, InsertProposalTemplate,
   leads, Lead, InsertLead,
   campaigns, Campaign, InsertCampaign,
   followUps, FollowUp, InsertFollowUp,
