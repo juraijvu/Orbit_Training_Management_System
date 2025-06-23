@@ -526,6 +526,7 @@ export default function ProposalTemplates() {
       };
 
       const response = await apiRequest('POST', '/api/proposal-templates', templateData);
+      const result = await response.json();
 
       toast({
         title: "Template Saved",
@@ -535,7 +536,7 @@ export default function ProposalTemplates() {
       // Reset form after successful save
       setTemplateName("");
       setTemplateDescription("");
-      setCoverPageImage(null);
+      setCoverPageImage("");
       
     } catch (error: any) {
       console.error("Template save error:", error);
