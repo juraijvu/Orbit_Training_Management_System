@@ -1257,7 +1257,7 @@ export default function ProposalTemplates() {
                       
                       <TabsContent value="upload" className="space-y-4 pt-4">
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                          <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                          <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                           <p className="text-sm text-gray-500 mb-2">
                             Drag & drop your company profile PDF here
                           </p>
