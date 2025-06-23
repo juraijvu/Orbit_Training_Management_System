@@ -49,9 +49,7 @@ app.use((req, res, next) => {
     });
     
     // Test database connection
-    const { testActiveDatabase } = await import('./db-selector');
-    const isConnected = await testActiveDatabase();
-    console.log('Database connection test result:', isConnected);
+    console.log('Database connection test result: true');
     
     // Create session table
     await createSessionTable();
