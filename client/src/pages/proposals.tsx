@@ -671,6 +671,70 @@ const ProposalsPage: FC = () => {
                   </div>
                 </div>
                 
+                {/* Template Selection */}
+                <div>
+                  <h3 className="text-md font-medium text-gray-700 mb-4">Proposal Template</h3>
+                  <p className="text-sm text-gray-500 mb-4">Select a template for your proposal</p>
+                  
+                  <FormField
+                    control={form.control}
+                    name="templateId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Template</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a template" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="0">Default Template</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Course Outline Upload */}
+                <div>
+                  <h3 className="text-md font-medium text-gray-700 mb-4">Course Outline Upload</h3>
+                  <p className="text-sm text-gray-500 mb-4">Upload a PDF file containing the course outline</p>
+                  
+                  <div className="flex items-center gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.pdf';
+                        input.onchange = (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (file) {
+                            form.setValue('courseOutlineFile', file);
+                            form.setValue('courseOutline', file.name);
+                            form.setValue('courseOutlineFilename', file.name);
+                            form.setValue('courseOutlineMimeType', file.type);
+                          }
+                        };
+                        input.click();
+                      }}
+                    >
+                      <FileImage className="mr-2 h-4 w-4" />
+                      Choose Course Outline PDF
+                    </Button>
+                    
+                    {form.watch('courseOutline') && (
+                      <span className="text-sm text-green-600">
+                        {form.watch('courseOutline')} uploaded
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 {/* Course Details */}
                 <div>
                   <h3 className="text-md font-medium text-gray-700 mb-4">Course Details</h3>

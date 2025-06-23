@@ -1591,10 +1591,6 @@ export default function ProposalTemplates() {
     </AppLayout>
   );
 }
-                          <Label htmlFor="intro-title">Section Title</Label>
-                          <Input id="intro-title" defaultValue="Company Introduction" className="mb-2" />
-                        </div>
-                        <div>
                           <Label htmlFor="intro-content">Content</Label>
                           <Textarea 
                             id="intro-content" 
