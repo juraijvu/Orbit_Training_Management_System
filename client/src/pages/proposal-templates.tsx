@@ -284,6 +284,52 @@ export default function ProposalTemplates() {
   const [includeFees, setIncludeFees] = useState<boolean>(true);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   
+  // Page content states for pages 2-5 and last 3 pages
+  const [page2Content, setPage2Content] = useState({
+    title: "About Our Company",
+    content: "",
+    backgroundImage: null as string | null,
+    pdfFile: null as File | null
+  });
+  const [page3Content, setPage3Content] = useState({
+    title: "Our Training Services", 
+    content: "",
+    backgroundImage: null as string | null,
+    pdfFile: null as File | null
+  });
+  const [page4Content, setPage4Content] = useState({
+    title: "Why Choose Orbit Institute",
+    content: "",
+    backgroundImage: null as string | null,
+    pdfFile: null as File | null
+  });
+  const [page5Content, setPage5Content] = useState({
+    title: "Training Program Details",
+    content: "",
+    backgroundImage: null as string | null,
+    pdfFile: null as File | null
+  });
+  
+  // Last 3 pages content
+  const [lastPage1Content, setLastPage1Content] = useState({
+    title: "Terms & Conditions",
+    content: "",
+    backgroundImage: null as string | null,
+    pdfFile: null as File | null
+  });
+  const [lastPage2Content, setLastPage2Content] = useState({
+    title: "Our Credentials & Certifications",
+    content: "",
+    backgroundImage: null as string | null,
+    pdfFile: null as File | null
+  });
+  const [lastPage3Content, setLastPage3Content] = useState({
+    title: "Contact Us",
+    content: "",
+    backgroundImage: null as string | null,
+    pdfFile: null as File | null
+  });
+  
   // Fetch courses from API
   const { data: courses, isLoading: isCoursesLoading } = useQuery<Course[]>({
     queryKey: ['/api/courses'],
@@ -1397,11 +1443,53 @@ export default function ProposalTemplates() {
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-medium">Content</Label>
-                        <Textarea 
-                          placeholder="Describe your training services and methodology..."
-                          className="min-h-[200px] mt-1"
-                        />
+                        <Label className="text-sm font-medium">Content Type</Label>
+                        <Tabs defaultValue="text" className="w-full mt-2">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="text">Rich Text</TabsTrigger>
+                            <TabsTrigger value="upload">PDF Upload</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="text" className="pt-4">
+                            <Textarea 
+                              placeholder="Describe your training services and methodology..."
+                              className="min-h-[200px]"
+                              value={page3Content.content}
+                              onChange={(e) => setPage3Content({...page3Content, content: e.target.value})}
+                            />
+                          </TabsContent>
+                          
+                          <TabsContent value="upload" className="pt-4">
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                              <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-500 mb-2">
+                                Upload services PDF
+                              </p>
+                              <input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePdfUpload('page3', file);
+                                }}
+                                className="hidden"
+                                id="page3-pdf-upload"
+                              />
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => document.getElementById('page3-pdf-upload')?.click()}
+                              >
+                                Browse Files
+                              </Button>
+                              {page3Content.pdfFile && (
+                                <p className="text-sm text-green-600 mt-2">
+                                  {page3Content.pdfFile.name} uploaded
+                                </p>
+                              )}
+                            </div>
+                          </TabsContent>
+                        </Tabs>
                       </div>
                     </div>
                   </Card>
@@ -1504,7 +1592,28 @@ export default function ProposalTemplates() {
                               <p className="text-sm text-gray-500 mb-2">
                                 Upload terms & conditions PDF
                               </p>
-                              <Button variant="outline" size="sm">Browse Files</Button>
+                              <input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePdfUpload('last1', file);
+                                }}
+                                className="hidden"
+                                id="last1-pdf-upload"
+                              />
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => document.getElementById('last1-pdf-upload')?.click()}
+                              >
+                                Browse Files
+                              </Button>
+                              {lastPage1Content.pdfFile && (
+                                <p className="text-sm text-green-600 mt-2">
+                                  {lastPage1Content.pdfFile.name} uploaded
+                                </p>
+                              )}
                             </div>
                           </TabsContent>
                         </Tabs>
@@ -1545,7 +1654,28 @@ export default function ProposalTemplates() {
                               <p className="text-sm text-gray-500 mb-2">
                                 Upload credentials PDF
                               </p>
-                              <Button variant="outline" size="sm">Browse Files</Button>
+                              <input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePdfUpload('last2', file);
+                                }}
+                                className="hidden"
+                                id="last2-pdf-upload"
+                              />
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => document.getElementById('last2-pdf-upload')?.click()}
+                              >
+                                Browse Files
+                              </Button>
+                              {lastPage2Content.pdfFile && (
+                                <p className="text-sm text-green-600 mt-2">
+                                  {lastPage2Content.pdfFile.name} uploaded
+                                </p>
+                              )}
                             </div>
                           </TabsContent>
                         </Tabs>
