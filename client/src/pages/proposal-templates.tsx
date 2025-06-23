@@ -362,13 +362,13 @@ export default function ProposalTemplates() {
         description: templateDescription,
         coverPageImage: coverPageImage,
         coverPageFields: JSON.stringify(coverFields),
-        page2Template: JSON.stringify({ title: "About Our Company", content: "" }),
-        page3Template: JSON.stringify({ title: "Our Training Services", content: "" }),
-        page4Template: JSON.stringify({ title: "Why Choose Orbit Institute", content: "" }),
-        page5Template: JSON.stringify({ title: "Training Program Details", content: "" }),
-        lastPage1Content: JSON.stringify({ title: "Terms & Conditions", content: "" }),
-        lastPage2Content: JSON.stringify({ title: "Our Credentials & Certifications", content: "" }),
-        lastPage3Content: JSON.stringify({ title: "Contact Us", content: "" }),
+        page2Template: JSON.stringify(page2Content),
+        page3Template: JSON.stringify(page3Content),
+        page4Template: JSON.stringify(page4Content),
+        page5Template: JSON.stringify(page5Content),
+        lastPage1Content: JSON.stringify(lastPage1Content),
+        lastPage2Content: JSON.stringify(lastPage2Content),
+        lastPage3Content: JSON.stringify(lastPage3Content),
         isActive: true
       };
 
@@ -379,7 +379,7 @@ export default function ProposalTemplates() {
 
       toast({
         title: "Template Saved",
-        description: "Your proposal template has been saved successfully!",
+        description: "Your complete proposal template has been saved successfully!",
       });
     } catch (error) {
       toast({
