@@ -336,6 +336,63 @@ export default function ProposalTemplates() {
     queryFn: getQueryFn({ on401: "throw" })
   });
 
+  // Handle PDF file upload for pages
+  const handlePdfUpload = (pageType: string, file: File) => {
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: 'Invalid File Type',
+        description: 'Please select a PDF file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast({
+        title: 'File Too Large',
+        description: 'PDF file must be less than 10MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      
+      switch (pageType) {
+        case 'page2':
+          setPage2Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
+          break;
+        case 'page3':
+          setPage3Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
+          break;
+        case 'page4':
+          setPage4Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
+          break;
+        case 'page5':
+          setPage5Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
+          break;
+        case 'last1':
+          setLastPage1Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
+          break;
+        case 'last2':
+          setLastPage2Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
+          break;
+        case 'last3':
+          setLastPage3Content(prev => ({ ...prev, pdfFile: file, backgroundImage: result }));
+          break;
+      }
+      
+      toast({
+        title: "Success",
+        description: "PDF uploaded successfully!",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Find the selected field in our list
   const getSelectedField = (): CoverPageField | undefined => {
     return coverFields.find((field) => field.id === selectedFieldId);
@@ -1507,11 +1564,53 @@ export default function ProposalTemplates() {
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-medium">Content</Label>
-                        <Textarea 
-                          placeholder="Highlight your unique selling points and advantages..."
-                          className="min-h-[200px] mt-1"
-                        />
+                        <Label className="text-sm font-medium">Content Type</Label>
+                        <Tabs defaultValue="text" className="w-full mt-2">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="text">Rich Text</TabsTrigger>
+                            <TabsTrigger value="upload">PDF Upload</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="text" className="pt-4">
+                            <Textarea 
+                              placeholder="Highlight your unique selling points and advantages..."
+                              className="min-h-[200px]"
+                              value={page4Content.content}
+                              onChange={(e) => setPage4Content({...page4Content, content: e.target.value})}
+                            />
+                          </TabsContent>
+                          
+                          <TabsContent value="upload" className="pt-4">
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                              <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-500 mb-2">
+                                Upload why choose us PDF
+                              </p>
+                              <input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePdfUpload('page4', file);
+                                }}
+                                className="hidden"
+                                id="page4-pdf-upload"
+                              />
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => document.getElementById('page4-pdf-upload')?.click()}
+                              >
+                                Browse Files
+                              </Button>
+                              {page4Content.pdfFile && (
+                                <p className="text-sm text-green-600 mt-2">
+                                  {page4Content.pdfFile.name} uploaded
+                                </p>
+                              )}
+                            </div>
+                          </TabsContent>
+                        </Tabs>
                       </div>
                     </div>
                   </Card>
@@ -1529,11 +1628,53 @@ export default function ProposalTemplates() {
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-medium">Content</Label>
-                        <Textarea 
-                          placeholder="Introduction to the training program details that will follow..."
-                          className="min-h-[200px] mt-1"
-                        />
+                        <Label className="text-sm font-medium">Content Type</Label>
+                        <Tabs defaultValue="text" className="w-full mt-2">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="text">Rich Text</TabsTrigger>
+                            <TabsTrigger value="upload">PDF Upload</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="text" className="pt-4">
+                            <Textarea 
+                              placeholder="Introduction to the training program details that will follow..."
+                              className="min-h-[200px]"
+                              value={page5Content.content}
+                              onChange={(e) => setPage5Content({...page5Content, content: e.target.value})}
+                            />
+                          </TabsContent>
+                          
+                          <TabsContent value="upload" className="pt-4">
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                              <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-500 mb-2">
+                                Upload program details PDF
+                              </p>
+                              <input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePdfUpload('page5', file);
+                                }}
+                                className="hidden"
+                                id="page5-pdf-upload"
+                              />
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => document.getElementById('page5-pdf-upload')?.click()}
+                              >
+                                Browse Files
+                              </Button>
+                              {page5Content.pdfFile && (
+                                <p className="text-sm text-green-600 mt-2">
+                                  {page5Content.pdfFile.name} uploaded
+                                </p>
+                              )}
+                            </div>
+                          </TabsContent>
+                        </Tabs>
                       </div>
                       <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
                         <strong>Note:</strong> Course outline will be inserted automatically after this page based on the uploaded course outline for each proposal.
@@ -1583,6 +1724,8 @@ export default function ProposalTemplates() {
                             <Textarea 
                               placeholder="Enter terms and conditions..."
                               className="min-h-[300px]"
+                              value={lastPage1Content.content}
+                              onChange={(e) => setLastPage1Content({...lastPage1Content, content: e.target.value})}
                             />
                           </TabsContent>
                           
@@ -1696,11 +1839,53 @@ export default function ProposalTemplates() {
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-medium">Content</Label>
-                        <Textarea 
-                          placeholder="Enter contact information, office locations, and how to reach you..."
-                          className="min-h-[300px] mt-1"
-                        />
+                        <Label className="text-sm font-medium">Content Type</Label>
+                        <Tabs defaultValue="text" className="w-full mt-2">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="text">Rich Text</TabsTrigger>
+                            <TabsTrigger value="upload">PDF Upload</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="text" className="pt-4">
+                            <Textarea 
+                              placeholder="Enter contact information, office locations, and how to reach you..."
+                              className="min-h-[300px]"
+                              value={lastPage3Content.content}
+                              onChange={(e) => setLastPage3Content({...lastPage3Content, content: e.target.value})}
+                            />
+                          </TabsContent>
+                          
+                          <TabsContent value="upload" className="pt-4">
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                              <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-500 mb-2">
+                                Upload contact page PDF
+                              </p>
+                              <input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePdfUpload('last3', file);
+                                }}
+                                className="hidden"
+                                id="last3-pdf-upload"
+                              />
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => document.getElementById('last3-pdf-upload')?.click()}
+                              >
+                                Browse Files
+                              </Button>
+                              {lastPage3Content.pdfFile && (
+                                <p className="text-sm text-green-600 mt-2">
+                                  {lastPage3Content.pdfFile.name} uploaded
+                                </p>
+                              )}
+                            </div>
+                          </TabsContent>
+                        </Tabs>
                       </div>
                     </div>
                   </Card>
