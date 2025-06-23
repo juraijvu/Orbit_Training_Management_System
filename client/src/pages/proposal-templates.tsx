@@ -459,10 +459,29 @@ export default function ProposalTemplates() {
 
   // Save the complete template
   const saveCompleteTemplate = async () => {
+    // Validation
+    if (!templateName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a template name.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!coverPageImage) {
+      toast({
+        title: "Validation Error", 
+        description: "Please upload a cover page background image.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const templateData = {
-        name: templateName,
-        description: templateDescription,
+        name: templateName.trim(),
+        description: templateDescription.trim() || null,
         coverPageImage: coverPageImage,
         coverPageFields: JSON.stringify(coverFields),
         page2Template: JSON.stringify(page2Content),
@@ -475,7 +494,7 @@ export default function ProposalTemplates() {
         isActive: true
       };
 
-      await apiRequest('/api/proposal-templates', {
+      const response = await apiRequest('/api/proposal-templates', {
         method: 'POST',
         body: JSON.stringify(templateData)
       });
@@ -484,10 +503,17 @@ export default function ProposalTemplates() {
         title: "Template Saved",
         description: "Your complete proposal template has been saved successfully!",
       });
-    } catch (error) {
+
+      // Reset form after successful save
+      setTemplateName("");
+      setTemplateDescription("");
+      setCoverPageImage(null);
+      
+    } catch (error: any) {
+      console.error("Template save error:", error);
       toast({
         title: "Error",
-        description: "Failed to save template. Please try again.",
+        description: error.message || "Failed to save template. Please try again.",
         variant: "destructive"
       });
     }
@@ -1455,6 +1481,8 @@ export default function ProposalTemplates() {
                         <Input 
                           placeholder="About Our Company" 
                           className="mt-1"
+                          value={page2Content.title}
+                          onChange={(e) => setPage2Content({...page2Content, title: e.target.value})}
                         />
                       </div>
                       <div>
@@ -1497,6 +1525,8 @@ export default function ProposalTemplates() {
                         <Input 
                           placeholder="Our Training Services" 
                           className="mt-1"
+                          value={page3Content.title}
+                          onChange={(e) => setPage3Content({...page3Content, title: e.target.value})}
                         />
                       </div>
                       <div>
@@ -1561,6 +1591,8 @@ export default function ProposalTemplates() {
                         <Input 
                           placeholder="Why Choose Orbit Institute" 
                           className="mt-1"
+                          value={page4Content.title}
+                          onChange={(e) => setPage4Content({...page4Content, title: e.target.value})}
                         />
                       </div>
                       <div>
@@ -1625,6 +1657,8 @@ export default function ProposalTemplates() {
                         <Input 
                           placeholder="Training Program Details" 
                           className="mt-1"
+                          value={page5Content.title}
+                          onChange={(e) => setPage5Content({...page5Content, title: e.target.value})}
                         />
                       </div>
                       <div>
@@ -1710,6 +1744,8 @@ export default function ProposalTemplates() {
                         <Input 
                           placeholder="Terms & Conditions" 
                           className="mt-1"
+                          value={lastPage1Content.title}
+                          onChange={(e) => setLastPage1Content({...lastPage1Content, title: e.target.value})}
                         />
                       </div>
                       <div>
@@ -1774,6 +1810,8 @@ export default function ProposalTemplates() {
                         <Input 
                           placeholder="Our Credentials & Certifications" 
                           className="mt-1"
+                          value={lastPage2Content.title}
+                          onChange={(e) => setLastPage2Content({...lastPage2Content, title: e.target.value})}
                         />
                       </div>
                       <div>
@@ -1836,6 +1874,8 @@ export default function ProposalTemplates() {
                         <Input 
                           placeholder="Contact Us" 
                           className="mt-1"
+                          value={lastPage3Content.title}
+                          onChange={(e) => setLastPage3Content({...lastPage3Content, title: e.target.value})}
                         />
                       </div>
                       <div>
