@@ -485,3 +485,214 @@ export const generateProposalPdf = (data: ProposalPdfData): string => {
     </div>
   `;
 };
+
+// Function to generate proposal PDF using a custom template
+export const generateProposalWithTemplate = (data: ProposalPdfData, template: any): string => {
+  try {
+    // Parse template fields from the database
+    const coverFields = JSON.parse(template.coverPageFields || '[]');
+    const page2Template = JSON.parse(template.page2Template || '{}');
+    const page3Template = JSON.parse(template.page3Template || '{}');
+    const page4Template = JSON.parse(template.page4Template || '{}');
+    const page5Template = JSON.parse(template.page5Template || '{}');
+    
+    // Create template-based cover page
+    let coverPageHtml = `
+      <div class="print-page" style="position: relative; width: 210mm; height: 297mm; overflow: hidden;">
+    `;
+    
+    // Add background image if available
+    if (template.coverPageImage) {
+      coverPageHtml += `
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;">
+          <img src="${template.coverPageImage}" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>
+      `;
+    }
+    
+    // Render template fields with actual data
+    coverFields.forEach((field: any) => {
+      if (field.type === 'text') {
+        let textValue = field.value || field.placeholder || '';
+        
+        // Replace placeholders with actual data
+        textValue = textValue.replace(/\{\{companyName\}\}/g, data.companyName || '');
+        textValue = textValue.replace(/\{\{contactPerson\}\}/g, data.contactPerson || '');
+        textValue = textValue.replace(/\{\{email\}\}/g, data.email || '');
+        textValue = textValue.replace(/\{\{phone\}\}/g, data.phone || '');
+        textValue = textValue.replace(/\{\{courseName\}\}/g, data.courses?.[0] || '');
+        textValue = textValue.replace(/\{\{presenterName\}\}/g, data.presenterName || '');
+        textValue = textValue.replace(/\{\{proposalDate\}\}/g, data.date || '');
+        textValue = textValue.replace(/\{\{trainerName\}\}/g, data.trainer?.fullName || '');
+        
+        coverPageHtml += `
+          <div style="
+            position: absolute;
+            left: ${field.x}px;
+            top: ${field.y}px;
+            width: ${field.width}px;
+            height: ${field.height}px;
+            font-family: ${field.fontFamily || 'Arial, sans-serif'};
+            font-size: ${field.fontSize || 16}px;
+            font-weight: ${field.bold ? 'bold' : 'normal'};
+            font-style: ${field.italic ? 'italic' : 'normal'};
+            color: ${field.color || '#000000'};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+          ">
+            ${textValue}
+          </div>
+        `;
+      } else if (field.type === 'image') {
+        const isOnBlackBackground = field.x < 250;
+        const logoUrl = data.logo || 'https://via.placeholder.com/120';
+        
+        coverPageHtml += `
+          <div style="
+            position: absolute;
+            left: ${field.x}px;
+            top: ${field.y}px;
+            width: ${field.width}px;
+            height: ${field.height}px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <img src="${logoUrl}" alt="Logo" style="
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: contain;
+              filter: ${isOnBlackBackground ? 'brightness(0) invert(1)' : 'none'};
+            " />
+          </div>
+        `;
+      } else if (field.type === 'rectangle') {
+        coverPageHtml += `
+          <div style="
+            position: absolute;
+            left: ${field.x}px;
+            top: ${field.y}px;
+            width: ${field.width}px;
+            height: ${field.height}px;
+            background-color: ${field.backgroundColor || '#000000'};
+          "></div>
+        `;
+      }
+    });
+    
+    coverPageHtml += `</div>`;
+    
+    // Generate content pages using templates
+    let contentPages = '';
+    
+    // Page 2 - Company Introduction
+    if (page2Template.title && page2Template.content) {
+      contentPages += `
+        <div class="print-page" style="padding: 40px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333;">${page2Template.title}</h1>
+          <div style="font-size: 14px; line-height: 1.6; color: #555;">
+            ${page2Template.content.replace(/\n/g, '<br>')}
+          </div>
+        </div>
+      `;
+    }
+    
+    // Page 3 - Services Overview
+    if (page3Template.title && page3Template.content) {
+      contentPages += `
+        <div class="print-page" style="padding: 40px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333;">${page3Template.title}</h1>
+          <div style="font-size: 14px; line-height: 1.6; color: #555;">
+            ${page3Template.content.replace(/\n/g, '<br>')}
+          </div>
+        </div>
+      `;
+    }
+    
+    // Page 4 - Why Choose Us
+    if (page4Template.title && page4Template.content) {
+      contentPages += `
+        <div class="print-page" style="padding: 40px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333;">${page4Template.title}</h1>
+          <div style="font-size: 14px; line-height: 1.6; color: #555;">
+            ${page4Template.content.replace(/\n/g, '<br>')}
+          </div>
+        </div>
+      `;
+    }
+    
+    // Page 5 - Training Program Details
+    if (page5Template.title && page5Template.content) {
+      contentPages += `
+        <div class="print-page" style="padding: 40px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333;">${page5Template.title}</h1>
+          <div style="font-size: 14px; line-height: 1.6; color: #555;">
+            ${page5Template.content.replace(/\n/g, '<br>')}
+          </div>
+        </div>
+      `;
+    }
+    
+    // Course details page
+    let coursesHtml = '';
+    if (data.content && Array.isArray(data.content)) {
+      data.content.forEach((module: any) => {
+        coursesHtml += `
+          <div style="margin-bottom: 20px;">
+            <h3 style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 10px;">${module.name || 'Module'}</h3>
+            ${module.subItems && Array.isArray(module.subItems) ? `
+              <ul style="margin-left: 20px; color: #555;">
+                ${module.subItems.map((item: string) => `<li style="margin-bottom: 5px;">${item}</li>`).join('')}
+              </ul>
+            ` : ''}
+          </div>
+        `;
+      });
+    }
+    
+    const courseDetailsPage = `
+      <div class="print-page" style="padding: 40px;">
+        <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333;">Course Details</h1>
+        <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #444;">${data.courses?.[0] || 'Training Course'}</h2>
+        ${coursesHtml}
+        
+        <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+          <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #333;">Training Investment</h3>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span>Total Amount:</span>
+            <span style="font-weight: bold;">AED ${data.totalAmount}</span>
+          </div>
+          ${data.discount && parseFloat(data.discount) > 0 ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span>Discount (${data.discount}%):</span>
+              <span style="color: #28a745;">-AED ${(parseFloat(data.totalAmount) * parseFloat(data.discount) / 100).toFixed(2)}</span>
+            </div>
+          ` : ''}
+          <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; border-top: 2px solid #dee2e6; padding-top: 10px;">
+            <span>Final Amount:</span>
+            <span style="color: #007bff;">AED ${data.finalAmount}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    return `
+      <style>
+        @page { margin: 0; }
+        .print-page { page-break-after: always; width: 210mm; height: 297mm; }
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+      </style>
+      ${coverPageHtml}
+      ${contentPages}
+      ${courseDetailsPage}
+    `;
+    
+  } catch (error) {
+    console.error('Error generating proposal with template:', error);
+    // Fallback to standard template
+    return generateProposalPdf(data);
+  }
+};

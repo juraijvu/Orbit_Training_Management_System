@@ -6,7 +6,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/app-layout';
 import { Button } from '@/components/ui/button';
-import { generateProposalPdf } from '@/lib/pdf-templates';
+import { generateProposalPdf, generateProposalWithTemplate } from '@/lib/pdf-templates';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import { PDFDocument } from 'pdf-lib';
@@ -83,6 +83,17 @@ const ProposalDetailPage: FC = () => {
       return await res.json();
     },
     enabled: !!proposal?.trainerId
+  });
+
+  // Fetch proposal template if templateId is available
+  const { data: proposalTemplate } = useQuery({
+    queryKey: ['/api/proposal-templates', proposal?.templateId],
+    queryFn: async () => {
+      if (!proposal?.templateId) return null;
+      const res = await apiRequest('GET', `/api/proposal-templates/${proposal.templateId}`);
+      return await res.json();
+    },
+    enabled: !!proposal?.templateId
   });
 
   // Update proposal status mutation
@@ -221,8 +232,10 @@ const ProposalDetailPage: FC = () => {
         // Don't include company profile in the main HTML generation
       };
       
-      // Generate the HTML content
-      const htmlContent = generateProposalPdf(pdfData);
+      // Generate the HTML content using template if available
+      const htmlContent = proposalTemplate 
+        ? generateProposalWithTemplate(pdfData, proposalTemplate)
+        : generateProposalPdf(pdfData);
       
       // Create PDF document
       const pdf = new jsPDF({
