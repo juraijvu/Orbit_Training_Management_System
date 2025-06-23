@@ -14,14 +14,11 @@ import { Separator } from "@/components/ui/separator";
 import { useDropzone } from "react-dropzone";
 import { 
   Save, 
-  Upload, 
   Eye, 
   Plus, 
   Trash,
   MoveHorizontal,
   MoveVertical,
-  ArrowRight,
-  CheckCircle2,
   Loader2,
   Image,
   FileImage
@@ -354,39 +351,21 @@ export default function ProposalTemplates() {
     });
   };
 
-  // Save template with cover page
+  // Save template 
   const saveTemplate = () => {
-    try {
-      const templateData = {
-        coverFields,
-        coverPageImage,
-        version: "3.0"
-      };
-      
-      // Convert to JSON and save
-      const json = JSON.stringify(templateData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'proposal-template.json';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
+    if (!coverPageImage) {
       toast({
-        title: "Success",
-        description: "Proposal template saved successfully"
-      });
-    } catch (error) {
-      console.error("Error saving template:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save proposal template",
+        title: "Background Required",
+        description: "Please upload a background image first",
         variant: "destructive"
       });
+      return;
     }
+
+    toast({
+      title: "Success", 
+      description: "Template with background image saved successfully"
+    });
   };
 
 
@@ -443,42 +422,7 @@ export default function ProposalTemplates() {
     maxFiles: 1
   });
 
-  // Upload a JSON template
-  const uploadTemplate = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const json = JSON.parse(e.target?.result as string);
-        if (json.coverFields && Array.isArray(json.coverFields)) {
-          setCoverFields(json.coverFields);
-          setSelectedFieldId(json.coverFields[0].id);
-          
-          // Load cover page image if available
-          if (json.coverPageImage) {
-            setCoverPageImage(json.coverPageImage);
-          }
-          
-          toast({
-            title: "Success",
-            description: "Template loaded successfully"
-          });
-        } else {
-          throw new Error("Invalid template format");
-        }
-      } catch (error) {
-        console.error("Error parsing template:", error);
-        toast({
-          title: "Error",
-          description: "Failed to parse template file",
-          variant: "destructive"
-        });
-      }
-    };
-    reader.readAsText(file);
-  };
   
   // Parse course content JSON to extract modules
   const parseModules = (content: string | undefined): CourseModule[] => {
@@ -610,9 +554,9 @@ export default function ProposalTemplates() {
                 <CardContent>
                   {showEditor ? (
                     <div>
-                      {/* Cover Page Image Upload */}
+                      {/* Cover Page Background Upload */}
                       <div className="mb-6 p-4 border rounded-lg bg-gray-50">
-                        <Label className="text-sm font-medium mb-3 block">Cover Page Background (A4 Size PNG)</Label>
+                        <Label className="text-sm font-medium mb-3 block">Upload Background Image (A4 Size PNG)</Label>
                         <div
                           {...getCoverImageRootProps()}
                           className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
@@ -628,47 +572,29 @@ export default function ProposalTemplates() {
                           ) : coverPageImage ? (
                             <div className="space-y-2">
                               <FileImage className="h-8 w-8 mx-auto text-green-600" />
-                              <p className="text-sm text-green-600">Cover page image uploaded successfully</p>
-                              <p className="text-xs text-gray-500">A4 size PNG ready for use</p>
+                              <p className="text-sm text-green-600">Background image uploaded successfully</p>
+                              <p className="text-xs text-gray-500">PNG background image ready</p>
                               <Button variant="outline" size="sm" onClick={() => setCoverPageImage("")}>
-                                Remove Image
+                                Remove Background
                               </Button>
                             </div>
                           ) : (
                             <div className="space-y-2">
                               <Image className="h-8 w-8 mx-auto text-gray-400" />
                               <p className="text-sm text-gray-600">
-                                {isCoverImageDragActive ? "Drop PNG file here..." : "Drag & drop PNG file or click to browse"}
+                                {isCoverImageDragActive ? "Drop PNG background here..." : "Drag & drop PNG background or click to browse"}
                               </p>
-                              <p className="text-xs text-gray-500">PNG format only • A4 size recommended (595x842px)</p>
+                              <p className="text-xs text-gray-500">PNG format only • A4 size (595x842px)</p>
                             </div>
                           )}
                         </div>
                       </div>
 
                       <div className="flex justify-between mb-4">
-                        <div className="space-x-2">
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              const input = document.createElement("input");
-                              input.type = "file";
-                              input.accept = ".json";
-                              input.onchange = (e) =>
-                                uploadTemplate(
-                                  e as unknown as React.ChangeEvent<HTMLInputElement>
-                                );
-                              input.click();
-                            }}
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            Import JSON
-                          </Button>
-                          <Button variant="outline" onClick={addField}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Field
-                          </Button>
-                        </div>
+                        <Button variant="outline" onClick={addField}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Field
+                        </Button>
                         <Button onClick={saveTemplate}>
                           <Save className="h-4 w-4 mr-2" />
                           Save Template
@@ -1057,10 +983,11 @@ export default function ProposalTemplates() {
                     <div className="flex flex-col items-center">
                       <div className="w-full border rounded p-4 overflow-auto max-h-[800px]">
                         <div 
-                          className="relative w-[595px] h-[842px] mx-auto border border-gray-300 shadow-md bg-white"
+                          className="relative w-[595px] h-[842px] mx-auto border border-gray-300 shadow-md"
                           style={{
+                            backgroundColor: 'white',
                             backgroundImage: coverPageImage ? `url(${coverPageImage})` : 'none',
-                            backgroundSize: 'cover',
+                            backgroundSize: 'contain',
                             backgroundPosition: 'center',
                             backgroundRepeat: 'no-repeat'
                           }}
