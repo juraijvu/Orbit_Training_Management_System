@@ -138,6 +138,13 @@ export interface IStorage {
   getProposals(): Promise<Proposal[]>;
   getProposal(id: number): Promise<Proposal | undefined>;
   createProposal(proposal: InsertProposal): Promise<Proposal>;
+  
+  // Proposal Template operations
+  createProposalTemplate(template: InsertProposalTemplate): Promise<ProposalTemplate>;
+  getAllProposalTemplates(): Promise<ProposalTemplate[]>;
+  getProposalTemplateById(id: number): Promise<ProposalTemplate | null>;
+  updateProposalTemplate(id: number, template: Partial<InsertProposalTemplate>): Promise<ProposalTemplate | null>;
+  deleteProposalTemplate(id: number): Promise<boolean>;
   updateProposal(id: number, proposal: Partial<Proposal>): Promise<Proposal | undefined>;
   
   // CRM - Leads
@@ -2740,10 +2747,55 @@ export class DatabaseStorage implements IStorage {
       discount: proposal.discount || null,
       content: proposal.content || null,
       coverPage: proposal.coverPage || null,
+      courseOutline: proposal.courseOutline || null,
+      courseOutlineFilename: proposal.courseOutlineFilename || null,
+      courseOutlineMimeType: proposal.courseOutlineMimeType || null,
+      templateId: proposal.templateId || null,
       status: proposal.status || 'draft'
     };
     const result = await db.insert(proposals).values(proposalWithDefaults).returning();
     return result[0];
+  }
+
+  // Proposal Template operations
+  async createProposalTemplate(template: InsertProposalTemplate): Promise<ProposalTemplate> {
+    const templateWithDefaults = {
+      ...template,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isActive: template.isActive !== undefined ? template.isActive : true
+    };
+    const result = await db.insert(proposalTemplates).values(templateWithDefaults).returning();
+    return result[0];
+  }
+
+  async getAllProposalTemplates(): Promise<ProposalTemplate[]> {
+    return await db.select().from(proposalTemplates).where(eq(proposalTemplates.isActive, true)).orderBy(asc(proposalTemplates.name));
+  }
+
+  async getProposalTemplateById(id: number): Promise<ProposalTemplate | null> {
+    const result = await db.select().from(proposalTemplates).where(eq(proposalTemplates.id, id));
+    return result.length > 0 ? result[0] : null;
+  }
+
+  async updateProposalTemplate(id: number, template: Partial<InsertProposalTemplate>): Promise<ProposalTemplate | null> {
+    const templateWithUpdate = {
+      ...template,
+      updatedAt: new Date()
+    };
+    const result = await db.update(proposalTemplates)
+      .set(templateWithUpdate)
+      .where(eq(proposalTemplates.id, id))
+      .returning();
+    return result.length > 0 ? result[0] : null;
+  }
+
+  async deleteProposalTemplate(id: number): Promise<boolean> {
+    const result = await db.update(proposalTemplates)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(proposalTemplates.id, id))
+      .returning();
+    return result.length > 0;
   }
 
   async updateProposal(id: number, proposal: Partial<Proposal>): Promise<Proposal | undefined> {

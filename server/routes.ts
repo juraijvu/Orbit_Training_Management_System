@@ -23,6 +23,7 @@ import {
   insertCertificateSchema,
   insertQuotationSchema,
   insertProposalSchema,
+  insertProposalTemplateSchema,
   insertUserSchema,
   insertWhatsappSettingsSchema,
   insertWhatsappTemplateSchema,
@@ -1840,6 +1841,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ================== Proposal Templates API ==================
+  // Get all proposal templates
+  app.get('/api/proposal-templates', isAuthenticated, async (req, res) => {
+    try {
+      const templates = await storage.getAllProposalTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Failed to fetch proposal templates:", error);
+      res.status(500).json({ message: "Failed to fetch proposal templates" });
+    }
+  });
+
+  // Get a specific proposal template
+  app.get('/api/proposal-templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getProposalTemplateById(id);
+      if (!template) {
+        return res.status(404).json({ message: "Proposal template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Failed to fetch proposal template:", error);
+      res.status(500).json({ message: "Failed to fetch proposal template" });
+    }
+  });
+
+  // Create a new proposal template
+  app.post('/api/proposal-templates', isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertProposalTemplateSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      const template = await storage.createProposalTemplate(validatedData);
+      res.json(template);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Failed to create proposal template:", error);
+      res.status(500).json({ message: "Failed to create proposal template" });
+    }
+  });
+
+  // Update a proposal template
+  app.patch('/api/proposal-templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getProposalTemplateById(id);
+      if (!template) {
+        return res.status(404).json({ message: "Proposal template not found" });
+      }
+      
+      const updatedTemplate = await storage.updateProposalTemplate(id, req.body);
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error("Failed to update proposal template:", error);
+      res.status(500).json({ message: "Failed to update proposal template" });
+    }
+  });
+
+  // Delete a proposal template
+  app.delete('/api/proposal-templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getProposalTemplateById(id);
+      if (!template) {
+        return res.status(404).json({ message: "Proposal template not found" });
+      }
+      
+      await storage.deleteProposalTemplate(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Failed to delete proposal template:", error);
+      res.status(500).json({ message: "Failed to delete proposal template" });
+    }
+  });
+
   // ================== Proposals API ==================
   // Get all proposals
   app.get('/api/proposals', isAuthenticated, async (req, res) => {

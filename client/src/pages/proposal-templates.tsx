@@ -261,6 +261,8 @@ export default function ProposalTemplates() {
   const [coverFields, setCoverFields] = useState<CoverPageField[]>(defaultCoverFields);
   const [selectedFieldId, setSelectedFieldId] = useState<string>(defaultCoverFields[0].id);
   const [coverPageImage, setCoverPageImage] = useState<string>("");
+  const [templateName, setTemplateName] = useState<string>("Default Template");
+  const [templateDescription, setTemplateDescription] = useState<string>("");
   const [previewData, setPreviewData] = useState<PreviewData>({
     companyName: "ABC Corporation",
     contactPerson: "Jane Doe",
@@ -1266,40 +1268,261 @@ export default function ProposalTemplates() {
         <TabsContent value="content">
           <Card>
             <CardHeader>
-              <CardTitle>Content Pages Configuration</CardTitle>
+              <CardTitle>Multi-Page Template Configuration</CardTitle>
+              <p className="text-sm text-gray-600">Configure pages 2-5 of your proposal template</p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                <Card className="p-4 h-full">
-                  <div className="flex flex-col h-full">
-                    <div>
-                      <h4 className="font-medium text-lg mb-2">Company Introduction</h4>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Upload company profile PDF or create content
-                      </p>
-                      <p className="text-xs text-blue-600 mb-4">
-                        Note: Course modules, pricing, and timeline will be handled dynamically by the proposal entries
-                      </p>
+              <Tabs defaultValue="page2" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="page2">Page 2</TabsTrigger>
+                  <TabsTrigger value="page3">Page 3</TabsTrigger>
+                  <TabsTrigger value="page4">Page 4</TabsTrigger>
+                  <TabsTrigger value="page5">Page 5</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="page2" className="space-y-4 pt-4">
+                  <Card className="p-4">
+                    <h4 className="font-medium text-lg mb-4">Page 2: Company Introduction</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Page Title</Label>
+                        <Input 
+                          placeholder="About Our Company" 
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Content Type</Label>
+                        <Tabs defaultValue="text" className="w-full mt-2">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="text">Rich Text</TabsTrigger>
+                            <TabsTrigger value="upload">PDF Upload</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="text" className="pt-4">
+                            <Textarea 
+                              placeholder="Enter company introduction content..."
+                              className="min-h-[200px]"
+                            />
+                          </TabsContent>
+                          
+                          <TabsContent value="upload" className="pt-4">
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                              <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-500 mb-2">
+                                Upload company profile PDF
+                              </p>
+                              <p className="text-xs text-gray-400 mb-4">Max file size: 10MB</p>
+                              <Button variant="outline" size="sm">Browse Files</Button>
+                            </div>
+                          </TabsContent>
+                        </Tabs>
+                      </div>
                     </div>
-                    
-                    <Tabs defaultValue="upload" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="upload">PDF Upload</TabsTrigger>
-                        <TabsTrigger value="text">Text Editor</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="upload" className="space-y-4 pt-4">
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                          <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                          <p className="text-sm text-gray-500 mb-2">
-                            Drag & drop your company profile PDF here
-                          </p>
-                          <p className="text-xs text-gray-400 mb-4">
-                            Max. file size: 10MB
-                          </p>
-                          <Button variant="outline" size="sm">
-                            Browse Files
-                          </Button>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="page3" className="space-y-4 pt-4">
+                  <Card className="p-4">
+                    <h4 className="font-medium text-lg mb-4">Page 3: Services Overview</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Page Title</Label>
+                        <Input 
+                          placeholder="Our Training Services" 
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Content</Label>
+                        <Textarea 
+                          placeholder="Describe your training services and methodology..."
+                          className="min-h-[200px] mt-1"
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="page4" className="space-y-4 pt-4">
+                  <Card className="p-4">
+                    <h4 className="font-medium text-lg mb-4">Page 4: Why Choose Us</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Page Title</Label>
+                        <Input 
+                          placeholder="Why Choose Orbit Institute" 
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Content</Label>
+                        <Textarea 
+                          placeholder="Highlight your unique selling points and advantages..."
+                          className="min-h-[200px] mt-1"
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="page5" className="space-y-4 pt-4">
+                  <Card className="p-4">
+                    <h4 className="font-medium text-lg mb-4">Page 5: Course Details Intro</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Page Title</Label>
+                        <Input 
+                          placeholder="Training Program Details" 
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Content</Label>
+                        <Textarea 
+                          placeholder="Introduction to the training program details that will follow..."
+                          className="min-h-[200px] mt-1"
+                        />
+                      </div>
+                      <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+                        <strong>Note:</strong> Course outline will be inserted automatically after this page based on the uploaded course outline for each proposal.
+                      </div>
+                    </div>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="closing">
+          <Card>
+            <CardHeader>
+              <CardTitle>Last 3 Pages Configuration</CardTitle>
+              <p className="text-sm text-gray-600">Configure the final 3 pages that appear in every proposal</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Tabs defaultValue="lastpage1" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="lastpage1">Last Page 1</TabsTrigger>
+                  <TabsTrigger value="lastpage2">Last Page 2</TabsTrigger>
+                  <TabsTrigger value="lastpage3">Last Page 3</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="lastpage1" className="space-y-4 pt-4">
+                  <Card className="p-4">
+                    <h4 className="font-medium text-lg mb-4">Terms & Conditions</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Page Title</Label>
+                        <Input 
+                          placeholder="Terms & Conditions" 
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Content Type</Label>
+                        <Tabs defaultValue="text" className="w-full mt-2">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="text">Rich Text</TabsTrigger>
+                            <TabsTrigger value="upload">PDF Upload</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="text" className="pt-4">
+                            <Textarea 
+                              placeholder="Enter terms and conditions..."
+                              className="min-h-[300px]"
+                            />
+                          </TabsContent>
+                          
+                          <TabsContent value="upload" className="pt-4">
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                              <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-500 mb-2">
+                                Upload terms & conditions PDF
+                              </p>
+                              <Button variant="outline" size="sm">Browse Files</Button>
+                            </div>
+                          </TabsContent>
+                        </Tabs>
+                      </div>
+                    </div>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="lastpage2" className="space-y-4 pt-4">
+                  <Card className="p-4">
+                    <h4 className="font-medium text-lg mb-4">Company Credentials</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Page Title</Label>
+                        <Input 
+                          placeholder="Our Credentials & Certifications" 
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Content Type</Label>
+                        <Tabs defaultValue="text" className="w-full mt-2">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="text">Rich Text</TabsTrigger>
+                            <TabsTrigger value="upload">PDF Upload</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="text" className="pt-4">
+                            <Textarea 
+                              placeholder="Enter credentials and certifications..."
+                              className="min-h-[300px]"
+                            />
+                          </TabsContent>
+                          
+                          <TabsContent value="upload" className="pt-4">
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                              <FileImage className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-500 mb-2">
+                                Upload credentials PDF
+                              </p>
+                              <Button variant="outline" size="sm">Browse Files</Button>
+                            </div>
+                          </TabsContent>
+                        </Tabs>
+                      </div>
+                    </div>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="lastpage3" className="space-y-4 pt-4">
+                  <Card className="p-4">
+                    <h4 className="font-medium text-lg mb-4">Contact Information</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Page Title</Label>
+                        <Input 
+                          placeholder="Contact Us" 
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Content</Label>
+                        <Textarea 
+                          placeholder="Enter contact information, office locations, and how to reach you..."
+                          className="min-h-[300px] mt-1"
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Save Template Button */}
+      <div className="flex justify-end mt-6">
+        <Button onClick={saveCompleteTemplate} size="lg">
+          <Save className="h-4 w-4 mr-2" />
+          Save Complete Template
                         </div>
                         
                         <div className="flex items-center">
