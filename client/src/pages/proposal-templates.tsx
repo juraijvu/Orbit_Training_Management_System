@@ -494,10 +494,7 @@ export default function ProposalTemplates() {
         isActive: true
       };
 
-      const response = await apiRequest('/api/proposal-templates', {
-        method: 'POST',
-        body: JSON.stringify(templateData)
-      });
+      const response = await apiRequest('POST', '/api/proposal-templates', templateData);
 
       toast({
         title: "Template Saved",
