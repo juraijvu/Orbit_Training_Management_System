@@ -54,14 +54,16 @@ const DATABASE_TYPE = 'mysql';
 
 The MySQL connection string format is: `mysql://username:password@hostname:3306/database_name`
 
-For Orbit Institute's Hostinger database:
-- Username: u912142054_orbit_app
-- Password: Orbit@Dubai@2024
-- Hostname: auth-db1443.hstgr.io
-- Database name: u912142054_orbit_app
+For your database connection, use these environment variables:
+- Username: `DB_USER`
+- Password: `DB_PASSWORD`
+- Hostname: `DB_HOST`
+- Database name: `DB_NAME`
 
-Your connection string (already configured above):
-`mysql://u912142054_orbit_app:Orbit@Dubai@2024@auth-db1443.hstgr.io:3306/u912142054_orbit_app`
+Your connection string should use environment variables:
+`mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:3306/${DB_NAME}`
+
+> **Security Note**: Never hard-code database credentials in your code or documentation. Always use environment variables or secure configuration files that are not committed to version control.
 
 > **Note about @ character in passwords**: If your password contains special characters like the @ symbol, they need to be properly encoded in the URL. The code in the Electron app will handle this encoding automatically.
 
