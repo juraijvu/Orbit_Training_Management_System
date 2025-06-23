@@ -1591,12 +1591,6 @@ export default function ProposalTemplates() {
     </AppLayout>
   );
 }
-                          <Label htmlFor="intro-content">Content</Label>
-                          <Textarea 
-                            id="intro-content" 
-                            rows={6} 
-                            placeholder="Enter your company introduction text here..."
-                            className="resize-none"
                           />
                         </div>
                       </TabsContent>

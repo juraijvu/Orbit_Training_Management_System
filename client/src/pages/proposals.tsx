@@ -7,13 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/app-layout';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -52,6 +46,13 @@ import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { insertProposalSchema } from '@shared/schema';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { z } from 'zod';
 import { format } from 'date-fns';
 
